@@ -68,6 +68,10 @@ function checktype(expr, ctx) {
 	if (expr.type == 'IndexExpression')
 	{
 		var t = checktype(expr.base, ctx);
+		if (!t) {
+			log.error('unknown type', expr.base, expr.loc.start.line);			
+			return '__unknown';
+		}
 		var idxt = checktype(expr.index, ctx);
 		// console.log('==',t);
 		if (t._array)
@@ -83,7 +87,7 @@ function checktype(expr, ctx) {
 				//console.log('will return guess',g);
 				return expandtype(g, ctx);
 			}
-			log.error('unknown type', expr.base, expr.identifier.name);
+			log.error('unknown type', expr.base, expr.identifier.name, expr.loc.start.line);
 
 			return '__unknown';
 		}
@@ -108,6 +112,10 @@ function checktype(expr, ctx) {
 		return 'bool';
 	}
 
+	if (expr.type == 'NumericLiteral') {
+		return 'number';
+	}
+
 	if (expr.type == 'NilLiteral') {
 		return 'null';
 	}
@@ -120,11 +128,23 @@ function checktype(expr, ctx) {
 		var t1 = checktype(expr.left, ctx);
 		var t2 = checktype(expr.right, ctx);
 		if (t1 == '__unknown')
-			log.error('unknown type', expr.left);
+			log.error('unknown type', expr.left, expr.loc.start.line);
 		if (t2 == '__unknown')
-			log.error('unknown type', expr.right);
+			log.error('unknown type', expr.right, expr.loc.start.line);
 
 		return 'bool';
+	}
+
+	if (expr.type == 'UnaryExpression') {
+		var t1 = checktype(expr.argument, ctx);
+		if (t1 == '__unknown')
+			log.error('unknown type', expr.argument, expr.loc.start.line);
+
+		return 'bool';
+	}
+
+	if (expr.type == 'TableConstructorExpression') {
+		return {};
 	}
 
 	return '__unknown';
