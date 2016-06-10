@@ -1,5 +1,4 @@
 var fs = require('fs');
-var bunyan = require('bunyan');
 var parseXml = require('xml2js').parseString;
 var xslt = require('libxslt');
 
@@ -13,16 +12,19 @@ var ensureArray = function(a) {
 	return a;
 };
 
-
-var log = bunyan.createLogger({name:'L'});
-
 var rootctx = {
 	guesses: {
 		important_leader_nemesis: {_array:'df.nemesis'},
 	},
 	types: {
+		null: 'null',
+		
 		df: {
-			nemesis: {
+			_type: '__df',
+			global: {
+				_type: '__global',
+			},
+			/*nemesis: {
 				figure: 'df.historical_figure'
 			},
 			creature_raw: {
@@ -52,11 +54,18 @@ var rootctx = {
 						}
 					}
 				}
-			}
+			}*/
 		}
 	},
 
-	functions: {},
+	functions: {
+		error: 'none',
+		
+		'table.insert': 'none',
+		
+		unitname: 'string',
+		unitprof: 'string',
+	},
 
 	parent: null,
 };
@@ -81,9 +90,9 @@ function convertBasicType(t)
 	throw new Error('unknown primitive subtype '+t);
 }
 
-function processStruct(def)
+function processStruct(def, n)
 {
-	var type = {};
+	var type = { _type: n };
 	var anon = 1;
 	ensureArray(def.$$).forEach(function(fdef) {
 		var t = fdef['#name'];
@@ -113,31 +122,38 @@ function processStruct(def)
 						type[fname] = { _array: 'df.'+item.$['type-name'] };
 					else if (imeta == 'number')
 						type[fname] = { _array: 'number' };
-					else if (meta == 'primitive')
+					else if (imeta == 'primitive')
 						type[fname] = convertBasicType(item.$['subtype']);
 					else if (imeta == 'compound') {
 						type[fname] = { _array: processStruct(item) };
 					}
 					else {
-						console.log('V', fdef);
+						// console.log('V1', fdef);
 						//console.log('#',convertBasicType(imeta));
 					}
 				}
 				else
-					console.log('V', fdef);
+					;// console.log('V2', fdef);
 
 			}
-			else if (meta == 'pointer' || meta == 'global')
+			else if (meta == 'pointer')
+			{
+				if (fdef.item)
+					type[fname] = processStruct(fdef.item);
+				else
+					type[fname] = 'df.' + fdef.$['type-name'];
+			}
+			else if (meta == 'global')
 			{
 				type[fname] = 'df.' + fdef.$['type-name'];
 			}
 			else if (meta == 'bytes')
 			{
 			}
-			// else if (meta == 'global')
-			// {
-			// 	console.log('G', fdef);
-			// }
+			/*else if (meta == 'global')
+			{
+				console.log('G', fdef);
+			}*/
 			else if (meta == 'compound' && fdef.$['subtype'] == 'enum')
 			{
 
@@ -152,10 +168,30 @@ function processStruct(def)
 			}
 			else
 				throw new Error('unknown meta '+meta);
+		
 		}
-
-
 	});
+
+	return type;
+}
+
+function processEnum(def, n)
+{
+	var type = { _type: n };
+
+	var anon = 1;
+	ensureArray(def.$$).forEach(function(fdef) {
+		var t = fdef['#name'];
+
+		if (t == 'enum-item')
+		{
+			var fname = fdef.$ && fdef.$['name'] || ('anon_'+anon++);
+			type[fname] = 'number';
+		}
+	});
+	
+	type._array = 'string';
+	type._enum = true;
 
 	return type;
 }
@@ -164,14 +200,41 @@ function processXml(xml, ctxtypes)
 {
 	parseXml(xml, { attrNameProcessors: [require('xml2js').processors.stripPrefix], tagNameProcessors: [require('xml2js').processors.stripPrefix], explicitArray: false, explicitChildren:true, preserveChildrenOrder:true }, function(err, result) {
 		ensureArray(result['data-definition']['global-type']).forEach(function(def) {
-			if (def.$['meta'] == 'struct-type' || def.$['meta'] == 'bitfield-type') {
+			if (def.$['meta'] == 'class-type' || def.$['meta'] == 'struct-type' || def.$['meta'] == 'bitfield-type') {
 				var n = def.$['type-name'];
-				ctxtypes[n] = processStruct(def);
+				ctxtypes[n] = processStruct(def, 'df.'+n);
 				if (def.$['instance-vector']) {
 					var v = def.$['instance-vector'];
 					rootctx.functions['df.'+n+'.find'] = 'df.'+n;
 				}
+			} else if (def.$['meta'] == 'enum-type') {
+				var n = def.$['type-name'];
+				ctxtypes[n] = processEnum(def, 'df.'+n);
 			}
+		});
+
+
+		ensureArray(result['data-definition']['global-object']).forEach(function(def) {
+			var item = def.item;
+
+			if (item) {
+				var imeta = item.$['meta'];
+				
+				if (imeta == 'pointer' || imeta == 'global')
+					rootctx.types.df.global[def.$['name']] = 'df.'+item.$['type-name'];
+				else if (imeta == 'number')
+					rootctx.types.df.global[def.$['name']] = 'number';
+				else if (imeta == 'primitive')
+					rootctx.types.df.global[def.$['name']] = convertBasicType(item.$['subtype']);
+				else if (imeta == 'compound') {
+					rootctx.types.df.global[def.$['name']] = processStruct(item);
+				}
+				else {
+					//console.log('#',convertBasicType(imeta));
+				}
+			}			
+			else
+				;//console.log('G2', def);			
 		});
 	});
 }
