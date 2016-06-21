@@ -14,7 +14,6 @@ var ensureArray = function(a) {
 
 var rootctx = {
 	guesses: {
-		important_leader_nemesis: {_array:'df.nemesis'},
 	},
 	types: {
 		null: 'null',
@@ -55,16 +54,70 @@ var rootctx = {
 					}
 				}
 			}*/
-		}
+		},
+		
+		'matinfo': {
+			_type: 'matinfo',
+			type: 'number',
+			index: 'number',
+			material: 'df.material',
+			mode: 'number',
+			subtype: 'number',
+			inorganic: 'df.inorganic_raw',
+			creature: 'df.creature_raw',
+			plant: 'df.plant_raw',
+			figure: 'df.historical_figure',
+		},
 	},
 
 	functions: {
 		error: 'none',
+		tostring: 'string',
+		print: 'none',
+		
+		'math.abs': 'number',
+		'math.floor': 'number',
 		
 		'table.insert': 'none',
+				
+		'string.gsub': 'string',
+		'string.sub': 'string',
+		'string.byte': 'number',
+		'string.char': 'string',
+		'string.find': 'number',
+		'string.lower': 'string',
 		
-		unitname: 'string',
-		unitprof: 'string',
+		'bit32.band': 'number',
+		'bit32.lshift': 'number',
+		'bit32.rshift': 'number',
+		
+		'df.item.getWear': 'number',
+		'df.squad_order.reasonCannot': 'number',
+		'df.activity_event.getName': 'string',
+		'df.block_square_event.getType': 'df.block_square_event_type',
+		'df.building.getType': 'df.building_type',
+
+		'dfhack.internal.setAddress': 'none',
+		'dfhack.getOSType': 'string',
+		'dfhack.df2utf': 'string',
+		'dfhack.gui.getCurViewscreen': 'df.viewscreen',
+		'dfhack.units.getProfessionName': 'string',
+		'dfhack.units.isCitizen': 'bool',
+		'dfhack.units.getVisibleName': 'df.language_name',
+		'dfhack.items.getGeneralRef': 'df.general_ref',
+		'dfhack.items.getDescription': 'string',
+		'dfhack.matinfo.decode': 'matinfo',
+		'dfhack.job.getName': 'string',
+		'dfhack.maps.getRegionBiome': 'df.region_map_entry',
+		
+		'utils.call_with_string': 'string',
+		
+		'gui.simulateInput':'none',
+		
+		'string.utf8capitalize': 'string',
+
+		'native.set_timer':'none',
+		
 	},
 
 	parent: null,
@@ -93,6 +146,18 @@ function convertBasicType(t)
 function processStruct(def, n)
 {
 	var type = { _type: n };
+	if (def.$['inherits-from']) {
+		type._super = 'df.' + def.$['inherits-from'];
+	
+		var supertype = rootctx.types.df[def.$['inherits-from']];
+		if (!supertype)
+			console.log('NO SUPER', def.$['inherits-from']);
+		else {
+			supertype._sub = supertype._sub || [];
+			supertype._sub.push(n);
+		}
+	}
+		
 	var anon = 1;
 	ensureArray(def.$$).forEach(function(fdef) {
 		var t = fdef['#name'];
@@ -118,12 +183,21 @@ function processStruct(def, n)
 				if (item) {
 					var imeta = item.$['meta'];
 					
-					if (imeta == 'pointer' || imeta == 'global')
-						type[fname] = { _array: 'df.'+item.$['type-name'] };
-					else if (imeta == 'number')
+					if (imeta == 'pointer' || imeta == 'global') {
+						var item2 = item.item;
+						if (item2 && item2.$.meta == 'compound') {
+							var tname = n + '.' + item2.$['typedef-name'];
+							rootctx.types[tname] = processStruct(item2, tname);
+							type[fname] = { _array:tname }
+							type[item2.$['typedef-name']] = tname;
+						} else if (item2 && item2.$.meta == 'static-array') {
+							type[fname] = { _array: { _type:'df.'+item2.item.$['type-name']+'[]', _array:'df.'+item2.item.$['type-name'] } };
+						} else
+							type[fname] = { _array: 'df.'+item.$['type-name'] };
+					} else if (imeta == 'number')
 						type[fname] = { _array: 'number' };
 					else if (imeta == 'primitive')
-						type[fname] = convertBasicType(item.$['subtype']);
+						type[fname] = { _array: convertBasicType(item.$['subtype']) };
 					else if (imeta == 'compound') {
 						type[fname] = { _array: processStruct(item) };
 					}
@@ -134,14 +208,46 @@ function processStruct(def, n)
 				}
 				else
 					;// console.log('V2', fdef);
-
+					
+				if (type[fname] && type[fname]._array)
+				{
+					var t = type[fname];
+					t._type = (t._array._type || t._array.toString()) + '[]';
+					
+					if (fdef.$['index-enum']) {
+						var e = rootctx.types.df[fdef.$['index-enum']];
+						if (e) {
+							Object.keys(e).forEach(function(k) {
+								if (k.substr(0,1) != '_')
+									t[k] = t._array;
+							});
+						} else
+							console.log('no enum', fdef.$['index-enum']);
+					}
+				}
 			}
 			else if (meta == 'pointer')
 			{
-				if (fdef.item)
-					type[fname] = processStruct(fdef.item);
-				else
-					type[fname] = 'df.' + fdef.$['type-name'];
+				if (fdef.item && fdef.item.$['meta'] == 'compound') {
+					var item2 = fdef.item;
+					var tname = n + '.' + item2.$['typedef-name'];
+					rootctx.types[tname] = processStruct(item2, tname);
+					type[fname] = tname;
+					type[item2.$['typedef-name']] = tname;
+
+					//type[fname] = processStruct(fdef.item);
+				} else {
+					var t;
+					try {
+						t = convertBasicType(fdef.$['type-name']);
+					} catch (e) {
+						t = 'df.' + fdef.$['type-name'];
+					}
+					if (fdef.$['is-array'] == 'true')
+						type[fname] = { _array:t };
+					else
+						type[fname] = t;
+				}
 			}
 			else if (meta == 'global')
 			{
@@ -150,21 +256,41 @@ function processStruct(def, n)
 			else if (meta == 'bytes')
 			{
 			}
-			/*else if (meta == 'global')
-			{
-				console.log('G', fdef);
-			}*/
 			else if (meta == 'compound' && fdef.$['subtype'] == 'enum')
 			{
-
+				if (fdef.$['typedef-name']) {
+					var tname = n + '.' + fdef.$['typedef-name'];
+					rootctx.types[tname] = processEnum(fdef, tname);
+					type[fdef.$['name']] = tname;
+					type[fdef.$['typedef-name']] = tname;
+				}
+				else
+				{
+					type[fdef.$['name']] = processEnum(fdef);
+				}
 			}
 			else if (meta == 'compound')
 			{
-				//TODO: if bitfield then create 0..X fields
-				/*if (fdef.$['type-name'])
-					type[fdef.$['name']] = fdef.$['type-name'];
-				else*/
-					type[fdef.$['name']] = processStruct(fdef);
+				if (fdef.$['typedef-name']) {
+					var tname = n + '.' + fdef.$['typedef-name'];
+					rootctx.types[tname] = processStruct(fdef, tname);
+					type[fdef.$['name']] = tname;
+					type[fdef.$['typedef-name']] = tname;
+				}
+				else
+				{
+					//TODO: if bitfield then create 0..X fields
+					/*if (fdef.$['type-name'])
+						type[fdef.$['name']] = fdef.$['type-name'];
+					else*/
+					if (fdef.$['is-union'] == 'true') {
+						var u = processStruct(fdef);
+						for (var j in u)
+							type[j] = u[j];
+					}
+					else
+						type[fdef.$['name']] = processStruct(fdef);
+				}
 			}
 			else
 				throw new Error('unknown meta '+meta);
@@ -179,20 +305,34 @@ function processEnum(def, n)
 {
 	var type = { _type: n };
 
+	type._array = 'string';
+	type._enum = true;
+	type.attrs = { _array: { } };
+
 	var anon = 1;
 	ensureArray(def.$$).forEach(function(fdef) {
 		var t = fdef['#name'];
 
-		if (t == 'enum-item')
-		{
+		if (t == 'enum-item') {
 			var fname = fdef.$ && fdef.$['name'] || ('anon_'+anon++);
 			type[fname] = 'number';
 		}
+		
+		else if (t == 'enum-attr') {
+			var atype;
+			if (fdef.$['type-name']) {
+				try {
+					atype = convertBasicType(fdef.$['type-name']);
+				} catch(e) {
+					atype = 'df.' + fdef.$['type-name'];
+				}
+			}
+			
+			type.attrs._array[fdef.$['name']] = atype || 'string';
+		}
 	});
 	
-	type._array = 'string';
-	type._enum = true;
-
+	
 	return type;
 }
 
@@ -228,9 +368,39 @@ function processXml(xml, ctxtypes)
 					rootctx.types.df.global[def.$['name']] = convertBasicType(item.$['subtype']);
 				else if (imeta == 'compound') {
 					rootctx.types.df.global[def.$['name']] = processStruct(item);
+				} else if (imeta == 'container') {
+					var item3 = item.item;
+
+					if (item3) {
+						var imeta3 = item3.$['meta'];
+						
+						if (imeta3 == 'pointer' || imeta3 == 'global') {
+							/*var item2 = item3.item;
+							if (item2 && item2.$.meta == 'compound') {
+								var tname = n + '.' + item2.$['typedef-name'];
+								rootctx.types[tname] = processStruct(item2, tname);
+								type[fname] = { _array:tname }
+								type[item2.$['typedef-name']] = tname;
+							} else if (item2 && item2.$.meta == 'static-array') {
+								rootctx.types.df.global[def.$['name']] = { _array: { _type:'df.'+item2.item.$['type-name']+'[]', _array:'df.'+item2.item.$['type-name'] } };
+							} else*/
+								rootctx.types.df.global[def.$['name']] = { _array: 'df.'+item3.$['type-name'] };
+						} else if (imeta3 == 'number')
+							rootctx.types.df.global[def.$['name']] = { _array: 'number' };
+						else if (imeta3 == 'primitive')
+							rootctx.types.df.global[def.$['name']] = { _array: convertBasicType(item3.$['subtype']) };
+						else if (imeta3 == 'compound') {
+							rootctx.types.df.global[def.$['name']] = { _array: processStruct(item3) };
+						}
+						else {
+							// console.log('V1', fdef);
+							//console.log('#',convertBasicType(imeta));
+						}
+					}
 				}
 				else {
 					//console.log('#',convertBasicType(imeta));
+					
 				}
 			}			
 			else
@@ -251,5 +421,11 @@ fs.readdirSync('./df').forEach(function(f) {
 });*/
 
 processXml(fs.readFileSync('./codegen.out.xml'), rootctx.types.df);
+
+rootctx.types['df.world.T_map'].block_index = { _array: { _array: { _array:'df.map_block' } } };
+rootctx.types['df.world.T_map'].column_index = { _array: { _array: 'df.map_block_column' } };
+rootctx.types.df.map_block.tiletype = { _array: { _array: 'df.tiletype' } };
+rootctx.types.df.map_block.designation = { _array: { _array: 'df.tile_designation' } };
+rootctx.types.df.block_square_event_grassst.amount = { _array: { _array: 'number' } }; 
 
 fs.writeFileSync('./ctx.json', JSON.stringify(rootctx));
