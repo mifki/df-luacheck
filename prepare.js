@@ -105,6 +105,7 @@ var rootctx = {
 		'dfhack.units.isCitizen': 'bool',
 		'dfhack.units.getVisibleName': 'df.language_name',
 		'dfhack.units.getProfessionColor': 'number',
+		'dfhack.units.getNemesis': 'df.nemesis_record',
 		'dfhack.items.getGeneralRef': 'df.general_ref',
 		'dfhack.items.getDescription': 'string',
 		'dfhack.matinfo.decode': 'matinfo',
@@ -119,6 +120,7 @@ var rootctx = {
 
 		'native.set_timer':'none',
 		
+		'mkmodule': 'none',
 	},
 
 	parent: null,
@@ -171,7 +173,10 @@ function processStruct(def, n)
 			if (meta == 'number')
 			{
 				//TODO: subtype == 'flag-bit' -> bool, but what if bits > 1 ?
-				type[fname] = 'number';
+				if (fdef.$['subtype'] == 'flag-bit' && fdef.$['bits'] == 1)
+					type[fname] = 'bool';
+				else
+					type[fname] = 'number';
 			}
 			else if (meta == 'primitive')
 			{
@@ -344,6 +349,7 @@ function processXml(xml, ctxtypes)
 			if (def.$['meta'] == 'class-type' || def.$['meta'] == 'struct-type' || def.$['meta'] == 'bitfield-type') {
 				var n = def.$['type-name'];
 				ctxtypes[n] = processStruct(def, 'df.'+n);
+				// rootctx.functions['df.'+n+'.new'] = 'df.'+n;
 				if (def.$['instance-vector']) {
 					var v = def.$['instance-vector'];
 					rootctx.functions['df.'+n+'.find'] = 'df.'+n;

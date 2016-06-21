@@ -23,9 +23,8 @@ var incpath = [ '../../df/df_linux/hack/lua' ];
 var reqignore = [ 'remote.utf8.utf8data', 'remote.utf8.utf8', 'remote.JSON', 'remote.MessagePack', 'remote.underscore', 'gui', 'utils' ];
 
 var src = fs.readFileSync(mainfn).toString();
-var ast = luaparser.parse(src, { comments:false, locations:true, ranges:true });
-var srcstack = [ src ];
-var fnstack = [ mainfn ];
+var ast = luaparser.parse(src, { comments:true, locations:true, ranges:true });
+var srcstack = [ { src:src, fn:mainfn, comments:ast.comments } ];
 // console.log(JSON.stringify(ast,null,2));
 console.log('---------------------------');
 
@@ -55,7 +54,7 @@ function findguess(name, ctx) {
 
 
 function expandtype(name, ctx) {
-	if (name == 'number' || name == 'string')
+	if (name == 'number' || name == 'string' || name == 'bool' || name == 'none' || name == 'null')
 		return name;
 	
 	if (typeof name == 'string') {
@@ -179,7 +178,7 @@ function checktype(expr, ctx, opts) {
 	}
 	
 	if (expr.type == 'FunctionDeclaration') {
-		return { _type:'function', _node:expr, _ctx:ctx, _src:srcstack[srcstack.length-1], _srcfn:fnstack[fnstack.length-1] };
+		return { _type:'function', _node:expr, _ctx:ctx, _src:srcstack[srcstack.length-1] };
 	};
 
 	if (expr.type == 'CallExpression') {
@@ -205,12 +204,10 @@ function checktype(expr, ctx, opts) {
 			}
 			
 			if (src) {
-				var ast = luaparser.parse(src, { comments:false, locations:true, ranges:true });		
-				srcstack.push(src);
-				fnstack.push(fn);
-				process(ast.body, rootctx);
+				var ast = luaparser.parse(src, { comments:true, locations:true, ranges:true });		
+				srcstack.push({src:src, fn:fn, comments:ast.comments});
+				process(ast.body, ctx);
 				srcstack.pop();
-				fnstack.pop();
 			}
 		}
 		
@@ -254,7 +251,7 @@ function checktype(expr, ctx, opts) {
 				//else
 					//res = t1;
 			} else if (expr.operator == 'or') {
-				if (t1 != 'bool' && t1 != 'null' && t1 != '__unknown')
+				if ((t1 != 'bool' && t1 != 'null' && t1 != '__unknown') || t2 == '__unknown')
 					res = t1;
 				else
 					res = t2;
@@ -350,12 +347,22 @@ function fntype(call, ctx) {
 	if (fnname.match('\\.delete$'))
 		return 'none';
 		
+	//TODO: check that assignment is correct somehow ?
+	if (fnname.match('\\.assign'))
+		return 'none';
+
+	if (fnname.match('\\.new')) 
+		return expandtype(fnname.slice(0, -4), ctx);
+
+	if (fnname.match('\\[\\]\\.(insert|delete)$'))
+		return 'none';
+
 	if (fnname == 'utils.binsearch') {
 		var t = checktype(call.arguments[0], ctx);
 		if (t && t._array)
-			return t._array;
+			return expandtype(t._array, ctx);
 	}
-	
+		
 	// console.log(fnname, call.arguments);
 	// call.arguments.forEach(function(a) {
 	// 	console.log(checktype(a, ctx));
@@ -370,20 +377,19 @@ function fntype(call, ctx) {
 			if (call.arguments.length > k + 1) {
 				var t = checktype(call.arguments[k+1], ctx);
 				ctx2.types[fn.parameters[k].name] = t;
+			} else {
+				ctx2.types[fn.parameters[k].name] = 'null';
 			}
 		}
 		// console.log(ctx2);
 		
 		srcstack.push(a0._src);
-		fnstack.push(a0._srcfn);
 		var q = process(fn.body, ctx2);
 		srcstack.pop();
-		fnstack.pop();
 
 		return q;
 	}
 
-	var ctx2 = { types:{}, parent:ctx };
 	var fn = findfn(fnname,ctx);
 	if (!fn) {
 		err(call.loc.start.line, 'unknown function', chalk.bold(fnname));
@@ -393,18 +399,19 @@ function fntype(call, ctx) {
 	if (typeof fn == 'string')
 		return expandtype(fn, ctx);
 
+	var ctx2 = { types:{}, parent:fn._ctx };
 	for (var k = 0; k < fn.parameters.length; k++) {
 		if (call.arguments.length > k) {
 			var t = checktype(call.arguments[k], ctx);
 			ctx2.types[fn.parameters[k].name] = t;
+		} else {
+			ctx2.types[fn.parameters[k].name] = 'null';
 		}
 	}
 
 	srcstack.push(fn._src);
-	fnstack.push(fn._srcfn);
 	var q = process(fn.body, ctx2);
 	srcstack.pop();
-	fnstack.pop();
 
 	// console.log(fnname, 'returns', q);
 	return q;
@@ -418,7 +425,38 @@ function process(body, ctx) {
 			ctx.functions = ctx.functions || {};
 			ctx.functions[b.identifier.name] = b;
 			ctx.functions[b.identifier.name]._src = srcstack[srcstack.length-1];
-			ctx.functions[b.identifier.name]._srcfn = fnstack[fnstack.length-1];
+			ctx.functions[b.identifier.name]._ctx = ctx;
+			
+			var cs = srcstack[srcstack.length-1].comments;
+			if (cs) {
+				for (var j = 0; j < cs.length; j++) {
+					var c = cs[j];
+					
+					if (c.loc.start.line == b.loc.start.line-1 && c.value.substr(0,9) == 'luacheck:') {
+						var inp = c.value.match(/in=([^\s]*)/);
+						var outp = c.value.match(/out=([^\s]+)/);
+						
+						if (inp) {
+							var argtypes = inp[1].split(',');
+
+							var ctx2 = { types:{}, parent:ctx };
+							
+							for (var k = 0; k < b.parameters.length; k++) {
+								if (argtypes.length > k) {
+									var t = expandtype(argtypes[k], ctx);
+									ctx2.types[b.parameters[k].name] = t;
+								} else {
+									ctx2.types[b.parameters[k].name] = 'null';
+								}
+							}
+						
+							srcstack.push(b._src);
+							process(b.body, ctx2);
+							srcstack.pop();
+						}
+					}
+				}
+			}
 		}
 
 		if (b.type == 'LocalStatement') {
@@ -455,6 +493,8 @@ function process(body, ctx) {
 							}
 							c.types[n] = t;
 							found = true;
+							if (n=='event')
+							console.log(c.types[n]);
 							break;
 						}
 					}
@@ -536,13 +576,13 @@ function process(body, ctx) {
 
 function sub(range)
 {
-	return srcstack[srcstack.length-1].substring(range[0], range[1]);
+	return srcstack[srcstack.length-1].src.substring(range[0], range[1]);
 }
 
 function err(line)
 {
 	var args = Array.prototype.slice.call(arguments);
-	var fn = fnstack[fnstack.length-1].split('/').slice(-1)[0];
+	var fn = srcstack[srcstack.length-1].fn.split('/').slice(-1)[0];
 	args.splice(0, 1, chalk.red('ERROR ' + fn + ':' + line));
 	console.log.apply(null, args);
 }
@@ -550,7 +590,7 @@ function err(line)
 function warn(line)
 {
 	var args = Array.prototype.slice.call(arguments);
-	var fn = fnstack[fnstack.length-1].split('/').slice(-1)[0];
+	var fn = srcstack[srcstack.length-1].fn.split('/').slice(-1)[0];
 	args.splice(0, 1, chalk.yellow('WARN  ' + fn + ':' + line));
 	console.log.apply(null, args);
 }
