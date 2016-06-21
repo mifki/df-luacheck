@@ -104,6 +104,7 @@ var rootctx = {
 		'dfhack.units.getProfessionName': 'string',
 		'dfhack.units.isCitizen': 'bool',
 		'dfhack.units.getVisibleName': 'df.language_name',
+		'dfhack.units.getProfessionColor': 'number',
 		'dfhack.items.getGeneralRef': 'df.general_ref',
 		'dfhack.items.getDescription': 'string',
 		'dfhack.matinfo.decode': 'matinfo',

@@ -177,6 +177,10 @@ function checktype(expr, ctx, opts) {
 	if (expr.type == 'NilLiteral') {
 		return 'null';
 	}
+	
+	if (expr.type == 'FunctionDeclaration') {
+		return { _type:'function', _node:expr, _ctx:ctx, _src:srcstack[srcstack.length-1], _srcfn:fnstack[fnstack.length-1] };
+	};
 
 	if (expr.type == 'CallExpression') {
 		return fntype(expr, ctx);
@@ -350,6 +354,33 @@ function fntype(call, ctx) {
 		var t = checktype(call.arguments[0], ctx);
 		if (t && t._array)
 			return t._array;
+	}
+	
+	// console.log(fnname, call.arguments);
+	// call.arguments.forEach(function(a) {
+	// 	console.log(checktype(a, ctx));
+	// });
+	
+	if (fnname == 'pcall') {
+		var a0 = checktype(call.arguments[0], ctx);
+		var fn = a0._node;
+		var ctx2 = { types:{}, parent:a0._ctx };
+	
+		for (var k = 0; k < fn.parameters.length; k++) {
+			if (call.arguments.length > k + 1) {
+				var t = checktype(call.arguments[k+1], ctx);
+				ctx2.types[fn.parameters[k].name] = t;
+			}
+		}
+		// console.log(ctx2);
+		
+		srcstack.push(a0._src);
+		fnstack.push(a0._srcfn);
+		var q = process(fn.body, ctx2);
+		srcstack.pop();
+		fnstack.pop();
+
+		return q;
 	}
 
 	var ctx2 = { types:{}, parent:ctx };
