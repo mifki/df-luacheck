@@ -489,6 +489,7 @@ function process(body, ctx) {
 				if (b.init.length > j) {
 					var t = checktype(b.init[j], ctx);
 	
+					//TODO: check that casting to correct subclass
 					if (as && as.length > 0)
 						t = expandtype(as[0], ctx);
 

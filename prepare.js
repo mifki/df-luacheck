@@ -344,7 +344,12 @@ function processStruct(def, n)
 					else if (mdef.$$ && mdef.$$['ret-type']) {
 						if (mdef.$$['ret-type'].$.meta == 'pointer')
 							rettype = 'df.' + mdef.$$['ret-type'].$['language_name'];
+						else
+							console.log('rettype', mdef);
 					}
+					
+					else
+						rettype = 'none';
 					
 					if (rettype) {
 						type._methods = type._methods || {};
