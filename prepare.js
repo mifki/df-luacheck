@@ -56,7 +56,7 @@ var rootctx = {
 			}*/
 		},
 		
-		'matinfo': {
+		matinfo: {
 			_type: 'matinfo',
 			type: 'number',
 			index: 'number',
@@ -68,11 +68,29 @@ var rootctx = {
 			plant: 'df.plant_raw',
 			figure: 'df.historical_figure',
 		},
+		
+		coord2d: {
+			_type: 'coord2d',
+			x: 'number',
+			y: 'number',
+			z: 'number',
+		},
+		
+		mp: {
+			_type: 'MessagePack',
+			NIL: 'null',
+		},
+		
+		os: {
+			_type: 'os',
+			clock: { _type:'function', _node:'number' },
+		}
 	},
 
 	functions: {
 		error: 'none',
 		tostring: 'string',
+		tonumber: 'number',
 		print: 'none',
 		
 		'math.abs': 'number',
@@ -91,21 +109,19 @@ var rootctx = {
 		'bit32.lshift': 'number',
 		'bit32.rshift': 'number',
 		
-		'df.item.getWear': 'number',
-		'df.squad_order.reasonCannot': 'number',
-		'df.activity_event.getName': 'string',
-		'df.block_square_event.getType': 'df.block_square_event_type',
-		'df.building.getType': 'df.building_type',
-
+		'dfhack.DF_VERSION': 'string',
 		'dfhack.internal.setAddress': 'none',
 		'dfhack.getOSType': 'string',
 		'dfhack.df2utf': 'string',
 		'dfhack.gui.getCurViewscreen': 'df.viewscreen',
 		'dfhack.units.getProfessionName': 'string',
 		'dfhack.units.isCitizen': 'bool',
+		'dfhack.units.isOwnCiv': 'bool',
+		'dfhack.units.isOwnGroup': 'bool',
 		'dfhack.units.getVisibleName': 'df.language_name',
 		'dfhack.units.getProfessionColor': 'number',
 		'dfhack.units.getNemesis': 'df.nemesis_record',
+		'dfhack.units.getPosition': 'coord2d',
 		'dfhack.items.getGeneralRef': 'df.general_ref',
 		'dfhack.items.getDescription': 'string',
 		'dfhack.matinfo.decode': 'matinfo',
@@ -181,6 +197,10 @@ function processStruct(def, n)
 			else if (meta == 'primitive')
 			{
 				type[fname] = convertBasicType(fdef.$['subtype']);
+			}
+			else if (meta == 'container' && fdef.$.subtype == 'df-flagarray')
+			{
+				type[fname] = { _array:'number', _type:'bool[]', whole:'number' };
 			}
 			else if (meta == 'container' || meta == 'static-array')
 			{
@@ -277,15 +297,19 @@ function processStruct(def, n)
 			}
 			else if (meta == 'compound')
 			{
+				//TODO: if bitfield then create 0..X fields !							
+
 				if (fdef.$['typedef-name']) {
 					var tname = n + '.' + fdef.$['typedef-name'];
 					rootctx.types[tname] = processStruct(fdef, tname);
+					if (fdef.$['subtype'] == 'bitfield')
+						rootctx.types[tname].whole = 'number';							
+
 					type[fdef.$['name']] = tname;
 					type[fdef.$['typedef-name']] = tname;
 				}
 				else
-				{
-					//TODO: if bitfield then create 0..X fields
+				{					
 					/*if (fdef.$['type-name'])
 						type[fdef.$['name']] = fdef.$['type-name'];
 					else*/
@@ -294,13 +318,40 @@ function processStruct(def, n)
 						for (var j in u)
 							type[j] = u[j];
 					}
-					else
+					else {
 						type[fdef.$['name']] = processStruct(fdef);
+						
+						if (fdef.$['subtype'] == 'bitfield')
+							type[fdef.$['name']].whole = 'number';							
+					}
 				}
 			}
 			else
 				throw new Error('unknown meta '+meta);
 		
+		} else if (t == 'virtual-methods') {
+			ensureArray(fdef.vmethod).forEach(function(mdef) {
+				if (mdef.$.name) {
+					var rettype;
+					if (mdef.$['ret-type']) {
+						try {
+							rettype = convertBasicType(mdef.$['ret-type']);
+						} catch (e) {
+							rettype = 'df.' + mdef.$['ret-type'];
+						}
+					}
+					
+					else if (mdef.$$ && mdef.$$['ret-type']) {
+						if (mdef.$$['ret-type'].$.meta == 'pointer')
+							rettype = 'df.' + mdef.$$['ret-type'].$['language_name'];
+					}
+					
+					if (rettype) {
+						type._methods = type._methods || {};
+						type._methods[mdef.$.name] = rettype;
+					}
+				}
+			});
 		}
 	});
 
@@ -321,7 +372,7 @@ function processEnum(def, n)
 
 		if (t == 'enum-item') {
 			var fname = fdef.$ && fdef.$['name'] || ('anon_'+anon++);
-			type[fname] = 'number';
+			type[fname] = n;//'number';
 		}
 		
 		else if (t == 'enum-attr') {
@@ -427,7 +478,7 @@ fs.readdirSync('./df').forEach(function(f) {
 	}
 });*/
 
-processXml(fs.readFileSync('./codegen.out.xml'), rootctx.types.df);
+processXml(fs.readFileSync('./codegen_4206.out.xml'), rootctx.types.df);
 
 rootctx.types['df.world.T_map'].block_index = { _array: { _array: { _array:'df.map_block' } } };
 rootctx.types['df.world.T_map'].column_index = { _array: { _array: 'df.map_block_column' } };

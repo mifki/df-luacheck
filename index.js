@@ -19,8 +19,9 @@ var rootctx = JSON.parse(fs.readFileSync('ctx.json'));
 
 var mainfn = _process.argv[_process.argv.length-1];
 var basedir = path.dirname(mainfn);
-var incpath = [ '../../df/df_linux/hack/lua' ];
-var reqignore = [ 'remote.utf8.utf8data', 'remote.utf8.utf8', 'remote.JSON', 'remote.MessagePack', 'remote.underscore', 'gui', 'utils' ];
+var incpath = [ '/home/vit/c9workspace/dfremote' ];
+var reqignore = [ 'remote.utf8.utf8data', 'remote.utf8.utf8', 'remote.JSON', 'remote.MessagePack', 'remote.underscore', 'gui', 'utils', 'compat' ];
+var fnstocheck = [];
 
 var src = fs.readFileSync(mainfn).toString();
 var ast = luaparser.parse(src, { comments:true, locations:true, ranges:true });
@@ -37,6 +38,23 @@ function findtype(name, ctx) {
 }
 
 function findfn(name, ctx) {
+	if (name.substr(0,3) == 'df.') {
+		var dot = name.lastIndexOf('.');
+		if (dot != -1) {
+			var t = expandtype(name.substr(0, dot), ctx);
+			var n = name.substr(dot+1);
+			if (t && t != '__unknown') {
+				for (var o = t; o; o = expandtype(o._super,ctx)) {
+					if (o._methods && o._methods[n])
+						return o._methods[n];
+				}
+			}
+		}
+	}
+	
+	if (ctx.types && ctx.types[name] && ctx.types[name]._type == 'function')
+		return ctx.types[name];
+
 	if (ctx.functions && ctx.functions[name])
 		return ctx.functions[name];
 
@@ -128,7 +146,7 @@ function checktype(expr, ctx, opts) {
 		for (var o = baset; o && !t; o = expandtype(o._super,ctx)) {
 			t = o[expr.identifier.name]
 		}
-		
+
 		if (!t && baset._sub) {
 			for (var j in baset._sub) {
 				var subt = expandtype(baset._sub[j], ctx);
@@ -178,6 +196,8 @@ function checktype(expr, ctx, opts) {
 	}
 	
 	if (expr.type == 'FunctionDeclaration') {
+		expr._ctx = ctx;
+		expr._src = srcstack[srcstack.length-1];
 		return { _type:'function', _node:expr, _ctx:ctx, _src:srcstack[srcstack.length-1] };
 	};
 
@@ -209,6 +229,9 @@ function checktype(expr, ctx, opts) {
 				process(ast.body, ctx);
 				srcstack.pop();
 			}
+		} else {
+			if (expr.argument.value == 'remote.MessagePack')
+				return rootctx.types.mp;
 		}
 		
 		return 'none';
@@ -398,6 +421,9 @@ function fntype(call, ctx) {
 
 	if (typeof fn == 'string')
 		return expandtype(fn, ctx);
+		
+	if (fn._type == 'function')
+		fn = fn._node;
 
 	var ctx2 = { types:{}, parent:fn._ctx };
 	for (var k = 0; k < fn.parameters.length; k++) {
@@ -436,34 +462,35 @@ function process(body, ctx) {
 						var inp = c.value.match(/in=([^\s]*)/);
 						var outp = c.value.match(/out=([^\s]+)/);
 						
-						if (inp) {
-							var argtypes = inp[1].split(',');
-
-							var ctx2 = { types:{}, parent:ctx };
-							
-							for (var k = 0; k < b.parameters.length; k++) {
-								if (argtypes.length > k) {
-									var t = expandtype(argtypes[k], ctx);
-									ctx2.types[b.parameters[k].name] = t;
-								} else {
-									ctx2.types[b.parameters[k].name] = 'null';
-								}
-							}
-						
-							srcstack.push(b._src);
-							process(b.body, ctx2);
-							srcstack.pop();
-						}
+						if (inp)
+							fnstocheck.push({node:b, inp:inp});
 					}
 				}
 			}
 		}
 
 		if (b.type == 'LocalStatement') {
+			var cs = srcstack[srcstack.length-1].comments;
+			var as = null;
+			if (cs) {
+				for (var j = 0; j < cs.length; j++) {
+					var c = cs[j];
+					if (c.loc.start.line == b.loc.start.line && c.value.substr(0,3) == 'as:') {
+						var m = c.value.match(/as:\s*([^\s]+)/);
+						if (m)
+							as = m[1].split(',');
+					}
+				}
+			}
+
 			for (var j = 0; j < b.variables.length; j++) {
 				var n = b.variables[j].name;
 				if (b.init.length > j) {
 					var t = checktype(b.init[j], ctx);
+	
+					if (as && as.length > 0)
+						t = expandtype(as[0], ctx);
+
 					if (t == '__unknown')
 						err(b.loc.start.line, 'type of expression is unknown', chalk.bold(sub(b.init[j].range)));
 					ctx.types[n] = t;
@@ -476,8 +503,7 @@ function process(body, ctx) {
 			if (b.variables[0].type == 'Identifier') {
 				var n = b.variables[0].name;
 				var t = checktype(b.init[0],ctx);
-				if (!t)
-					console.log(b.init[0]);
+								
 				if (t == '__unknown')
 					err(b.loc.start.line, 'type of expression is unknown', chalk.bold(sub(b.init[0].range)));
 	
@@ -493,8 +519,6 @@ function process(body, ctx) {
 							}
 							c.types[n] = t;
 							found = true;
-							if (n=='event')
-							console.log(c.types[n]);
 							break;
 						}
 					}
@@ -503,7 +527,7 @@ function process(body, ctx) {
 						warn(b.loc.start.line, 'assignment to global/unknown var', b.variables[0].name);
 						ctx.types[n] = t;
 					}
-				}
+				}				
 
 			} else if (b.variables[0].type == 'MemberExpression') {
 				var lt = checktype(b.variables[0], ctx)
@@ -538,9 +562,12 @@ function process(body, ctx) {
 				//	err(b.loc.start.line, 'skipped loop');
 				//else
 				{
+					ctx2.types[b.variables[0].name] = 'number';
 					ctx2.types[b.variables[1].name] = expandtype(t._array, ctx);
 					rettype = process(b.body, ctx2) || rettype;
 				}
+			} else {
+				warn(b.loc.start.line, 'unsupported for loop');
 			}
 		}
 
@@ -596,5 +623,27 @@ function warn(line)
 }
 
 process(ast.body, rootctx);
+
+fnstocheck.forEach(function(fn) {
+	var b = fn.node;
+	var ctx = b._ctx;
+	var inp = fn.inp;
+	var argtypes = inp[1].split(',');
+
+	var ctx2 = { types:{}, parent:ctx };
+	
+	for (var k = 0; k < b.parameters.length; k++) {
+		if (argtypes.length > k) {
+			var t = expandtype(argtypes[k], ctx);
+			ctx2.types[b.parameters[k].name] = t;
+		} else {
+			ctx2.types[b.parameters[k].name] = 'null';
+		}
+	}
+
+	srcstack.push(b._src);
+	process(b.body, ctx2);
+	srcstack.pop();
+});
 
 //console.log(functions);
