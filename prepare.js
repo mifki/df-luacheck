@@ -126,6 +126,8 @@ var rootctx = {
 		'dfhack.items.getDescription': 'string',
 		'dfhack.matinfo.decode': 'matinfo',
 		'dfhack.job.getName': 'string',
+		'dfhack.job.getWorker': 'df.unit',
+		'dfhack.job.getGeneralRef': 'df.general_ref',
 		'dfhack.maps.getRegionBiome': 'df.region_map_entry',
 		
 		'utils.call_with_string': 'string',
@@ -188,8 +190,7 @@ function processStruct(def, n)
 
 			if (meta == 'number')
 			{
-				//TODO: subtype == 'flag-bit' -> bool, but what if bits > 1 ?
-				if (fdef.$['subtype'] == 'flag-bit' && fdef.$['bits'] == 1)
+				if (fdef.$['subtype'] == 'bool' || (fdef.$['subtype'] == 'flag-bit' && fdef.$['bits'] == 1)) //TODO: can bits be >1 ?
 					type[fname] = 'bool';
 				else
 					type[fname] = 'number';
@@ -198,7 +199,7 @@ function processStruct(def, n)
 			{
 				type[fname] = convertBasicType(fdef.$['subtype']);
 			}
-			else if (meta == 'container' && fdef.$.subtype == 'df-flagarray')
+			else if (meta == 'container' && (fdef.$.subtype == 'df-flagarray' || fdef.$.subtype == 'stl-bit-vector'))
 			{
 				type[fname] = { _array:'number', _type:'bool[]', whole:'number' };
 			}
@@ -341,11 +342,11 @@ function processStruct(def, n)
 						}
 					}
 					
-					else if (mdef.$$ && mdef.$$['ret-type']) {
-						if (mdef.$$['ret-type'].$.meta == 'pointer')
-							rettype = 'df.' + mdef.$$['ret-type'].$['language_name'];
+					else if (mdef['ret-type']) {
+						if (mdef['ret-type'].$.meta == 'pointer')
+							rettype = 'df.' + mdef['ret-type'].$['type-name'];
 						else
-							console.log('rettype', mdef);
+							console.log('rettype', mdef['ret-type']);
 					}
 					
 					else
@@ -490,5 +491,7 @@ rootctx.types['df.world.T_map'].column_index = { _array: { _array: 'df.map_block
 rootctx.types.df.map_block.tiletype = { _array: { _array: 'df.tiletype' } };
 rootctx.types.df.map_block.designation = { _array: { _array: 'df.tile_designation' } };
 rootctx.types.df.block_square_event_grassst.amount = { _array: { _array: 'number' } }; 
+rootctx.types.df.viewscreen_unitlistst.units = { _array: { _type:'df.unit[]', _array: 'df.unit' } }; 
+rootctx.types.df.viewscreen_unitlistst.jobs = { _array: { _type:'df.job[]', _array: 'df.job' } }; 
 
 fs.writeFileSync('./ctx.json', JSON.stringify(rootctx));

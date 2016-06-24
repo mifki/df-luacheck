@@ -146,6 +146,27 @@ function checktype(expr, ctx, opts) {
 		for (var o = baset; o && !t; o = expandtype(o._super,ctx)) {
 			t = o[expr.identifier.name]
 		}
+		
+		if (!t && baset._sub) {
+			var cs = srcstack[srcstack.length-1].comments;
+			if (cs) {
+				for (var j = 0; j < cs.length; j++) {
+					var c = cs[j];
+					if (c.loc.start.line == expr.loc.start.line && c.value.substr(0,5) == 'hint:') {
+						var m = c.value.match(/hint:\s*([^\s]+)/);
+						var hint = m[1];
+						
+						if (baset._sub.indexOf(hint) != -1) {
+							var subt = expandtype(hint, ctx);
+							t = subt[expr.identifier.name];
+						} else
+							err(expr.loc.start.line, 'hint', chalk.bold(hint), 'is not a subclass of', chalk.bold(baset._type));		
+						
+						break;
+					}
+				}
+			}			
+		}
 
 		if (!t && baset._sub) {
 			for (var j in baset._sub) {
@@ -385,6 +406,11 @@ function fntype(call, ctx) {
 		if (t && t._array)
 			return expandtype(t._array, ctx);
 	}
+	
+	if (fnname == 'df.reinterpret_cast') {
+		var t = checktype(call.arguments[0], ctx);
+		return t;
+	}
 		
 	// console.log(fnname, call.arguments);
 	// call.arguments.forEach(function(a) {
@@ -465,6 +491,8 @@ function process(body, ctx) {
 						
 						if (inp)
 							fnstocheck.push({node:b, inp:inp});
+							
+						break;
 					}
 				}
 			}
@@ -480,6 +508,8 @@ function process(body, ctx) {
 						var m = c.value.match(/as:\s*([^\s]+)/);
 						if (m)
 							as = m[1].split(',');
+							
+						break;
 					}
 				}
 			}
@@ -502,10 +532,29 @@ function process(body, ctx) {
 		}
 
 		if (b.type == 'AssignmentStatement') {
+			var cs = srcstack[srcstack.length-1].comments;
+			var as = null;
+			if (cs) {
+				for (var j = 0; j < cs.length; j++) {
+					var c = cs[j];
+					if (c.loc.start.line == b.loc.start.line && c.value.substr(0,3) == 'as:') {
+						var m = c.value.match(/as:\s*([^\s]+)/);
+						if (m)
+							as = m[1].split(',');
+							
+						break;
+					}
+				}
+			}
+
 			if (b.variables[0].type == 'Identifier') {
 				var n = b.variables[0].name;
 				var t = checktype(b.init[0],ctx);
 								
+				//TODO: check that casting to correct subclass
+				// if (as && as.length > 0)
+				// 	t = expandtype(as[0], ctx);
+
 				if (t == '__unknown')
 					err(b.loc.start.line, 'type of expression is unknown', chalk.bold(sub(b.init[0].range)));
 	
@@ -526,7 +575,7 @@ function process(body, ctx) {
 					}
 		
 					if (!found) {
-						warn(b.loc.start.line, 'assignment to global/unknown var', b.variables[0].name);
+						//warn(b.loc.start.line, 'assignment to global/unknown var', b.variables[0].name);
 						ctx.types[n] = t;
 					}
 				}				
@@ -556,7 +605,7 @@ function process(body, ctx) {
 		}
 
 		if (b.type == 'ForGenericStatement') {
-			if (b.iterators[0].base.name == 'ipairs') {
+			if (b.iterators[0].base.name == 'ipairs' || b.iterators[0].base.name == 'ripairs') {
 				var ctx2 = { parent:ctx, types:{} };
 				var t = checktype(b.iterators[0].arguments[0],ctx);
 				// console.log('$$$',b.iterators[0].arguments[0], t);
