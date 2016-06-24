@@ -448,10 +448,11 @@ function process(body, ctx) {
 
 	body.forEach(function(b) {
 		if (b.type == 'FunctionDeclaration') {
-			ctx.functions = ctx.functions || {};
-			ctx.functions[b.identifier.name] = b;
-			ctx.functions[b.identifier.name]._src = srcstack[srcstack.length-1];
-			ctx.functions[b.identifier.name]._ctx = ctx;
+			//TODO: 'local function' should use ctx while 'function' rootctx
+			rootctx.functions = rootctx.functions || {};
+			rootctx.functions[b.identifier.name] = b;
+			rootctx.functions[b.identifier.name]._src = srcstack[srcstack.length-1];
+			rootctx.functions[b.identifier.name]._ctx = rootctx;
 			
 			var cs = srcstack[srcstack.length-1].comments;
 			if (cs) {
