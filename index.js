@@ -333,14 +333,14 @@ function checktype(expr, ctx, opts) {
 	if (expr.type == 'TableConstructorExpression') {
 		//console.log(expr.fields);
 		if (!expr.fields.length)
-			return { _type:'custom' };
+			return { _type:'table' };
 			
 		if (expr.fields[0].type == 'TableValue') {
-			return { _array:checktype(expr.fields[0].value,ctx)||'__undefined', _type:'custom' };
+			return { _array:checktype(expr.fields[0].value,ctx)||'__undefined', _type:'table' };
 		}
 		
 		//TODO: key-value pairs
-		return { _type:'custom' };
+		return { _type:'table' };
 	}
 
 	return '__unknown';
@@ -398,6 +398,29 @@ function fntype(call, ctx) {
 	if (fnname.match('\\.new')) 
 		return expandtype(fnname.slice(0, -4), ctx);
 
+	if (fnname == 'table.insert') {
+		var k = (call.arguments.length == 3 ? 2 : 1);
+		var t = checktype(call.arguments[0], ctx) || '__unknown';
+		var rt = checktype(call.arguments[k], ctx) || '__unknown';
+		
+		if (rt == '__unknown')
+			err(call.loc.start.line, 'type of expression is unknown', chalk.bold(sub(call.arguments[k].range)));
+			
+		if (t == '__unknown')
+			err(call.loc.start.line, 'type of expression is unknown', chalk.bold(sub(call.arguments[0].range)));
+		else {
+			if (t._type == 'table') {
+				if (t._array && (t._array._type||t._array) != (rt._type||rt))
+					warn(call.loc.start.line, 'inserting', chalk.bold(rt._type||rt), 'to a table with', chalk.bold(t._array._type || t._array));
+				else
+					t._array = rt;
+			} else
+				err(call.loc.start.line, 'type of table.insert argument is not a table', chalk.bold(sub(call.arguments[0].range)));			
+		}
+			
+		return 'none';
+	}
+
 	if (fnname.match('\\[\\]\\.(insert|delete)$'))
 		return 'none';
 
@@ -435,8 +458,8 @@ function fntype(call, ctx) {
 		srcstack.push(a0._src);
 		var q = process(fn.body, ctx2);
 		srcstack.pop();
-
-		return q;
+// console.log('pcall returns', q&&q._type||q);
+		return { _type:'tuple', _tuple:['bool', q] };
 	}
 
 	var fn = findfn(fnname,ctx);
@@ -465,7 +488,7 @@ function fntype(call, ctx) {
 	var q = process(fn.body, ctx2);
 	srcstack.pop();
 
-	// console.log(fnname, 'returns', q);
+	// console.log(fnname, 'returns', q&&q._type||q);
 	return q;
 }
 
@@ -474,11 +497,11 @@ function process(body, ctx) {
 
 	body.forEach(function(b) {
 		if (b.type == 'FunctionDeclaration') {
-			//TODO: 'local function' should use ctx while 'function' rootctx
-			rootctx.functions = rootctx.functions || {};
-			rootctx.functions[b.identifier.name] = b;
-			rootctx.functions[b.identifier.name]._src = srcstack[srcstack.length-1];
-			rootctx.functions[b.identifier.name]._ctx = rootctx;
+			var c = b.isLocal ? ctx : rootctx;
+			c.functions = c.functions || {};
+			c.functions[b.identifier.name] = b;
+			c.functions[b.identifier.name]._src = srcstack[srcstack.length-1];
+			c.functions[b.identifier.name]._ctx = c;
 			
 			var cs = srcstack[srcstack.length-1].comments;
 			if (cs) {
@@ -513,18 +536,37 @@ function process(body, ctx) {
 					}
 				}
 			}
+			
+			var righttypes = [];
+			for (var j = 0; j < b.init.length; j++)
+			{
+				var t = checktype(b.init[j], ctx);
+				
+				if (t._tuple) {
+					for (var k = 0; k < t._tuple.length; k++)
+						righttypes.push(t._tuple[k]);
+					
+					break;
+				}
+				
+				if (t == '__unknown')
+					err(b.loc.start.line, 'type of expression is unknown', chalk.bold(sub(b.init[j].range)));				
+					
+				righttypes.push(t);
+			}
 
 			for (var j = 0; j < b.variables.length; j++) {
 				var n = b.variables[j].name;
-				if (b.init.length > j) {
-					var t = checktype(b.init[j], ctx);
+				if (righttypes.length > j) {
+					var t = righttypes[j];
 	
 					//TODO: check that casting to correct subclass
-					if (as && as.length > 0)
-						t = expandtype(as[0], ctx);
-
-					if (t == '__unknown')
-						err(b.loc.start.line, 'type of expression is unknown', chalk.bold(sub(b.init[j].range)));
+					if (as && as.length > j) {
+						t = expandtype(as[j], ctx);	
+						if (t == '__unknown')
+							err(b.loc.start.line, 'type of expression is unknown', chalk.bold(as[j]));
+					}
+					
 					ctx.types[n] = t;
 				} else 
 					ctx.types[n] = 'null';
@@ -565,7 +607,7 @@ function process(body, ctx) {
 					for (var c = ctx; c; c = c.parent) {
 						if (c.types[n]) {
 							if (c.types[n] != 'null' && c.types[n] != t && t != '__unknown' && t != 'null' &&
-								c.types[n]._type != 'custom') {
+								c.types[n]._type != 'table') {
 								err(b.loc.start.line, 'assigning', chalk.bold(sub(b.init[0].range)), 'of type', chalk.bold(t&&t._type||t), 'to', chalk.bold(b.variables[0].name), 'of type', chalk.bold(c.types[n]._type||c.types[n]));
 							}
 							c.types[n] = t;
@@ -607,16 +649,16 @@ function process(body, ctx) {
 		if (b.type == 'ForGenericStatement') {
 			if (b.iterators[0].base.name == 'ipairs' || b.iterators[0].base.name == 'ripairs') {
 				var ctx2 = { parent:ctx, types:{} };
-				var t = checktype(b.iterators[0].arguments[0],ctx);
-				// console.log('$$$',b.iterators[0].arguments[0], t);
-				//if (t == '__unknown')
-				//	err(b.loc.start.line, 'skipped loop');
-				//else
-				{
-					ctx2.types[b.variables[0].name] = 'number';
-					ctx2.types[b.variables[1].name] = expandtype(t._array, ctx);
-					rettype = process(b.body, ctx2) || rettype;
+				var t = checktype(b.iterators[0].arguments[0],ctx) || '__unknown';
+
+				if (t == '__unknown') {
+					err(b.loc.start.line, 'type of expression is unknown', chalk.bold(sub(b.iterators[0].arguments[0].range)));
+					t = { _array:'unknown' };
 				}
+
+				ctx2.types[b.variables[0].name] = 'number';
+				ctx2.types[b.variables[1].name] = expandtype(t._array, ctx);
+				rettype = process(b.body, ctx2) || rettype;
 			} else {
 				warn(b.loc.start.line, 'unsupported for loop');
 			}

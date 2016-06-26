@@ -129,8 +129,14 @@ var rootctx = {
 		'dfhack.job.getWorker': 'df.unit',
 		'dfhack.job.getGeneralRef': 'df.general_ref',
 		'dfhack.maps.getRegionBiome': 'df.region_map_entry',
+		'dfhack.buildings.deconstruct': 'none',
+		'dfhack.maps.getBlock': 'df.map_block',
+		'dfhack.burrows.setAssignedUnit': 'none',
 		
 		'utils.call_with_string': 'string',
+		'utils.insert_sorted': 'none',
+		'utils.erase_sorted': 'none',
+		'utils.erase_sorted_key': 'none',
 		
 		'gui.simulateInput':'none',
 		
@@ -162,6 +168,41 @@ function convertBasicType(t)
 		return t;
 
 	throw new Error('unknown primitive subtype '+t);
+}
+
+function container_type(fdef, type)
+{
+	var item = fdef.item;
+
+	if (item) {
+		var imeta = item.$['meta'];
+		
+		if (imeta == 'pointer' || imeta == 'global') {
+			var item2 = item.item;
+			if (item2 && item2.$.meta == 'compound') {
+				var tname = type._type + '.' + item2.$['typedef-name'];
+				rootctx.types[tname] = processStruct(item2, tname);
+				type[item2.$['typedef-name']] = tname;
+				return { _array:tname }
+			} else if (item2 && item2.$.meta == 'static-array') {
+				return { _array: { _type:'df.'+item2.item.$['type-name']+'[]', _array:'df.'+item2.item.$['type-name'] } };
+			} else
+				return { _array: 'df.'+item.$['type-name'] };
+		} else if (imeta == 'number')
+			return { _array: 'number' };
+		else if (imeta == 'primitive')
+			return { _array: convertBasicType(item.$['subtype']) };
+		else if (imeta == 'compound') {
+			return { _array: processStruct(item) };
+		}
+		else {
+			// console.log('V1', fdef);
+			//console.log('#',convertBasicType(imeta));
+		}
+	}
+
+	else // vector<void*>
+		return { _array:'number' };	
 }
 
 function processStruct(def, n)
@@ -201,40 +242,24 @@ function processStruct(def, n)
 			}
 			else if (meta == 'container' && (fdef.$.subtype == 'df-flagarray' || fdef.$.subtype == 'stl-bit-vector'))
 			{
-				type[fname] = { _array:'number', _type:'bool[]', whole:'number' };
+				var t = { _array:'bool', _type:'bool[]', whole:'number' };
+				type[fname] = t;
+				
+				if (fdef.$['index-enum']) {
+					var e = rootctx.types.df[fdef.$['index-enum']];
+					if (e) {
+						Object.keys(e).forEach(function(k) {
+							if (k.substr(0,1) != '_')
+								t[k] = t._array;
+						});
+					} else
+						console.log('no enum', fdef.$['index-enum']);
+				}
+				
 			}
 			else if (meta == 'container' || meta == 'static-array')
 			{
-				var item = fdef.item;
-
-				if (item) {
-					var imeta = item.$['meta'];
-					
-					if (imeta == 'pointer' || imeta == 'global') {
-						var item2 = item.item;
-						if (item2 && item2.$.meta == 'compound') {
-							var tname = n + '.' + item2.$['typedef-name'];
-							rootctx.types[tname] = processStruct(item2, tname);
-							type[fname] = { _array:tname }
-							type[item2.$['typedef-name']] = tname;
-						} else if (item2 && item2.$.meta == 'static-array') {
-							type[fname] = { _array: { _type:'df.'+item2.item.$['type-name']+'[]', _array:'df.'+item2.item.$['type-name'] } };
-						} else
-							type[fname] = { _array: 'df.'+item.$['type-name'] };
-					} else if (imeta == 'number')
-						type[fname] = { _array: 'number' };
-					else if (imeta == 'primitive')
-						type[fname] = { _array: convertBasicType(item.$['subtype']) };
-					else if (imeta == 'compound') {
-						type[fname] = { _array: processStruct(item) };
-					}
-					else {
-						// console.log('V1', fdef);
-						//console.log('#',convertBasicType(imeta));
-					}
-				}
-				else
-					;// console.log('V2', fdef);
+				type[fname] = container_type(fdef, type);
 					
 				if (type[fname] && type[fname]._array)
 				{
@@ -263,6 +288,10 @@ function processStruct(def, n)
 					type[item2.$['typedef-name']] = tname;
 
 					//type[fname] = processStruct(fdef.item);
+				
+				} else if (fdef.item && fdef.item.$['meta'] == 'container') {
+					type[fname] = container_type(fdef.item, type);
+				
 				} else {
 					var t;
 					try {
@@ -426,12 +455,19 @@ function processXml(xml, ctxtypes)
 				
 				if (imeta == 'pointer' || imeta == 'global')
 					rootctx.types.df.global[def.$['name']] = 'df.'+item.$['type-name'];
-				else if (imeta == 'number')
-					rootctx.types.df.global[def.$['name']] = 'number';
-				else if (imeta == 'primitive')
+				
+				else if (imeta == 'number') {
+					if (item.$['subtype'] == 'bool' || (item.$['subtype'] == 'flag-bit' && item.$['bits'] == 1)) //TODO: can bits be >1 ?
+						rootctx.types.df.global[def.$['name']] = 'bool';
+					else
+						rootctx.types.df.global[def.$['name']] = 'number';
+					
+				} else if (imeta == 'primitive')
 					rootctx.types.df.global[def.$['name']] = convertBasicType(item.$['subtype']);
+				
 				else if (imeta == 'compound') {
 					rootctx.types.df.global[def.$['name']] = processStruct(item);
+				
 				} else if (imeta == 'container') {
 					var item3 = item.item;
 
