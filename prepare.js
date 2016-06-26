@@ -101,8 +101,12 @@ var rootctx = {
 		
 		'math.abs': 'number',
 		'math.floor': 'number',
+		'math.min': 'number',
+		'math.max': 'number',
+		'math.random': 'number',
 		
 		'table.insert': 'none',
+		'table.remove': 'none',
 		'table.sort': 'none',
 		'table.pack': 'table',
 				
@@ -195,7 +199,7 @@ function container_type(fdef, type)
 		var imeta = item.$['meta'];
 		
 		if (imeta == 'pointer' || imeta == 'global') {
-			var item2 = item.item;
+			/*var item2 = item.item;
 			if (item2 && item2.$.meta == 'compound') {
 				var tname = type._type + '.' + item2.$['typedef-name'];
 				rootctx.types[tname] = processStruct(item2, tname);
@@ -204,18 +208,27 @@ function container_type(fdef, type)
 			} else if (item2 && item2.$.meta == 'static-array') {
 				return { _array: { _type:'df.'+item2.item.$['type-name']+'[]', _array:'df.'+item2.item.$['type-name'] } };
 			} else
-				return { _array: 'df.'+item.$['type-name'], _type:'df.'+item.$['type-name']+'[]' };
-		} else if (imeta == 'number')
+				return { _array: 'df.'+item.$['type-name'], _type:'df.'+item.$['type-name']+'[]' };*/
+
+			//TODO: set _type
+			var t = pointer_type(fdef.item, type);
+			return { _array: t, _type:t+'[]' };
+		
+		} else if (imeta == 'number') {
 			return { _array: 'number' };
-		else if (imeta == 'container' || imeta == 'static-array') {
+		
+		} else if (imeta == 'container' || imeta == 'static-array') {
 			//TODO: set _type
 			return { _array: container_type(fdef.item, type) };
-		} else if (imeta == 'primitive')
+		
+		} else if (imeta == 'primitive') {
+			console.log(item.$['subtype'], convertBasicType(item.$['subtype']));
 			return { _array: convertBasicType(item.$['subtype']) };
-		else if (imeta == 'compound') {
+		
+		} else if (imeta == 'compound') {
 			return { _array: processStruct(item) };
-		}
-		else {
+		
+		} else {
 			// console.log('V1', fdef);
 			//console.log('#',convertBasicType(imeta));
 		}
@@ -236,7 +249,7 @@ function pointer_type(fdef, type)
 
 		//type[fname] = processStruct(fdef.item);
 	
-	} else if (fdef.item && fdef.item.$['meta'] == 'container') {
+	} else if (fdef.item && (fdef.item.$['meta'] == 'container' || fdef.item.$['meta'] == 'static-array')) {
 		return container_type(fdef.item, type);
 		
 	} else if (fdef.item && fdef.item.$['meta'] == 'pointer' && fdef.$['is-array'] == 'true') {
