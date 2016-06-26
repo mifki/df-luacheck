@@ -132,6 +132,7 @@ var rootctx = {
 		'dfhack.buildings.deconstruct': 'none',
 		'dfhack.maps.getBlock': 'df.map_block',
 		'dfhack.burrows.setAssignedUnit': 'none',
+		'dfhack.internal.memmove': 'none',
 		
 		'utils.call_with_string': 'string',
 		'utils.insert_sorted': 'none',

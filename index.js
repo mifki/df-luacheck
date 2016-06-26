@@ -404,6 +404,9 @@ function fntype(call, ctx) {
 	if (fnname.match('\\.delete$'))
 		return 'none';
 		
+	if (fnname.match('\\.sizeof'))
+		return { _type:'tuple', _tuple:['number', 'number'] };
+
 	//TODO: check that assignment is correct somehow ?
 	if (fnname.match('\\.assign'))
 		return 'none';
@@ -452,7 +455,7 @@ function fntype(call, ctx) {
 	// call.arguments.forEach(function(a) {
 	// 	console.log(checktype(a, ctx));
 	// });
-	
+		
 	if (fnname == 'pcall') {
 		var a0 = checktype(call.arguments[0], ctx);
 		var fn = a0._node;
