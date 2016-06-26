@@ -389,6 +389,9 @@ function processStruct(def, n)
 			});
 		}
 	});
+	
+	if (def.$.meta == 'bitfield-type')
+		type._array = 'bool';
 
 	return type;
 }
