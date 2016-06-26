@@ -488,13 +488,19 @@ function fntype(call, ctx) {
 		return '__unknown';
 	}
 
-	if (typeof fn == 'string')
+	if (typeof fn == 'string') {
+		for (var k = 0; k < call.arguments.length; k++) {
+			var t = checktype(call.arguments[k], ctx);
+		}
+		
 		return expandtype(fn, ctx);
+	}
 		
 	if (fn._type == 'function')
 		fn = fn._node;
 		
 	var des = [ fnname ];	
+	var save = true;
 
 	var ctx2 = { types:{}, parent:fn._ctx };
 	for (var k = 0; k < fn.parameters.length; k++) {
@@ -502,6 +508,8 @@ function fntype(call, ctx) {
 			var t = checktype(call.arguments[k], ctx);
 			ctx2.types[fn.parameters[k].name] = t;
 			des.push(t._type||t);
+			if (t._type == 'function')
+				save = false;
 		} else {
 			ctx2.types[fn.parameters[k].name] = 'null';
 			des.push('null');
@@ -516,8 +524,8 @@ function fntype(call, ctx) {
 	var q = process(fn.body, ctx2);
 	srcstack.pop();
 
-	// console.log(fnname, 'returns', q&&q._type||q);
-	checkedfns[des] = q;
+	if (save)
+		checkedfns[des] = q;
 	return q;
 }
 
