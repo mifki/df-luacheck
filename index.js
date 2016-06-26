@@ -22,6 +22,7 @@ var basedir = path.dirname(mainfn);
 var incpath = [ '/home/vit/c9workspace/dfremote' ];
 var reqignore = [ 'remote.utf8.utf8data', 'remote.utf8.utf8', 'remote.JSON', 'remote.MessagePack', 'remote.underscore', 'gui', 'utils', 'compat' ];
 var fnstocheck = [];
+var checkedfns = {};
 
 var src = fs.readFileSync(mainfn).toString();
 var ast = luaparser.parse(src, { comments:true, locations:true, ranges:true });
@@ -387,6 +388,9 @@ function fntype(call, ctx) {
 		fnname = call.base.name;
 	} else if (call.base.type == 'MemberExpression') {
 		fnname = flatten(call.base, ctx);
+	} else {
+		warn(call.loc.start.line, 'skipping function call', chalk.bold(sub(call.base.range)));
+		return '__unknown';
 	}
 	
 	/*if (fnname.indexOf(':') != -1) {
@@ -489,22 +493,31 @@ function fntype(call, ctx) {
 		
 	if (fn._type == 'function')
 		fn = fn._node;
+		
+	var des = [ fnname ];	
 
 	var ctx2 = { types:{}, parent:fn._ctx };
 	for (var k = 0; k < fn.parameters.length; k++) {
 		if (call.arguments.length > k) {
 			var t = checktype(call.arguments[k], ctx);
 			ctx2.types[fn.parameters[k].name] = t;
+			des.push(t._type||t);
 		} else {
 			ctx2.types[fn.parameters[k].name] = 'null';
+			des.push('null');
 		}
 	}
+	
+	des = des.join('_');
+	if (checkedfns[des])
+		return checkedfns[des];
 
 	srcstack.push(fn._src);
 	var q = process(fn.body, ctx2);
 	srcstack.pop();
 
 	// console.log(fnname, 'returns', q&&q._type||q);
+	checkedfns[des] = q;
 	return q;
 }
 

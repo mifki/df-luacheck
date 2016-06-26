@@ -122,8 +122,10 @@ var rootctx = {
 		'dfhack.units.getProfessionColor': 'number',
 		'dfhack.units.getNemesis': 'df.nemesis_record',
 		'dfhack.units.getPosition': 'coord2d',
+		'dfhack.units.getCasteProfessionName': 'string',
 		'dfhack.items.getGeneralRef': 'df.general_ref',
 		'dfhack.items.getDescription': 'string',
+		'dfhack.items.getItemBaseValue': 'number',
 		'dfhack.matinfo.decode': 'matinfo',
 		'dfhack.job.getName': 'string',
 		'dfhack.job.getWorker': 'df.unit',
@@ -150,6 +152,8 @@ var rootctx = {
 
 	parent: null,
 };
+
+var pending_index_enums = [];
 
 function convertBasicType(t)
 {
@@ -246,17 +250,8 @@ function processStruct(def, n)
 				var t = { _array:'bool', _type:'bool[]', whole:'number' };
 				type[fname] = t;
 				
-				if (fdef.$['index-enum']) {
-					var e = rootctx.types.df[fdef.$['index-enum']];
-					if (e) {
-						Object.keys(e).forEach(function(k) {
-							if (k.substr(0,1) != '_')
-								t[k] = t._array;
-						});
-					} else
-						console.log('no enum', fdef.$['index-enum']);
-				}
-				
+				if (fdef.$['index-enum'])
+					pending_index_enums.push({ type:t, enumtype:fdef.$['index-enum'] });
 			}
 			else if (meta == 'container' || meta == 'static-array')
 			{
@@ -267,16 +262,8 @@ function processStruct(def, n)
 					var t = type[fname];
 					t._type = (t._array._type || t._array.toString()) + '[]';
 					
-					if (fdef.$['index-enum']) {
-						var e = rootctx.types.df[fdef.$['index-enum']];
-						if (e) {
-							Object.keys(e).forEach(function(k) {
-								if (k.substr(0,1) != '_')
-									t[k] = t._array;
-							});
-						} else
-							console.log('no enum', fdef.$['index-enum']);
-					}
+					if (fdef.$['index-enum'])
+						pending_index_enums.push({ type:t, enumtype:fdef.$['index-enum'] });
 				}
 			}
 			else if (meta == 'pointer')
@@ -391,8 +378,10 @@ function processStruct(def, n)
 		}
 	});
 	
-	if (def.$.meta == 'bitfield-type')
+	if (def.$.meta == 'bitfield-type') {
+		type.whole = 'number';
 		type._array = 'bool';
+	}
 
 	return type;
 }
@@ -525,6 +514,19 @@ fs.readdirSync('./df').forEach(function(f) {
 });*/
 
 processXml(fs.readFileSync('./codegen_4206.out.xml'), rootctx.types.df);
+
+pending_index_enums.forEach(function(e) {
+	var t = e.type;
+	var e = rootctx.types.df[e.enumtype];
+	if (e) {
+		Object.keys(e).forEach(function(k) {
+			if (k.substr(0,1) != '_')
+				t[k] = t._array;
+		});
+	} else
+		console.log('no enum', e.enumtype);
+	
+});
 
 rootctx.types['df.world.T_map'].block_index = { _array: { _array: { _array:'df.map_block' } } };
 rootctx.types['df.world.T_map'].column_index = { _array: { _array: 'df.map_block_column' } };
