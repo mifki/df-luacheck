@@ -84,19 +84,27 @@ var rootctx = {
 		os: {
 			_type: 'os',
 			clock: { _type:'function', _node:'number' },
-		}
+		},
+		
+		dfhack: {
+			type: '__dfhack',
+			DF_VERSION: 'string',
+		},	
 	},
-
+	
 	functions: {
 		error: 'none',
 		tostring: 'string',
 		tonumber: 'number',
 		print: 'none',
+		type: 'string',
 		
 		'math.abs': 'number',
 		'math.floor': 'number',
 		
 		'table.insert': 'none',
+		'table.sort': 'none',
+		'table.pack': 'table',
 				
 		'string.gsub': 'string',
 		'string.sub': 'string',
@@ -108,9 +116,8 @@ var rootctx = {
 		'bit32.band': 'number',
 		'bit32.lshift': 'number',
 		'bit32.rshift': 'number',
+		'bit32.bnot': 'number',
 		
-		'dfhack.DF_VERSION': 'string',
-		'dfhack.internal.setAddress': 'none',
 		'dfhack.getOSType': 'string',
 		'dfhack.df2utf': 'string',
 		'dfhack.gui.getCurViewscreen': 'df.viewscreen',
@@ -135,6 +142,11 @@ var rootctx = {
 		'dfhack.maps.getBlock': 'df.map_block',
 		'dfhack.burrows.setAssignedUnit': 'none',
 		'dfhack.internal.memmove': 'none',
+		'dfhack.internal.getRebaseDelta': 'number',
+		'dfhack.internal.setAddress': 'none',
+		'dfhack.internal.getAddress': 'number',
+		'dfhack.TranslateName': 'string',
+		'dfhack.buildings.setOwner': 'none',
 		
 		'utils.call_with_string': 'string',
 		'utils.insert_sorted': 'none',
@@ -192,10 +204,13 @@ function container_type(fdef, type)
 			} else if (item2 && item2.$.meta == 'static-array') {
 				return { _array: { _type:'df.'+item2.item.$['type-name']+'[]', _array:'df.'+item2.item.$['type-name'] } };
 			} else
-				return { _array: 'df.'+item.$['type-name'] };
+				return { _array: 'df.'+item.$['type-name'], _type:'df.'+item.$['type-name']+'[]' };
 		} else if (imeta == 'number')
 			return { _array: 'number' };
-		else if (imeta == 'primitive')
+		else if (imeta == 'container' || imeta == 'static-array') {
+			//TODO: set _type
+			return { _array: container_type(fdef.item, type) };
+		} else if (imeta == 'primitive')
 			return { _array: convertBasicType(item.$['subtype']) };
 		else if (imeta == 'compound') {
 			return { _array: processStruct(item) };
@@ -210,18 +225,59 @@ function container_type(fdef, type)
 		return { _array:'number' };	
 }
 
+function pointer_type(fdef, type)
+{
+	if (fdef.item && fdef.item.$['meta'] == 'compound') {
+		var item2 = fdef.item;
+		var tname = type._type + '.' + item2.$['typedef-name'];
+		rootctx.types[tname] = processStruct(item2, tname);
+		type[item2.$['typedef-name']] = tname;
+		return tname;
+
+		//type[fname] = processStruct(fdef.item);
+	
+	} else if (fdef.item && fdef.item.$['meta'] == 'container') {
+		return container_type(fdef.item, type);
+		
+	} else if (fdef.item && fdef.item.$['meta'] == 'pointer' && fdef.$['is-array'] == 'true') {
+		return { _array:pointer_type(fdef.item, type) };
+	
+	} else {
+		var t;
+		try {
+			t = convertBasicType(fdef.$['type-name']);
+		} catch (e) {
+			t = 'df.' + fdef.$['type-name'];
+		}
+		if (fdef.$['is-array'] == 'true')
+			return { _array:t };
+		else
+			return t;
+	}
+}
+
 function processStruct(def, n)
 {
 	var type = { _type: n };
 	if (def.$['inherits-from']) {
 		type._super = 'df.' + def.$['inherits-from'];
 	
-		var supertype = rootctx.types.df[def.$['inherits-from']];
-		if (!supertype)
-			console.log('NO SUPER', def.$['inherits-from']);
-		else {
-			supertype._sub = supertype._sub || [];
-			supertype._sub.push(n);
+		var supername = def.$['inherits-from'];
+		while(1)
+		{
+			var supertype = rootctx.types.df[supername];
+			if (!supertype) {
+				console.log('NO SUPER', supername);
+				break;
+			} else {
+				supertype._sub = supertype._sub || [];
+				supertype._sub.push(n);
+				
+				if (!supertype._super)
+					break;
+					
+				supername = supertype._super.substr(3);
+			}
 		}
 	}
 		
@@ -268,7 +324,8 @@ function processStruct(def, n)
 			}
 			else if (meta == 'pointer')
 			{
-				if (fdef.item && fdef.item.$['meta'] == 'compound') {
+				type[fname] = pointer_type(fdef, type);
+				/*if (fdef.item && fdef.item.$['meta'] == 'compound') {
 					var item2 = fdef.item;
 					var tname = n + '.' + item2.$['typedef-name'];
 					rootctx.types[tname] = processStruct(item2, tname);
@@ -291,7 +348,7 @@ function processStruct(def, n)
 						type[fname] = { _array:t };
 					else
 						type[fname] = t;
-				}
+				}*/
 			}
 			else if (meta == 'global')
 			{
@@ -462,21 +519,13 @@ function processXml(xml, ctxtypes)
 					rootctx.types.df.global[def.$['name']] = processStruct(item);
 				
 				} else if (imeta == 'container') {
-					var item3 = item.item;
+					rootctx.types.df.global[def.$['name']] = container_type(item);
+					/*var item3 = item.item;
 
 					if (item3) {
 						var imeta3 = item3.$['meta'];
 						
 						if (imeta3 == 'pointer' || imeta3 == 'global') {
-							/*var item2 = item3.item;
-							if (item2 && item2.$.meta == 'compound') {
-								var tname = n + '.' + item2.$['typedef-name'];
-								rootctx.types[tname] = processStruct(item2, tname);
-								type[fname] = { _array:tname }
-								type[item2.$['typedef-name']] = tname;
-							} else if (item2 && item2.$.meta == 'static-array') {
-								rootctx.types.df.global[def.$['name']] = { _array: { _type:'df.'+item2.item.$['type-name']+'[]', _array:'df.'+item2.item.$['type-name'] } };
-							} else*/
 								rootctx.types.df.global[def.$['name']] = { _array: 'df.'+item3.$['type-name'] };
 						} else if (imeta3 == 'number')
 							rootctx.types.df.global[def.$['name']] = { _array: 'number' };
@@ -489,7 +538,7 @@ function processXml(xml, ctxtypes)
 							// console.log('V1', fdef);
 							//console.log('#',convertBasicType(imeta));
 						}
-					}
+					}*/
 				}
 				else {
 					//console.log('#',convertBasicType(imeta));
@@ -527,13 +576,5 @@ pending_index_enums.forEach(function(e) {
 		console.log('no enum', e.enumtype);
 	
 });
-
-rootctx.types['df.world.T_map'].block_index = { _array: { _array: { _array:'df.map_block' } } };
-rootctx.types['df.world.T_map'].column_index = { _array: { _array: 'df.map_block_column' } };
-rootctx.types.df.map_block.tiletype = { _array: { _array: 'df.tiletype' } };
-rootctx.types.df.map_block.designation = { _array: { _array: 'df.tile_designation' } };
-rootctx.types.df.block_square_event_grassst.amount = { _array: { _array: 'number' } }; 
-rootctx.types.df.viewscreen_unitlistst.units = { _array: { _type:'df.unit[]', _array: 'df.unit' } }; 
-rootctx.types.df.viewscreen_unitlistst.jobs = { _array: { _type:'df.job[]', _array: 'df.job' } }; 
 
 fs.writeFileSync('./ctx.json', JSON.stringify(rootctx));

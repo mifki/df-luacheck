@@ -410,6 +410,9 @@ function fntype(call, ctx) {
 		
 	if (fnname.match('\\.sizeof'))
 		return { _type:'tuple', _tuple:['number', 'number'] };
+		
+	if (fnname.match('\\._field')) //TODO: check that the field exists
+		return { _type:'field' };
 
 	//TODO: check that assignment is correct somehow ?
 	if (fnname.match('\\.assign'))
@@ -441,7 +444,7 @@ function fntype(call, ctx) {
 		return 'none';
 	}
 
-	if (fnname.match('\\[\\]\\.(insert|delete)$'))
+	if (fnname.match('\\[\\]\\.(insert|resize|erase)$'))
 		return 'none';
 
 	if (fnname == 'utils.binsearch') {
@@ -578,7 +581,7 @@ function process(body, ctx) {
 			var righttypes = [];
 			for (var j = 0; j < b.init.length; j++)
 			{
-				var t = checktype(b.init[j], ctx);
+				var t = checktype(b.init[j], ctx) || '__unknown';
 				
 				if (t._tuple) {
 					for (var k = 0; k < t._tuple.length; k++)
@@ -648,7 +651,8 @@ function process(body, ctx) {
 								c.types[n]._type != 'table') {
 								err(b.loc.start.line, 'assigning', chalk.bold(sub(b.init[0].range)), 'of type', chalk.bold(t&&t._type||t), 'to', chalk.bold(b.variables[0].name), 'of type', chalk.bold(c.types[n]._type||c.types[n]));
 							}
-							c.types[n] = t;
+							else if (t != 'null')
+								c.types[n] = t;
 							found = true;
 							break;
 						}
