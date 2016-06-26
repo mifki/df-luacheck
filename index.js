@@ -339,8 +339,21 @@ function checktype(expr, ctx, opts) {
 			return { _array:checktype(expr.fields[0].value,ctx)||'__undefined', _type:'table' };
 		}
 		
+		var ret = { _type:'table' }
+		
+		expr.fields.forEach(function(f) {
+			if (f.key.type == 'Identifier') {
+				var t = checktype(f.value, ctx) || '__unknown';
+				
+				if (t == '__unknown')
+					err(f.loc.start.line, 'type of expression is unknown', chalk.bold(sub(f.value.range)));
+				else
+					ret[f.key.name] = t;
+			}
+		});
+		
 		//TODO: key-value pairs
-		return { _type:'table' };
+		return ret;
 	}
 
 	return '__unknown';
@@ -501,7 +514,8 @@ function process(body, ctx) {
 			c.functions = c.functions || {};
 			c.functions[b.identifier.name] = b;
 			c.functions[b.identifier.name]._src = srcstack[srcstack.length-1];
-			c.functions[b.identifier.name]._ctx = c;
+			c.functions[b.identifier.name]._ctx = ctx;
+			c.types[b.identifier.name] = { _type:'function', _node:b, _ctx:ctx, _src:srcstack[srcstack.length-1] }
 			
 			var cs = srcstack[srcstack.length-1].comments;
 			if (cs) {
