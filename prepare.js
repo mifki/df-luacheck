@@ -124,6 +124,8 @@ var rootctx = {
 		
 		'dfhack.getOSType': 'string',
 		'dfhack.df2utf': 'string',
+		'dfhack.isMapLoaded': 'bool',
+		'dfhack.timeout': 'none',
 		'dfhack.gui.getCurViewscreen': 'df.viewscreen',
 		'dfhack.units.getProfessionName': 'string',
 		'dfhack.units.isCitizen': 'bool',
@@ -134,13 +136,16 @@ var rootctx = {
 		'dfhack.units.getNemesis': 'df.nemesis_record',
 		'dfhack.units.getPosition': 'coord2d',
 		'dfhack.units.getCasteProfessionName': 'string',
+		'dfhack.units.setNickname': 'none',
 		'dfhack.items.getGeneralRef': 'df.general_ref',
 		'dfhack.items.getDescription': 'string',
 		'dfhack.items.getItemBaseValue': 'number',
+		'dfhack.items.getValue': 'number',
 		'dfhack.matinfo.decode': 'matinfo',
 		'dfhack.job.getName': 'string',
 		'dfhack.job.getWorker': 'df.unit',
 		'dfhack.job.getGeneralRef': 'df.general_ref',
+		'dfhack.job.removeWorker': 'none',
 		'dfhack.maps.getRegionBiome': 'df.region_map_entry',
 		'dfhack.buildings.deconstruct': 'none',
 		'dfhack.maps.getBlock': 'df.map_block',
@@ -222,7 +227,6 @@ function container_type(fdef, type)
 			return { _array: container_type(fdef.item, type) };
 		
 		} else if (imeta == 'primitive') {
-			console.log(item.$['subtype'], convertBasicType(item.$['subtype']));
 			return { _array: convertBasicType(item.$['subtype']) };
 		
 		} else if (imeta == 'compound') {

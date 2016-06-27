@@ -23,6 +23,7 @@ var incpath = [ '/home/vit/c9workspace/dfremote' ];
 var reqignore = [ 'remote.utf8.utf8data', 'remote.utf8.utf8', 'remote.JSON', 'remote.MessagePack', 'remote.underscore', 'gui', 'utils', 'compat' ];
 var fnstocheck = [];
 var checkedfns = {};
+var checked_global_fns = {};
 
 var src = fs.readFileSync(mainfn).toString();
 var ast = luaparser.parse(src, { comments:true, locations:true, ranges:true });
@@ -108,6 +109,8 @@ function checktype(expr, ctx, opts) {
 	if (expr.type == 'IndexExpression')
 	{
 		var t = checktype(expr.base, ctx);
+		if (!t)
+		console.log(expr.base);
 		if (t == '__unknown') {
 			err(expr.loc.start.line, 'type of expression is unknown', chalk.bold(sub(expr.base.range)));
 			return '__unknown';
@@ -121,7 +124,8 @@ function checktype(expr, ctx, opts) {
 	if (expr.type == 'MemberExpression')
 	{
 		var baset = checktype(expr.base, ctx);
-
+		if (!baset)
+			console.log(expr.base);
 		//TODO: need to update parent object type in context for abstract types
 		/*if (baset._type == 'df.viewscreen' && !baset[expr.identifier.name]) {
 			if (expr.base.type == 'Identifier') {
@@ -142,6 +146,9 @@ function checktype(expr, ctx, opts) {
 
 			return '__unknown';
 		}*/
+		
+		if (!baset._type && expr.identifier.name == 'value')
+			return baset;
 
 		var t = null;
 		for (var o = baset; o && !t; o = expandtype(o._super,ctx)) {
@@ -529,6 +536,8 @@ function fntype(call, ctx) {
 
 	if (save)
 		checkedfns[des] = q;
+	checked_global_fns[fnname] = true;
+		
 	return q;
 }
 
@@ -543,6 +552,9 @@ function process(body, ctx) {
 			c.functions[b.identifier.name]._src = srcstack[srcstack.length-1];
 			c.functions[b.identifier.name]._ctx = ctx;
 			c.types[b.identifier.name] = { _type:'function', _node:b, _ctx:ctx, _src:srcstack[srcstack.length-1] }
+			
+			if (!b.isLocal)
+				checked_global_fns[b.identifier.name] = false;
 			
 			var cs = srcstack[srcstack.length-1].comments;
 			if (cs) {
@@ -672,7 +684,17 @@ function process(body, ctx) {
 				if (rt == '__unknown')
 					err(b.loc.start.line, 'type of expression is unknown', chalk.bold(sub(b.init[0].range)));
 				if (lt != '__unknown' && rt != '__unknown' && lt != rt && rt != 'null') {
-					err(b.loc.start.line, 'assigning', chalk.bold(sub(b.init[0].range)), 'of type', chalk.bold(rt._type||rt), 'to', chalk.bold(sub(b.variables[0].range)), 'of type', chalk.bold(lt._type||lt));
+					var ok = false;
+					if (rt._type && lt._sub) {
+						for (var j = 0; j < lt._sub.length; j++) {
+							if (lt._sub[j] == rt._type) {
+								ok = true;
+								break;
+							}
+						}		
+					}
+					if (!ok)
+						err(b.loc.start.line, 'assigning', chalk.bold(sub(b.init[0].range)), 'of type', chalk.bold(rt._type||rt), 'to', chalk.bold(sub(b.variables[0].range)), 'of type', chalk.bold(lt._type||lt));
 				}
 				//console.log(, b.variables[0], t);
 			
@@ -779,6 +801,13 @@ fnstocheck.forEach(function(fn) {
 	srcstack.push(b._src);
 	process(b.body, ctx2);
 	srcstack.pop();
+	
+	checked_global_fns[b.identifier.name] = true;
+});
+
+Object.keys(checked_global_fns).forEach(function(f) {
+	if (!checked_global_fns[f])
+		console.log('global function NOT checked', f);
 });
 
 //console.log(functions);
