@@ -1,6 +1,7 @@
 var fs = require('fs');
 var parseXml = require('xml2js').parseString;
 var xslt = require('libxslt');
+var _process = require('process');
 
 var ensureArray = function(a) {
 	if (!a)
@@ -12,167 +13,9 @@ var ensureArray = function(a) {
 	return a;
 };
 
-var rootctx = {
-	guesses: {
-	},
-	types: {
-		null: 'null',
-		
-		df: {
-			_type: '__df',
-			global: {
-				_type: '__global',
-			},
-			/*nemesis: {
-				figure: 'df.historical_figure'
-			},
-			creature_raw: {
+var dfhackver = _process.argv[_process.argv.length-1];
 
-			},
-			historical_entity: {
-				flags: {
-					named_civ:'bool',
-				},
-			},
-			historical_figure: {
-				race: 'number',
-			},
-			global: {
-				world: {
-					entities: {
-						all: {
-							_array: 'df.historical_entity'
-						}
-					},
- 
- 					raws: {
-						creatures: {
-							all: {
-								_array: 'df.creature_raw'
-							}
-						}
-					}
-				}
-			}*/
-		},
-		
-		matinfo: {
-			_type: 'matinfo',
-			type: 'number',
-			index: 'number',
-			material: 'df.material',
-			mode: 'number',
-			subtype: 'number',
-			inorganic: 'df.inorganic_raw',
-			creature: 'df.creature_raw',
-			plant: 'df.plant_raw',
-			figure: 'df.historical_figure',
-		},
-		
-		coord2d: {
-			_type: 'coord2d',
-			x: 'number',
-			y: 'number',
-			z: 'number',
-		},
-		
-		mp: {
-			_type: 'MessagePack',
-			NIL: 'null',
-		},
-		
-		os: {
-			_type: 'os',
-			clock: { _type:'function', _node:'number' },
-		},
-		
-		dfhack: {
-			type: '__dfhack',
-			DF_VERSION: 'string',
-		},	
-	},
-	
-	functions: {
-		error: 'none',
-		tostring: 'string',
-		tonumber: 'number',
-		print: 'none',
-		type: 'string',
-		
-		'math.abs': 'number',
-		'math.floor': 'number',
-		'math.min': 'number',
-		'math.max': 'number',
-		'math.random': 'number',
-		
-		'table.insert': 'none',
-		'table.remove': 'none',
-		'table.sort': 'none',
-		'table.pack': 'table',
-				
-		'string.gsub': 'string',
-		'string.sub': 'string',
-		'string.byte': 'number',
-		'string.char': 'string',
-		'string.find': 'number',
-		'string.lower': 'string',
-		
-		'bit32.band': 'number',
-		'bit32.lshift': 'number',
-		'bit32.rshift': 'number',
-		'bit32.bnot': 'number',
-		
-		'dfhack.getOSType': 'string',
-		'dfhack.df2utf': 'string',
-		'dfhack.isMapLoaded': 'bool',
-		'dfhack.timeout': 'none',
-		'dfhack.gui.getCurViewscreen': 'df.viewscreen',
-		'dfhack.units.getProfessionName': 'string',
-		'dfhack.units.isCitizen': 'bool',
-		'dfhack.units.isOwnCiv': 'bool',
-		'dfhack.units.isOwnGroup': 'bool',
-		'dfhack.units.getVisibleName': 'df.language_name',
-		'dfhack.units.getProfessionColor': 'number',
-		'dfhack.units.getNemesis': 'df.nemesis_record',
-		'dfhack.units.getPosition': 'coord2d',
-		'dfhack.units.getCasteProfessionName': 'string',
-		'dfhack.units.setNickname': 'none',
-		'dfhack.items.getGeneralRef': 'df.general_ref',
-		'dfhack.items.getDescription': 'string',
-		'dfhack.items.getItemBaseValue': 'number',
-		'dfhack.items.getValue': 'number',
-		'dfhack.matinfo.decode': 'matinfo',
-		'dfhack.job.getName': 'string',
-		'dfhack.job.getWorker': 'df.unit',
-		'dfhack.job.getGeneralRef': 'df.general_ref',
-		'dfhack.job.removeWorker': 'none',
-		'dfhack.maps.getRegionBiome': 'df.region_map_entry',
-		'dfhack.buildings.deconstruct': 'none',
-		'dfhack.maps.getBlock': 'df.map_block',
-		'dfhack.burrows.setAssignedUnit': 'none',
-		'dfhack.internal.memmove': 'none',
-		'dfhack.internal.getRebaseDelta': 'number',
-		'dfhack.internal.setAddress': 'none',
-		'dfhack.internal.getAddress': 'number',
-		'dfhack.TranslateName': 'string',
-		'dfhack.buildings.setOwner': 'none',
-		
-		'utils.call_with_string': 'string',
-		'utils.insert_sorted': 'none',
-		'utils.erase_sorted': 'none',
-		'utils.erase_sorted_key': 'none',
-		
-		'gui.simulateInput':'none',
-		
-		'string.utf8capitalize': 'string',
-
-		'native.set_timer':'none',
-		
-		'mkmodule': 'none',
-	},
-
-	parent: null,
-};
+var rootctx = require('./builtins_'+dfhackver);
 
 var pending_index_enums = [];
 
@@ -579,7 +422,7 @@ fs.readdirSync('./df').forEach(function(f) {
 	}
 });*/
 
-processXml(fs.readFileSync('./codegen_4206.out.xml'), rootctx.types.df);
+processXml(fs.readFileSync('./codegen_'+dfhackver+'.out.xml'), rootctx.types.df);
 
 pending_index_enums.forEach(function(e) {
 	var t = e.type;
@@ -594,4 +437,4 @@ pending_index_enums.forEach(function(e) {
 	
 });
 
-fs.writeFileSync('./ctx.json', JSON.stringify(rootctx));
+fs.writeFileSync('./ctx_'+dfhackver+'.json', JSON.stringify(rootctx, null, 2));

@@ -1,5 +1,3 @@
 Tool to check Lua scripts against Dwarf Fortress data types.
 
-Place `codegen.out.xml` in current folder and run `node prepare.js`.
-
-Then run `node index.js <script>`.
+Run `node index.js 4024|4206|4303-alpha1 <script.lua>`.
