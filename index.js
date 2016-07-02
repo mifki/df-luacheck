@@ -18,6 +18,7 @@ var ensureArray = function(a) {
 
 var argv = require('yargs').argv;
 var dfhackver = argv.v;
+var dfver = dfhackver.toString().split('-')[0];
 var mainfn = argv._[0];
 
 var rootctx = JSON.parse(fs.readFileSync('ctx_'+dfhackver+'.json'));
@@ -30,14 +31,14 @@ var reqignore = [
 	'remote.MessagePack',
 	'remote.underscore',
 	'gui',
-	'utils',
-	'remote.compat_40',
-	'remote.compat_42'
+	'utils'
 ];
 var fnstocheck = [];
 var callers = [];
 var checkedfns = {};
 var checked_global_fns = {};
+
+reqignore = reqignore.concat(ensureArray(argv.x));
 
 var src = fs.readFileSync(mainfn).toString();
 var ast = luaparser.parse(src, { comments:true, locations:true, ranges:true });
@@ -86,7 +87,6 @@ function findguess(name, ctx) {
 
 
 function expandtype(name, ctx) {
-	
 	if (typeof name == 'string' && name.slice(-2) == '[]')
 		return { _type:name, _array:name.slice(0,-2) }
 		
@@ -483,7 +483,7 @@ function fntype(call, ctx) {
 		else {
 			if (t._type == 'table') {
 				if (t._array && (t._array._type||t._array) != (rt._type||rt))
-					warn(call.loc.start.line, 'inserting', chalk.bold(rt._type||rt), 'to a table with', chalk.bold(t._array._type || t._array));
+					;//warn(call.loc.start.line, 'inserting', chalk.bold(rt._type||rt), 'to a table with', chalk.bold(t._array._type || t._array));
 				else
 					t._array = rt;
 			} else
@@ -597,6 +597,31 @@ function fntype(call, ctx) {
 		
 	return q;
 }
+
+function find_comment_dfver(b)
+{
+	var cs = srcstack[srcstack.length-1].comments;
+	
+	if (cs) {
+		for (var j = 0; j < cs.length; j++) {
+			var c = cs[j];
+			if (c.loc.start.line == b.loc.start.line && c.value.substr(0,6) == 'dfver:') {
+				var m = c.value.match(/dfver:\s*([^\s]+)/);
+				if (m) {
+					var vers = m[1].split('-');
+					var min = vers[0] || 0;
+					var max = vers[1] || 9999;
+					
+					return (dfver >= min && dfver <= max);
+				}
+					
+				break;
+			}
+		}
+	}
+	
+	return true;
+}	
 
 function process(body, ctx) {
 	var rettype = null;
@@ -828,9 +853,11 @@ function process(body, ctx) {
 					// if (t == '__unknown')
 					// 	err(b.loc.start.line, 'type of expression is unknown', chalk.bold(sub(c.condition.range)));
 				}
-	
-				var ctx2 = { parent:ctx, types:{} };			
-				rettype = process(c.body, ctx2) || rettype;
+				
+				if (find_comment_dfver(c)) {
+					var ctx2 = { parent:ctx, types:{} };			
+					rettype = process(c.body, ctx2) || rettype;
+				}
 			});
 		}
 

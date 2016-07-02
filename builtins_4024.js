@@ -148,6 +148,7 @@ module.exports = {
 		'dfhack.maps.getRegionBiome': 'df.region_map_entry',
 		'dfhack.maps.getBlock': 'df.map_block',
 		'dfhack.maps.getTileBlock': 'df.map_block',
+		'dfhack.maps.getTileType': 'df.tiletype',
 		'dfhack.burrows.setAssignedUnit': 'none',
 		'dfhack.internal.memmove': 'none',
 		'dfhack.internal.getRebaseDelta': 'number',
