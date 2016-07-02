@@ -29,6 +29,11 @@ module.exports = {
 			clock: { _type:'function', _node:'number' },
 		},
 		
+		/*string: {
+			_type: 'string',
+			upper: { _type:'function', _node:'string' },
+		},*/
+		
 		dfhack: {
 			type: '__dfhack',
 			DF_VERSION: 'string',
@@ -50,7 +55,35 @@ module.exports = {
 					'getCraftClass': 'df.craft_material_class',
 				},
 			},			
-		},	
+		},
+		
+		native: {
+			itemcache: {
+				cats: {
+					_array: 'native.type_category',
+				}
+			},
+			
+			type_category: {
+				count: 'number',
+				busy: 'number',
+				groups_index: {
+					_array: 'native.group_info',
+				},
+			},
+			
+			group_info: {
+				type: 'df.item_type',
+				subtype: 'number',
+				mat_type: 'number',
+				mat_index: 'number',
+				title: 'string',
+				count: 'number',
+				items: { _array:'df.item' },
+				flags_all: 'df.item_flags',
+				flags_some: 'df.item_flags',
+			}
+		},
 	},
 	
 	functions: {
@@ -127,6 +160,7 @@ module.exports = {
 		'dfhack.buildings.getStockpileContents': { _type:'df.item[]', _array:'df.item' },
 		'dfhack.gui.getSelectedUnit': 'df.unit',
 		'dfhack.gui.getSelectedBuilding': 'df.building',
+		'dfhack.screen.getKeyDisplay': 'string',
 		'dfhack.run_command_silent': { _type:'tuple', _tuple:['string', 'number'] },
 		
 		'utils.call_with_string': 'string',
@@ -142,6 +176,10 @@ module.exports = {
 		'native.set_timer': 'none',
 		'native.itemcache_init': 'none',
 		'native.itemcache_free': 'none',
+		'native.itemcache_get': 'native.itemcache',
+		'native.itemcache_get_category': 'native.type_category',
+		'native.itemcache_search': 'native.group_info[]',
+		
 		'mp.pack': 'string',
 		
 		'mkmodule': 'none',

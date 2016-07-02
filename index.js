@@ -4,6 +4,7 @@ var luaparser = require('./luaparse');
 var parseXml = require('xml2js').parseString;
 var chalk = require('chalk');
 var _process = require('process');
+var jsonic = require('jsonic');
 
 var ensureArray = function(a) {
 	if (!a)
@@ -88,6 +89,20 @@ function expandtype(name, ctx) {
 	
 	if (typeof name == 'string' && name.slice(-2) == '[]')
 		return { _type:name, _array:name.slice(0,-2) }
+		
+	if (typeof name == 'string' && name.slice(0,1) == '{' && name.slice(-1) == '}') {
+		var type = null;
+		try {
+			type = jsonic(name);
+		} catch (e) {
+			console.log(e, 'can not parse type definition', name);
+		}
+		
+		if (type) {
+			type._type = 'custom_' + Math.round(Math.random()*10000);
+			return type;
+		}
+	}
 	
 	if (name == 'number' || name == 'string' || name == 'bool' || name == 'none' || name == 'null')
 		return name;
@@ -379,8 +394,8 @@ function checktype(expr, ctx, opts) {
 					;//warn(f.loc.start.line, 'unsupported table key type', f.key.type);
 			
 			} else if (f.type == 'TableValue') {
-				if (!t._array)
-					t._array = t;
+				if (!ret._array)
+					ret._array = t;
 			
 			} else
 				console.log(f);
@@ -625,7 +640,7 @@ function process(body, ctx) {
 					if (c.loc.start.line == b.loc.start.line && c.value.substr(0,3) == 'as:') {
 						var m = c.value.match(/as:\s*([^\s]+)/);
 						if (m)
-							as = m[1].split(',');
+							as = [ m[1] ]; //TODO:split is removed to support json, so annotated tuple assignment do not work now! m[1].split(',');
 							
 						break;
 					}
@@ -720,6 +735,7 @@ function process(body, ctx) {
 				}				
 
 			} else if (b.variables[0].type == 'MemberExpression') {
+				//TODO: support assigning to non-existing fields in custom tables
 				var lt = checktype(b.variables[0], ctx) || '__unknown';
 				var rt = checktype(b.init[0],ctx) || '__unknown';
 				
