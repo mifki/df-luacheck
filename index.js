@@ -86,7 +86,7 @@ function findguess(name, ctx) {
 }
 
 
-function expandtype(name, ctx) {
+function expandtype(name, ctx, line) {
 	if (typeof name == 'string' && name.slice(-2) == '[]')
 		return { _type:name, _array:name.slice(0,-2) }
 		
@@ -99,7 +99,8 @@ function expandtype(name, ctx) {
 		}
 		
 		if (type) {
-			type._type = 'custom_' + Math.round(Math.random()*10000);
+			var fn = srcstack[srcstack.length-1].fn.split('/').slice(-1)[0].split('.')[0];
+			type._type = 'custom_' + fn + '_' + line;
 			return type;
 		}
 	}
@@ -698,7 +699,7 @@ function process(body, ctx) {
 	
 					//TODO: check that casting to correct subclass
 					if (as && as.length > j) {
-						t = expandtype(as[j], ctx);	
+						t = expandtype(as[j], ctx, b.loc.start.line);	
 						if (t == '__unknown')
 							err(b.loc.start.line, 'type of expression is unknown', chalk.bold(as[j]));
 					}
@@ -731,7 +732,7 @@ function process(body, ctx) {
 								
 				//TODO: check that casting to correct subclass
 				// if (as && as.length > 0)
-				// 	t = expandtype(as[0], ctx);
+				// 	t = expandtype(as[0], ctx, b.loc.start.line);
 
 				if (t == '__unknown')
 					err(b.loc.start.line, 'type of expression is unknown', chalk.bold(sub(b.init[0].range)));
@@ -831,7 +832,7 @@ function process(body, ctx) {
 				}
 
 				if (as) {
-					t = expandtype(as, ctx);	
+					t = expandtype(as, ctx, b.loc.start.line);	
 					if (t == '__unknown')
 						err(b.loc.start.line, 'type of expression is unknown', chalk.bold(as));
 	
