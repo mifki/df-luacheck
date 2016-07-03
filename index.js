@@ -99,8 +99,10 @@ function expandtype(name, ctx, line) {
 		}
 		
 		if (type) {
-			var fn = srcstack[srcstack.length-1].fn.split('/').slice(-1)[0].split('.')[0];
-			type._type = 'custom_' + fn + '_' + line;
+			if (!type._type) {
+				var fn = srcstack[srcstack.length-1].fn.split('/').slice(-1)[0].split('.')[0];
+				type._type = 'custom_' + fn + '_' + line;
+			}
 			return type;
 		}
 	}
@@ -197,7 +199,9 @@ function checktype(expr, ctx, opts) {
 						
 						if (baset._sub.indexOf(hint) != -1) {
 							var subt = expandtype(hint, ctx);
-							t = subt[expr.identifier.name];
+							for (var o = subt; o && !t; o = expandtype(o._super,ctx)) {
+								t = o[expr.identifier.name]
+							}
 						} else
 							err(expr.loc.start.line, 'hint', chalk.bold(hint), 'is not a subclass of', chalk.bold(baset._type));		
 						
@@ -261,15 +265,11 @@ function checktype(expr, ctx, opts) {
 		return { _type:'function', _node:expr, _ctx:ctx, _src:srcstack[srcstack.length-1] };
 	};
 
-	if (expr.type == 'CallExpression') {
-		return fntype(expr, ctx);
-	}
-	
 	if (expr.type == 'StringCallExpression' && expr.base.type == 'MemberExpression' && flatten(expr.base,ctx) == 'df.new') {
 		var t = expr.argument.value;
-		return { value: expandtype(t) };
+		return expandtype(t);
 	}
-	
+		
 	if (expr.type == 'StringCallExpression' && expr.base.name == 'require') {
 		if (reqignore.indexOf(expr.argument.value) == -1)
 		{
@@ -296,6 +296,10 @@ function checktype(expr, ctx, opts) {
 		
 		return 'none';
 	}
+	
+	if (expr.type == 'CallExpression' || expr.type == 'StringCallExpression') {
+		return fntype(expr, ctx);
+	}		
 
 	if (expr.type == 'BinaryExpression') {
 		var t1 = checktype(expr.left, ctx);
@@ -433,6 +437,10 @@ function flatten(expr, ctx) {
 }
 
 function fntype(call, ctx) {
+	
+	if (!call.arguments && call.argument)
+		call.arguments = [ call.argument ];
+	
 	var fnname = null;
 	if (call.base.type == 'Identifier') {
 		fnname = call.base.name;
@@ -471,6 +479,9 @@ function fntype(call, ctx) {
 	if (fnname.match('\\.new')) 
 		return expandtype(fnname.slice(0, -4), ctx);
 
+	if (fnname.match('^df.+\\.is_instance')) 
+		return 'bool';
+
 	if (fnname == 'table.insert') {
 		var k = (call.arguments.length == 3 ? 2 : 1);
 		var t = checktype(call.arguments[0], ctx) || '__unknown';
@@ -482,7 +493,7 @@ function fntype(call, ctx) {
 		if (t == '__unknown')
 			err(call.loc.start.line, 'type of expression is unknown', chalk.bold(sub(call.arguments[0].range)));
 		else {
-			if (t._type == 'table') {
+			if (t._type == 'table' || t._array) {
 				if (t._array && (t._array._type||t._array) != (rt._type||rt))
 					;//warn(call.loc.start.line, 'inserting', chalk.bold(rt._type||rt), 'to a table with', chalk.bold(t._array._type || t._array));
 				else
@@ -546,6 +557,12 @@ function fntype(call, ctx) {
 		err(call.loc.start.line, 'unknown function', chalk.bold(fnname));
 		return '__unknown';
 	}
+	
+	if (fn._type && fn._type != 'function')
+		return fn;
+		
+	if (fn._type == 'function')
+		fn = fn._node;
 
 	if (typeof fn == 'string') {
 		for (var k = 0; k < call.arguments.length; k++) {
@@ -554,12 +571,6 @@ function fntype(call, ctx) {
 		
 		return expandtype(fn, ctx);
 	}
-	
-	if (fn._type && fn._type != 'function')
-		return fn;
-		
-	if (fn._type == 'function')
-		fn = fn._node;
 
 	var des = [ fnname ];	
 	var save = true;
@@ -581,7 +592,7 @@ function fntype(call, ctx) {
 	des = des.join('_');
 	
 	if (callers.indexOf(des) != -1)
-		return 'none';
+		return '__recursive';
 	
 	if (checkedfns[des])
 		return checkedfns[des];
@@ -719,7 +730,7 @@ function process(body, ctx) {
 					if (c.loc.start.line == b.loc.start.line && c.value.substr(0,3) == 'as:') {
 						var m = c.value.match(/as:\s*([^\s]+)/);
 						if (m)
-							as = m[1].split(',');
+							as = [ m[1] ]; //TODO:split is removed to support json, so annotated tuple assignment do not work now! m[1].split(',');
 							
 						break;
 					}
@@ -742,7 +753,7 @@ function process(body, ctx) {
 					// we need to find closest one having this var and update its type
 					var found = false;
 					for (var c = ctx; c; c = c.parent) {
-						if (c.types[n]) {
+						if (c.types[n] && !(c.temps && c.temps[n])) {
 							var lt = c.types[n];
 							if (lt != 'null' && (lt._type||lt) != (t._type||t) && t != '__unknown' && t != 'null' && lt._type != 'table') {
 								err(b.loc.start.line, 'assigning', chalk.bold(sub(b.init[0].range)), 'of type', chalk.bold(t&&t._type||t), 'to', chalk.bold(b.variables[0].name), 'of type', chalk.bold(lt._type||lt));
@@ -756,7 +767,10 @@ function process(body, ctx) {
 		
 					if (!found) {
 						warn(b.loc.start.line, 'assignment to global/unknown var', b.variables[0].name);
-						rootctx.types[n] = t;
+						if (as && as.length > 0)
+							rootctx.types[n] = expandtype(as[0], ctx, b.loc.start.line);
+						else
+							rootctx.types[n] = t;
 					}
 				}				
 
@@ -817,7 +831,7 @@ function process(body, ctx) {
 			}
 
 			if (b.iterators[0].type == 'CallExpression' &&
-			    (b.iterators[0].base.name == 'pairs' || b.iterators[0].base.name == 'ipairs' || b.iterators[0].base.name == 'ripairs')) {
+			    (b.iterators[0].base.name == 'pairs' || b.iterators[0].base.name == 'ipairs' || b.iterators[0].base.name == 'ripairs' || b.iterators[0].base.name == 'ripairs_tbl')) {
 				var ctx2 = { parent:ctx, types:{} };
 				var t = checktype(b.iterators[0].arguments[0],ctx) || '__unknown';
 
@@ -839,7 +853,7 @@ function process(body, ctx) {
 					t = { _array:t };
 			    }
 
-				ctx2.types[b.variables[0].name] = 'number'; //TODO: if "pairs", then string
+				ctx2.types[b.variables[0].name] = (b.iterators[0].base.name == 'pairs' ? 'string' : 'number');
 				ctx2.types[b.variables[1].name] = expandtype(t._array, ctx);
 				rettype = process(b.body, ctx2) || rettype;
 			} else {
@@ -848,15 +862,42 @@ function process(body, ctx) {
 		}
 
 		if (b.type == 'IfStatement') {
+			var cs = srcstack[srcstack.length-1].comments;
+			var as = null;
+			if (cs) {
+				for (var j = 0; j < cs.length; j++) {
+					var c = cs[j];
+					if (c.loc.start.line == b.loc.start.line && c.value.substr(0,3) == 'as:') {
+						var m = c.value.match(/as:\s*([^\s]+)/);
+						if (m) {
+							as = m[1].split(',');
+						}
+							
+						break;
+					}
+				}
+			}
+
 			b.clauses.forEach(function(c) {
 				if (c.condition) {
-					var t = checktype(c.condition, ctx, { in_if:true });
+					var ctx2 = { parent:ctx, types:{} };
+					ensureArray(as).forEach(function(a) {
+						var a2 = a.split('=');
+						ctx2.types[a2[0]] = expandtype(a2[1], ctx);
+					});
+					var t = checktype(c.condition, ctx2, { in_if:true });
 					// if (t == '__unknown')
 					// 	err(b.loc.start.line, 'type of expression is unknown', chalk.bold(sub(c.condition.range)));
 				}
 				
 				if (find_comment_dfver(c)) {
-					var ctx2 = { parent:ctx, types:{} };			
+					var ctx2 = { parent:ctx, types:{} };
+					ensureArray(as).forEach(function(a) {
+						var a2 = a.split('=');
+						ctx2.types[a2[0]] = expandtype(a2[1], ctx);
+						ctx2.temps = ctx2.temps || {};
+						ctx2.temps[a2[0]] = true;
+					});
 					rettype = process(c.body, ctx2) || rettype;
 				}
 			});
