@@ -309,6 +309,7 @@ function processEnum(def, n)
 
 	type._array = 'string';
 	type._enum = true;
+	type._last_item = 'number';
 	type.attrs = { _array: { } };
 
 	var anon = 1;
