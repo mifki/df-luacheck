@@ -141,6 +141,7 @@ module.exports = {
 		'dfhack.items.getHolderUnit': 'df.unit',
 		'dfhack.matinfo.decode': 'dfhack.matinfo',
 		'dfhack.matinfo.find': 'dfhack.matinfo',
+		'dfhack.matinfo.matches': 'bool',
 		'dfhack.job.getName': 'string',
 		'dfhack.job.getWorker': 'df.unit',
 		'dfhack.job.getGeneralRef': 'df.general_ref',
@@ -174,6 +175,9 @@ module.exports = {
 		
 		'string.utf8capitalize': 'string',
 
+		'native.verify_pwd': 'bool',
+		'native.check_wtoken': 'bool',
+		'native.update_wtoken': 'number',
 		'native.set_timer': 'none',
 		'native.itemcache_init': 'none',
 		'native.itemcache_free': 'none',

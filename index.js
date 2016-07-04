@@ -20,6 +20,7 @@ var argv = require('yargs').argv;
 var dfhackver = argv.v;
 var dfver = dfhackver.toString().split('-')[0];
 var mainfn = argv._[0];
+var nowarn = argv.W;
 
 var rootctx = JSON.parse(fs.readFileSync('ctx_'+dfhackver+'.json'));
 
@@ -85,6 +86,19 @@ function findguess(name, ctx) {
 		return findguess(name, ctx.parent);
 }
 
+function fix_custom_type_name(type, fn, line, lvl)
+{
+	lvl = lvl || 0;
+	
+	if (!type._type)
+		type._type = 'custom_' + fn + '_' + line + '_' + lvl;
+	
+	Object.keys(type).forEach(function(k) {
+		var subtype = type[k];
+		if (typeof subtype == 'object')
+			fix_custom_type_name(subtype, line, lvl+1);
+	});
+}
 
 function expandtype(name, ctx, line) {
 	if (typeof name == 'string' && name.slice(-2) == '[]')
@@ -99,10 +113,8 @@ function expandtype(name, ctx, line) {
 		}
 		
 		if (type) {
-			if (!type._type) {
-				var fn = srcstack[srcstack.length-1].fn.split('/').slice(-1)[0].split('.')[0];
-				type._type = 'custom_' + fn + '_' + line;
-			}
+			var fn = srcstack[srcstack.length-1].fn.split('/').slice(-1)[0].split('.')[0];
+			fix_custom_type_name(type, fn, line);
 			return type;
 		}
 	}
@@ -142,14 +154,22 @@ function checktype(expr, ctx, opts) {
 	if (expr.type == 'IndexExpression')
 	{
 		var t = checktype(expr.base, ctx);
+		
 		if (!t)
-		console.log(expr.base);
+			console.log(expr.base);
+		
 		if (t == '__unknown') {
 			err(expr.loc.start.line, 'type of expression is unknown', chalk.bold(sub(expr.base.range)));
 			return '__unknown';
 		}
-		var idxt = checktype(expr.index, ctx);
+		// console.log(expr.index);
+		// var idxt = checktype(expr.index, ctx);
 		// console.log('==',t);
+		if (expr.index.type == 'NumericLiteral' && t._type) {
+			if (t[expr.index.value])
+				return expandtype(t[expr.index.value], ctx); 
+		}
+
 		if (t._array)
 			return expandtype(t._array, ctx);
 	}
@@ -379,7 +399,9 @@ function checktype(expr, ctx, opts) {
 		if (!expr.fields.length)
 			return { _type:'table' };
 		
-		var ret = { _type:'table' }
+		var ret = { _type:'table' };
+		var j = 1;
+		var mixed = false;
 		
 		expr.fields.forEach(function(f) {
 			var t = checktype(f.value, ctx) || '__unknown';
@@ -399,12 +421,20 @@ function checktype(expr, ctx, opts) {
 					;//warn(f.loc.start.line, 'unsupported table key type', f.key.type);
 			
 			} else if (f.type == 'TableValue') {
-				if (!ret._array)
-					ret._array = t;
+				ret[j++] = t;
+				
 			
 			} else
 				console.log(f);
 			
+			if (!mixed) {
+				if (!ret._array)
+					ret._array = t;
+				else if ((ret._array._type||ret._array) != (t._type||t)) {
+					delete ret._array;
+					mixed = true;
+				}
+			}
 		});
 		
 		//TODO: key-value pairs
@@ -441,16 +471,33 @@ function fntype(call, ctx) {
 	if (!call.arguments && call.argument)
 		call.arguments = [ call.argument ];
 	
+	//TODO: support IndexExpression
 	var fnname = null;
+	var fn = null;
 	if (call.base.type == 'Identifier') {
 		fnname = call.base.name;
 	} else if (call.base.type == 'MemberExpression') {
 		fnname = flatten(call.base, ctx);
+	} else if (call.base.type == 'IndexExpression' && call.base.index.type == 'NumericLiteral') {
+		var baset = checktype(call.base.base, ctx);
+		if (baset == '__unknown') {
+			err(call.loc.start.line, 'type of expression is unknown', chalk.bold(sub(call.base.base.range)));
+			return '__unknown';
+		}
+		
+		if (baset[call.base.index.value])
+			fn = baset[call.base.index.value]; 
+		else {
+			err(call.loc.start.line, 'unknown function', chalk.bold(sub(call.base.range)));
+			return '__unknown';
+		}
+
 	} else {
 		warn(call.loc.start.line, 'skipping function call', chalk.bold(sub(call.base.range)));
 		return '__unknown';
 	}
 	
+	if (!fn) {
 	/*if (fnname.indexOf(':') != -1) {
 		var a = fnname.split(':');
 		var objname = a[0];
@@ -553,6 +600,7 @@ function fntype(call, ctx) {
 	}
 
 	var fn = findfn(fnname,ctx);
+	}
 	if (!fn) {
 		err(call.loc.start.line, 'unknown function', chalk.bold(fnname));
 		return '__unknown';
@@ -578,7 +626,10 @@ function fntype(call, ctx) {
 	var ctx2 = { types:{}, parent:fn._ctx };
 	for (var k = 0; k < fn.parameters.length; k++) {
 		if (call.arguments.length > k) {
-			var t = checktype(call.arguments[k], ctx);
+			var t = checktype(call.arguments[k], ctx) || '__unknown';
+			if (t == '__unknown')
+				err(call.loc.start.line, 'type of expression is unknown', chalk.bold(sub(call.arguments[k].range)));				
+
 			ctx2.types[fn.parameters[k].name] = t;
 			des.push(t._type||t);
 			if (t._type == 'function')
@@ -668,7 +719,7 @@ function process(body, ctx) {
 			}
 		}
 
-		if (b.type == 'LocalStatement') {
+		else if (b.type == 'LocalStatement') {
 			var cs = srcstack[srcstack.length-1].comments;
 			var as = null;
 			if (cs) {
@@ -697,8 +748,12 @@ function process(body, ctx) {
 				}
 				
 				//TODO: don't show error if there's --as: comment, show warning
-				if (t == '__unknown')
-					err(b.loc.start.line, 'type of expression is unknown', chalk.bold(sub(b.init[j].range)));				
+				if (t == '__unknown') {
+					if (b.init.length == 1 && as)
+						warn(b.loc.start.line, 'type of expression is unknown', chalk.bold(sub(b.init[j].range)), 'will assume from comment', chalk.bold(as[0]));
+					else
+						err(b.loc.start.line, 'type of expression is unknown', chalk.bold(sub(b.init[j].range)));				
+				}
 					
 				righttypes.push(t);
 			}
@@ -721,7 +776,7 @@ function process(body, ctx) {
 			}
 		}
 
-		if (b.type == 'AssignmentStatement') {
+		else if (b.type == 'AssignmentStatement') {
 			var cs = srcstack[srcstack.length-1].comments;
 			var as = null;
 			if (cs) {
@@ -814,7 +869,7 @@ function process(body, ctx) {
 			}
 		}
 
-		if (b.type == 'ForGenericStatement') {
+		else if (b.type == 'ForGenericStatement') {
 			var cs = srcstack[srcstack.length-1].comments;
 			var as = null;
 			if (cs) {
@@ -857,11 +912,11 @@ function process(body, ctx) {
 				ctx2.types[b.variables[1].name] = expandtype(t._array, ctx);
 				rettype = process(b.body, ctx2) || rettype;
 			} else {
-				warn(b.loc.start.line, 'unsupported for loop');
+				err(b.loc.start.line, 'unsupported for loop');
 			}
 		}
 
-		if (b.type == 'IfStatement') {
+		else if (b.type == 'IfStatement') {
 			var cs = srcstack[srcstack.length-1].comments;
 			var as = null;
 			if (cs) {
@@ -903,7 +958,7 @@ function process(body, ctx) {
 			});
 		}
 
-		if (b.type == 'ReturnStatement') {
+		else if (b.type == 'ReturnStatement') {
 			if (b.arguments.length) {
 				var t = checktype(b.arguments[0], ctx);
 				if (t != 'null')
@@ -911,9 +966,36 @@ function process(body, ctx) {
 			}
 		}
 
-		if (b.type == 'CallStatement') {
+		else if (b.type == 'CallStatement') {
 			checktype(b.expression, ctx);
 		}
+		
+		else if (b.type == 'BreakStatement' || b.type == 'GotoStatement' || b.type == 'LabelStatement')
+			;
+			
+		else if (b.type == 'WhileStatement' || b.type == 'RepeatStatement') {
+			if (b.condition) {
+				var t = checktype(b.condition, ctx);
+				// if (t == '__unknown')
+				// 	err(b.loc.start.line, 'type of expression is unknown', chalk.bold(sub(b.condition.range)));
+			}
+			
+			var ctx2 = { parent:ctx, types:{} };
+			rettype = process(b.body, ctx2) || rettype;
+		}
+		
+		else if (b.type == 'ForNumericStatement') {
+			if (b.variable.type == 'Identifier') {			
+				var ctx2 = { parent:ctx, types:{} };
+				ctx2.types[b.variable.name] = 'number';
+				rettype = process(b.body, ctx2) || rettype;
+			}
+			else
+				console.log(b.variable.type);
+		}
+		
+		else
+			console.log(b.type);
 
 	});
 
@@ -935,6 +1017,9 @@ function err(line)
 
 function warn(line)
 {
+	if (nowarn)
+		return;
+	
 	var args = Array.prototype.slice.call(arguments);
 	var fn = srcstack[srcstack.length-1].fn.split('/').slice(-1)[0];
 	args.splice(0, 1, chalk.yellow('WARN  ' + fn + ':' + line));
