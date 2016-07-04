@@ -102,6 +102,9 @@ function pointer_type(fdef, type)
 	} else if (fdef.item && fdef.item.$['meta'] == 'pointer' && fdef.$['is-array'] == 'true') {
 		return { _array:pointer_type(fdef.item, type) };
 	
+	} else if (fdef.item && fdef.item.$['subtype'] == 'static-string') {
+		return 'string';
+
 	} else {
 		var t;
 		try {
@@ -157,9 +160,17 @@ function processStruct(def, n)
 				else
 					type[fname] = 'number';
 			}
+			else if (fdef.$['subtype'] == 'static-string')
+			{
+				type[fname] = 'string';
+			}	
 			else if (meta == 'primitive')
 			{
 				type[fname] = convertBasicType(fdef.$['subtype']);
+			}
+			else if (meta == 'container' && fdef.$.subtype == 'df-linked-list')
+			{
+				type[fname] = 'df.' + fdef.$['type-name'];
 			}
 			else if (meta == 'container' && (fdef.$.subtype == 'df-flagarray' || fdef.$.subtype == 'stl-bit-vector'))
 			{
