@@ -104,6 +104,7 @@ module.exports = {
 		'table.remove': 'none',
 		'table.sort': 'none',
 		'table.pack': 'table',
+		'table.unpack': { _type:'tuple', _tuple:[] },
 				
 		'string.gsub': 'string',
 		'string.sub': 'string',

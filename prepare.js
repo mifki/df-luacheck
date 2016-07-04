@@ -103,7 +103,7 @@ function pointer_type(fdef, type)
 		return { _array:pointer_type(fdef.item, type) };
 	
 	} else if (fdef.item && fdef.item.$['subtype'] == 'static-string') {
-		return 'string';
+		return { _type:'charptr', _array:'number' };
 
 	} else {
 		var t;
