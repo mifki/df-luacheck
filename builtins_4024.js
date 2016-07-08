@@ -19,10 +19,17 @@ module.exports = {
 			z: 'number',
 		},
 		
-		mp: {
+		MessagePack: {
 			_type: 'MessagePack',
 			NIL: 'null',
 		},
+		
+		'JSON': {
+			_type: 'JSON',
+			_methods: {
+				'decode': 'table',
+			},
+		},		
 		
 		os: {
 			_type: 'os',
@@ -103,6 +110,7 @@ module.exports = {
 		'table.insert': 'none',
 		'table.remove': 'none',
 		'table.sort': 'none',
+		'table.concat': 'string',
 		'table.pack': 'table',
 		'table.unpack': { _type:'tuple', _tuple:[] },
 				
@@ -190,6 +198,8 @@ module.exports = {
 		
 		'mkmodule': 'none',
 		'printall': 'none',
+		
+		'deflatelua.inflate_zlib': 'none',
 		
 	},
 

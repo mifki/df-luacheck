@@ -31,6 +31,7 @@ var reqignore = [
 	'remote.JSON',
 	'remote.MessagePack',
 	'remote.underscore',
+	'remote.deflatelua',
 	'gui',
 	'utils'
 ];
@@ -49,12 +50,15 @@ function findtype(name, ctx) {
 	if (ctx.types[name])
 		return ctx.types[name];
 
+	if (ctx.functions && ctx.functions[name])
+		return { _type:'function', _node:ctx.functions[name] };
+
 	if (ctx.parent)
 		return findtype(name, ctx.parent);
 }
 
 function findfn(name, ctx) {
-	if (name.substr(0,3) == 'df.' || name.substr(0,7) == 'dfhack.') {
+	if (1||name.substr(0,3) == 'df.' || name.substr(0,7) == 'dfhack.') {
 		var dot = name.lastIndexOf('.');
 		if (dot != -1) {
 			var t = expandtype(name.substr(0, dot), ctx);
@@ -121,6 +125,9 @@ function expandtype(name, ctx, line) {
 	
 	if (name == 'number' || name == 'string' || name == 'bool' || name == 'none' || name == 'null')
 		return name;
+		
+	if (name == 'table')
+		return { _type:'table' };
 	
 	if (typeof name == 'string') {
 		var q = findtype(name, ctx);
@@ -174,7 +181,7 @@ function checktype(expr, ctx, opts) {
 			return expandtype(t._array, ctx);
 	}
 
-	if (expr.type == 'MemberExpression')
+	else if (expr.type == 'MemberExpression')
 	{
 		var baset = checktype(expr.base, ctx);
 		if (!baset)
@@ -259,38 +266,38 @@ function checktype(expr, ctx, opts) {
 		return expandtype(t, ctx) || '__unknown';
 	}
 
-	if (expr.type == 'Identifier') {
+	else if (expr.type == 'Identifier') {
 		return expandtype(expr.name, ctx) || '__unknown';
 	}
 
-	if (expr.type == 'StringLiteral') {
+	else if (expr.type == 'StringLiteral') {
 		return 'string';
 	}
 
-	if (expr.type == 'BooleanLiteral') {
+	else if (expr.type == 'BooleanLiteral') {
 		return 'bool';
 	}
 
-	if (expr.type == 'NumericLiteral') {
+	else if (expr.type == 'NumericLiteral') {
 		return 'number';
 	}
 
-	if (expr.type == 'NilLiteral') {
+	else if (expr.type == 'NilLiteral') {
 		return 'null';
 	}
 	
-	if (expr.type == 'FunctionDeclaration') {
+	else if (expr.type == 'FunctionDeclaration') {
 		expr._ctx = ctx;
 		expr._src = srcstack[srcstack.length-1];
 		return { _type:'function', _node:expr, _ctx:ctx, _src:srcstack[srcstack.length-1] };
-	};
+	}
 
-	if (expr.type == 'StringCallExpression' && expr.base.type == 'MemberExpression' && flatten(expr.base,ctx) == 'df.new') {
+	else if (expr.type == 'StringCallExpression' && expr.base.type == 'MemberExpression' && flatten(expr.base,ctx) == 'df.new') {
 		var t = expr.argument.value;
 		return expandtype(t);
 	}
 		
-	if (expr.type == 'StringCallExpression' && expr.base.name == 'require') {
+	else if (expr.type == 'StringCallExpression' && expr.base.name == 'require') {
 		if (reqignore.indexOf(expr.argument.value) == -1)
 		{
 			var src = null;
@@ -311,17 +318,19 @@ function checktype(expr, ctx, opts) {
 			}
 		} else {
 			if (expr.argument.value == 'remote.MessagePack')
-				return rootctx.types.mp;
+				return rootctx.types.MessagePack;
+			if (expr.argument.value == 'remote.JSON')
+				return rootctx.types.JSON;
 		}
 		
 		return 'none';
 	}
 	
-	if (expr.type == 'CallExpression' || expr.type == 'StringCallExpression') {
+	else if (expr.type == 'CallExpression' || expr.type == 'StringCallExpression' || expr.type == 'TableCallExpression') {
 		return fntype(expr, ctx);
 	}		
 
-	if (expr.type == 'BinaryExpression') {
+	else if (expr.type == 'BinaryExpression') {
 		var t1 = checktype(expr.left, ctx);
 		var t2 = checktype(expr.right, ctx);
 		
@@ -343,7 +352,7 @@ function checktype(expr, ctx, opts) {
 	}
 
 	//TODO: if this is inside if condition, return bool and don't show warnings
-	if (expr.type == 'LogicalExpression') {
+	else if (expr.type == 'LogicalExpression') {
 		var t1 = checktype(expr.left, ctx, opts);
 		var t2 = checktype(expr.right, ctx, opts);
 
@@ -374,7 +383,7 @@ function checktype(expr, ctx, opts) {
 		return res;
 	}
 
-	if (expr.type == 'UnaryExpression') {
+	else if (expr.type == 'UnaryExpression') {
 		var res;
 		var op = expr.operator;
 		if (op == '-') //todo: check operand type
@@ -394,7 +403,7 @@ function checktype(expr, ctx, opts) {
 	}
 	
 	//TODO: check all elements!
-	if (expr.type == 'TableConstructorExpression') {
+	else if (expr.type == 'TableConstructorExpression') {
 		//console.log(expr.fields);
 		if (!expr.fields.length)
 			return { _type:'table' };
@@ -440,6 +449,13 @@ function checktype(expr, ctx, opts) {
 		//TODO: key-value pairs
 		return ret;
 	}
+	
+	else if (expr.type == 'VarargLiteral') {
+		return { _type:'tuple', _tuple:[] };
+	}
+	
+	else
+		console.log(expr);
 
 	return '__unknown';
 }
