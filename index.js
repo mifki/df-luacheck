@@ -559,7 +559,7 @@ function fntype(call, ctx) {
 			if (t._type == 'table' || t._array) {
 				if (t._array && (t._array._type||t._array) != (rt._type||rt))
 					;//warn(call.loc.start.line, 'inserting', chalk.bold(rt._type||rt), 'to a table with', chalk.bold(t._array._type || t._array));
-				else
+				else if (!t._array)
 					t._array = rt;
 			} else
 				err(call.loc.start.line, 'type of table.insert argument is not a table', chalk.bold(sub(call.arguments[0].range)));			
@@ -574,9 +574,16 @@ function fntype(call, ctx) {
 	if (fnname == 'utils.binsearch') {
 		var t = checktype(call.arguments[0], ctx);
 		if (t && t._array)
-			return expandtype(t._array, ctx);
+			return { _type:'tuple', _tuple:[ expandtype(t._array, ctx), 'bool', 'number' ] };
+			//return expandtype(t._array, ctx);
 	}
 	
+	if (fnname == 'utils.linear_index') {
+		var t = checktype(call.arguments[0], ctx);
+		if (t && t._array)
+			return { _type:'tuple', _tuple:[ 'number', expandtype(t._array, ctx) ] };
+	}
+
 	if (fnname == 'df.reinterpret_cast') {
 		var t = checktype(call.arguments[0], ctx);
 		return t;
@@ -912,7 +919,7 @@ function process(body, ctx) {
 				}
 
 				if (!t._array) {
-					err(b.loc.start.line, 'not an array', chalk.bold(sub(b.iterators[0].arguments[0].range)));
+					err(b.loc.start.line, 'not an array', chalk.bold(sub(b.iterators[0].arguments[0].range)), t);
 					t = { _array:'__unknown' };
 				}
 
