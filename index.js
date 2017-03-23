@@ -30,6 +30,7 @@ var reqignore = [
 	'remote.utf8.utf8',
 	'remote.JSON',
 	'remote.MessagePack',
+	'remote.MessagePack53',
 	'remote.underscore',
 	'remote.deflatelua',
 	'gui',
