@@ -5,53 +5,57 @@
         <enum-item name="ConversationAddress"/>
         <enum-item name="ConversationSelect"/>
         <enum-item name="ConversationSpeak"/>
-
+        5
         <enum-item name="Inventory"/>
         <enum-item name="Drop"/>
         <enum-item name="ThrowItem"/>
         <enum-item name="Wear"/>
         <enum-item name="Remove"/>
-
+        10
         <enum-item name="Interact"/>
         <enum-item name="Put"/>
         <enum-item name="PutContainer"/>
         <enum-item name="Eat"/>
         <enum-item name="ThrowAim"/>
-
+        15
         <enum-item name="Fire"/>
         <enum-item name="Get"/>
         <enum-item name="Unk17"/>
         <enum-item name="CombatPrefs"/>
         <enum-item name="Companions"/>
-
+        20
         <enum-item name="MovementPrefs"/>
         <enum-item name="SpeedPrefs"/>
         <enum-item name="InteractAction"/>
         <enum-item name="MoveCarefully"/>
         <enum-item name="Announcements"/>
-
+        25
         <enum-item name="UseBuilding"/>
         <enum-item name="Travel"/>
         <enum-item name="Unk27"/>
         <enum-item name="Unk28"/>
         <enum-item name="SleepConfirm"/>
-
+        30
         <enum-item name="SelectInteractionTarget"/>
         <enum-item name="Unk31"/>
         <enum-item name="Unk32"/>
         <enum-item name="FallAction"/>
         <enum-item name="ViewTracks"/>
-
+        35
         <enum-item name="Jump"/>
         <enum-item name="Unk36"/>
         <enum-item name="AttackConfirm"/>
         <enum-item name="AttackType"/>
         <enum-item name="AttackBodypart"/>
-
+        40
         <enum-item name="AttackStrike"/>
         <enum-item name="Unk41"/>
         <enum-item name="Unk42"/>
         <enum-item name="DodgeDirection"/>
+        <enum-item name="Unk44"/>
+        45
+        <enum-item name="Unk45"/>
+        <enum-item name="Build"/>
     </ld:global-type>
     <ld:global-type ld:meta="struct-type" ld:level="0" type-name="conversation">
         <ld:field name="conv_title" ld:level="1" ld:meta="primitive" ld:subtype="stl-string"/>
@@ -109,6 +113,7 @@
         </ld:field>
     </ld:global-type>
     <ld:global-type ld:meta="enum-type" ld:level="0" type-name="talk_choice_type">
+        0
         <enum-item name="Greet"/>
         <enum-item name="Nevermind"/>
         <enum-item name="Trade"/>
@@ -119,7 +124,7 @@
         <enum-item name="AskFamily"/>
         <enum-item name="AskProfession"/>
         <enum-item name="AskPermissionSleep"/>
-
+        10
         <enum-item name="AccuseNightCreature"/>
         <enum-item name="AskTroubles"/>
         <enum-item name="BringUpEvent"/>
@@ -130,7 +135,7 @@
         <enum-item name="BringUpIncident"/>
         <enum-item name="TellNothingChanged"/>
         <enum-item name="Goodbye2"/>
-
+        20
         <enum-item name="ReturnTopic"/>
         <enum-item name="ChangeSubject"/>
         <enum-item name="AskTargetAction"/>
@@ -141,7 +146,7 @@
         <enum-item name="RespondJoinInsurrection"/>
         <enum-item/>
         <enum-item name="AllowPermissionSleep"/>
-
+        30
         <enum-item name="DenyPermissionSleep"/>
         <enum-item/>
         <enum-item name="AskJoinAdventure"/>
@@ -152,7 +157,7 @@
         <enum-item name="StateNotAcquainted"/>
         <enum-item name="SuggestTravel"/>
         <enum-item name="SuggestTalk"/>
-
+        40
         <enum-item name="RequestSelfRescue"/>
         <enum-item name="AskWhatHappened"/>
         <enum-item name="AskBeRescued"/>
@@ -163,7 +168,7 @@
         <enum-item name="ReferToElder"/>
         <enum-item name="AskComeCloser"/>
         <enum-item name="DoBusiness"/>
-
+        50
         <enum-item name="AskComeStoreLater"/>
         <enum-item name="AskComeMarketLater"/>
         <enum-item name="TellTryShopkeeper"/>
@@ -174,7 +179,7 @@
         <enum-item name="DescribeProfession"/>
         <enum-item name="AnnounceNightCreature"/>
         <enum-item name="StateIncredulity"/>
-
+        60
         <enum-item name="BypassGreeting"/>
         <enum-item name="AskCeaseHostilities"/>
         <enum-item name="DemandYield"/>
@@ -185,7 +190,7 @@
         <enum-item name="ExpressGreatEmotion"/>
         <enum-item name="ExpressEmotion"/>
         <enum-item name="ExpressMinorEmotion"/>
-
+        70
         <enum-item name="ExpressLackEmotion"/>
         <enum-item name="OutburstFleeConflict"/>
         <enum-item name="StateFleeConflict"/>
@@ -196,7 +201,7 @@
         <enum-item name="AskDirectionsPlace"/>
         <enum-item name="AskWhereabouts"/>
         <enum-item name="RequestGuide"/>
-
+        80
         <enum-item name="RequestGuide2"/>
         <enum-item name="ProvideDirections"/>
         <enum-item name="ProvideWhereabouts"/>
@@ -207,7 +212,7 @@
         <enum-item name="TellAboutPlace"/>
         <enum-item name="AskFavorMenu"/>
         <enum-item name="AskWait"/>
-
+        90
         <enum-item name="AskFollow"/>
         <enum-item name="ApologizeBusy"/>
         <enum-item name="ComplyOrder"/>
@@ -218,7 +223,7 @@
         <enum-item name="AgreeCeaseHostile"/>
         <enum-item name="RefuseCeaseHostile"/>
         <enum-item name="RefuseCeaseHostile2"/>
-
+        100
         <enum-item name="RefuseYield"/>
         <enum-item name="RefuseYield2"/>
         <enum-item name="Brag"/>
@@ -229,7 +234,7 @@
         <enum-item name="AskJoinService"/>
         <enum-item name="AcceptService"/>
         <enum-item name="TellRemainVigilant"/>
-
+        110
         <enum-item name="GiveServiceOrder"/>
         <enum-item name="WelcomeSelfHome"/>
         <enum-item/>
@@ -240,7 +245,7 @@
         <enum-item name="CancelAgreement"/>
         <enum-item name="SummarizeConflict"/>
         <enum-item name="SummarizeViews"/>
-
+        120
         <enum-item name="AskClaimStrength"/>
         <enum-item name="AskArmyPosition"/>
         <enum-item name="AskOtherClaims"/>
@@ -251,7 +256,7 @@
         <enum-item name="DemandDropWeapon"/>
         <enum-item name="AgreeComplyDemand"/>
         <enum-item name="RefuseComplyDemand"/>
-
+        130
         <enum-item name="AskLocationObject"/>
         <enum-item name="DemandTribute"/>
         <enum-item name="AgreeGiveTribute"/>
@@ -262,7 +267,7 @@
         <enum-item name="CancelTribute"/>
         <enum-item name="OfferPeace"/>
         <enum-item name="AgreePeace"/>
-
+        140
         <enum-item name="RefusePeace"/>
         <enum-item name="AskTradeDepotLater"/>
         <enum-item name="ExpressAstonishment"/>
@@ -273,7 +278,7 @@
         <enum-item name="SummarizeOpposition"/>
         <enum-item name="DescribeRefugees"/>
         <enum-item name="AccuseTroublemaker"/>
-
+        150
         <enum-item name="AskAdopt"/>
         <enum-item name="AgreeAdopt"/>
         <enum-item name="RefuseAdopt"/>
@@ -284,7 +289,7 @@
         <enum-item name="RefuseInviteService"/>
         <enum-item name="RefuseRequestService"/>
         <enum-item name="OfferService"/>
-
+        160
         <enum-item name="AcceptPositionService"/>
         <enum-item name="RefusePositionService"/>
         <enum-item name="InvokeNameBanish"/>
@@ -295,7 +300,7 @@
         <enum-item name="OfferEncouragement"/>
         <enum-item name="PraiseTaskCompleter"/>
         <enum-item name="AskAboutPersonMenu"/>
-
+        170
         <enum-item name="AskAboutPerson"/>
         <enum-item name="TellAboutPerson"/>
         <enum-item name="AskFeelings"/>
@@ -306,7 +311,7 @@
         <enum-item name="RentRoom"/>
         <enum-item name="ExtendRoomRental"/>
         <enum-item name="ConfirmServiceOrder"/>
-
+        180
         <enum-item name="AskJoinEntertain"/>
         <enum-item name="RespondJoinEntertain"/>
         <enum-item name="AskJoinTroupe"/>
@@ -317,7 +322,7 @@
         <enum-item name="RefuseTroupeInvitation"/>
         <enum-item name="KickOutOfTroupe"/>
         <enum-item name="CreateTroupe"/>
-
+        190
         <enum-item name="LeaveTroupe"/>
         <enum-item/>
         <enum-item name="TellBePatientForService"/>
@@ -327,8 +332,8 @@
         <enum-item name="ExpressEmotionMenu"/>
         <enum-item name="StateValueMenu"/>
         <enum-item name="StateValue"/>
-        <enum-item/>
-
+        <enum-item name="SayNoOrderYet"/>
+        200
         <enum-item name="ProvideDirectionsBuilding"/>
         <enum-item name="Argue"/>
         <enum-item name="Flatter"/>
@@ -339,13 +344,14 @@
         <enum-item name="ExpressOutrageAtDismissal"/>
         <enum-item name="PressArgument"/>
         <enum-item name="DropArgument"/>
-
+        210
         <enum-item name="AskWork"/>
         <enum-item name="AskWorkGroup"/>
         <enum-item name="GrantWork"/>
         <enum-item name="RefuseWork"/>
         <enum-item name="GrantWorkGroup"/>
         <enum-item name="RefuseWorkGroup"/>
+        <enum-item name="GiveSquadOrder"/>
     </ld:global-type>
     <ld:global-type ld:meta="struct-type" ld:level="0" type-name="talk_choice">
         <ld:field ld:subtype="enum" name="type" base-type="int32_t" type-name="talk_choice_type" ld:level="1" ld:meta="global"/>
@@ -5051,6 +5057,8 @@
         <enum-item name="ThreadYarn"/>
         <enum-item name="Tools"/>
         <enum-item name="Clay"/>
+        <enum-item name="Parchment"/>
+        <enum-item name="CupsMugsGoblets"/>
     </ld:global-type>
     <ld:global-type ld:meta="struct-type" ld:level="0" type-name="entity_sell_prices">
         <ld:field ld:level="1" ld:meta="pointer" type-name="entity_sell_requests" name="items" ld:is-container="true"><ld:item ld:level="2" ld:meta="global" type-name="entity_sell_requests"/></ld:field>
@@ -5154,7 +5162,7 @@
 
             <ld:field name="organic" ld:level="2" ld:meta="compound" ld:typedef-name="T_organic">
                 <ld:field name="leather" type-name="material_vec_ref" ld:level="3" ld:meta="global"/>
-                <ld:field type-name="material_vec_ref" since="v0.42.01" ld:level="3" ld:meta="global" ld:anon-name="anon_1"/>
+                <ld:field name="parchment" type-name="material_vec_ref" since="v0.42.01" ld:level="3" ld:meta="global"/>
                 <ld:field name="fiber" type-name="material_vec_ref" ld:level="3" ld:meta="global"/>
                 <ld:field name="silk" type-name="material_vec_ref" ld:level="3" ld:meta="global"/>
                 <ld:field name="wool" type-name="material_vec_ref" ld:level="3" ld:meta="global"/>
@@ -5257,8 +5265,7 @@
                 <ld:item ld:subtype="enum" base-type="int16_t" type-name="ethic_response" ld:level="3" ld:meta="global"/>
             </ld:field>
 
-            <ld:field ld:level="2" ld:meta="static-array" name="values" type-name="int32_t" count="32" index-enum="value_type" ld:is-container="true"><ld:item ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
-            <ld:field ld:level="2" ld:meta="static-array" name="values_2" type-name="int32_t" count="32" index-enum="value_type" since="v0.42.01" ld:is-container="true"><ld:item ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
+            <ld:field ld:level="2" ld:meta="static-array" name="values" type-name="int32_t" count="64" index-enum="value_type" ld:is-container="true"><ld:item ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
 
             <ld:field since="v0.42.01" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_2"/>
             <ld:field ld:level="2" ld:meta="static-array" name="permitted_skill" type-name="bool" index-enum="job_skill" count="135" ld:is-container="true"><ld:item ld:level="3" ld:meta="number" ld:subtype="bool" ld:bits="8"/></ld:field>
@@ -6267,9 +6274,7 @@
             <ld:item ld:subtype="enum" base-type="int16_t" type-name="ethic_response" ld:level="2" ld:meta="global"/>
         </ld:field>
 
-        <ld:field ld:level="1" ld:meta="static-array" name="values" type-name="int32_t" count="32" index-enum="value_type" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
-
-        <ld:field ld:level="1" ld:meta="static-array" name="unk_v42_1" type-name="int32_t" count="32" since="v0.42.01" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
+        <ld:field ld:level="1" ld:meta="static-array" name="values" type-name="int32_t" count="64" index-enum="value_type" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
         <ld:field ld:level="1" ld:meta="static-array" name="unk_v42_2" type-name="int32_t" count="128" since="v0.42.01" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
         <ld:field name="unk_v42_3" since="v0.42.01" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
 
@@ -18786,7 +18791,7 @@
 
             <vmethod ld:level="1" ret-type="int16_t" name="getUniformType"><ret-type ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></vmethod>
             <vmethod ld:level="1" name="getName">
-                <ld:field ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+                <ld:field name="unit_id" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
                 <ld:field ld:level="2" ld:meta="pointer" type-name="stl-string" name="str" ld:is-container="true"><ld:item ld:level="3" ld:meta="primitive" ld:subtype="stl-string"/></ld:field>
             </vmethod>
         </virtual-methods>
@@ -19172,12 +19177,12 @@
         <ld:field name="poetic_form" ref-target="poetic_form" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
         <ld:field name="music_form" ref-target="musical_form" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
         <ld:field name="dance_form" ref-target="dance_form" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_1"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_2"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_3"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_4"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_5"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_6"/>
+        <ld:field name="unk_1" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field name="unk_2" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field name="unk_3" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field name="unk_4" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field name="unk_5" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field name="unk_6" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
         <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="participant_actions" ld:is-container="true">
             <ld:item ld:level="2" ld:meta="pointer" ld:is-container="true">
                 <ld:item ld:meta="compound" ld:level="2" ld:typedef-name="T_participant_actions">
@@ -19185,15 +19190,15 @@
                 <ld:field name="sub_type" comment="depends on type. if music: 0 = sing, gt 0 =&gt; instrument index in musical form" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
                 <ld:field name="unit_id" ref-target="unit" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
                 <ld:field name="histfig_id" ref-target="historical_figure" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
-                <ld:field ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_1"/>
-                <ld:field ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_2"/>
-                <ld:field ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_3"/>
-                <ld:field ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_4"/>
-                <ld:field ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_5"/>
-                <ld:field ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_6"/>
-                <ld:field ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_7"/>
-                <ld:field ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_8"/>
-                <ld:field ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_9"/>
+                <ld:field name="unk_act_1" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+                <ld:field name="unk_act_2" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+                <ld:field name="unk_act_3" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
+                <ld:field name="unk_act_4" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
+                <ld:field name="unk_act_5" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
+                <ld:field name="unk_act_6" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+                <ld:field name="unk_act_7" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+                <ld:field name="unk_act_8" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+                <ld:field name="unk_act_9" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
             </ld:item>
                 
                 
@@ -19210,33 +19215,31 @@
                 
             </ld:item>
         </ld:field>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_7"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_8"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_9"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_10"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_11"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_12"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_13"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_14"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_15"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_16"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_17"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_18"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_19"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_20"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_21"/>
+        <ld:field name="pos_performer_2d" type-name="coord2d" ld:level="1" ld:meta="global"/>
+        <ld:field name="pos_performer" type-name="coord" ld:level="1" ld:meta="global"/>
+
+        <ld:field name="unk_pos_1" ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
+        <ld:field name="unk_pos_2" ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
+        <ld:field name="unk_pos_3" ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
+        <ld:field name="unk_pos_4" ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
+        <ld:field name="unk_pos_5" ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
+        <ld:field name="unk_pos_6" ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
+        <ld:field name="unk_pos_7" ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
+        <ld:field name="unk_pos_8" ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
+        <ld:field name="unk_pos_9" ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
+        <ld:field name="unk_pos_10" ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
 
         <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="play_orders" pointer-type="performance_play_orderst" ld:is-container="true"><ld:item ld:meta="pointer" ld:is-container="true" ld:level="2" type-name="performance_play_orderst"><ld:item ld:level="3" ld:meta="global" type-name="performance_play_orderst"/></ld:item></ld:field>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_22"/>
+        <ld:field name="unk_11" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
 
-        <ld:field ld:level="1" ld:meta="static-array" type-name="int8_t" count="49" ld:is-container="true" ld:anon-name="anon_23"><ld:item ld:level="2" ld:meta="number" ld:subtype="int8_t" ld:bits="8"/></ld:field>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_24"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_25"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_26"/>
+        <ld:field ld:level="1" ld:meta="static-array" name="unk_12" type-name="int8_t" count="49" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int8_t" ld:bits="8"/></ld:field>
+        <ld:field name="unk_13" ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
+        <ld:field name="unk_14" ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
+        <ld:field name="unk_15" ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
 
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_27"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_28"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_29"/>
+        <ld:field name="unk_16" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field name="unk_17" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field name="unk_18" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
     </ld:global-type>
     <ld:global-type ld:meta="class-type" ld:level="0" type-name="performance_play_orderst">
         <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_1"/>
@@ -19263,40 +19266,36 @@
     </ld:global-type>
     <ld:global-type ld:meta="class-type" ld:level="0" type-name="activity_event_researchst" inherits-from="activity_event">
         <ld:field name="participants" type-name="activity_event_participants" ld:level="1" ld:meta="global"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_1"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_2"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_3"/>
+        <ld:field name="site_id" ref-target="world_site" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field name="location_id" ref-target="abstract_building" aux-value="$$.site_id" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field name="building_id" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
     </ld:global-type>
     <ld:global-type ld:meta="class-type" ld:level="0" type-name="activity_event_ponder_topicst" inherits-from="activity_event">
         <ld:field name="participants" type-name="activity_event_participants" ld:level="1" ld:meta="global"/>
+        <ld:field name="site_id" ref-target="world_site" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field name="location_id" ref-target="abstract_building" aux-value="$$.site_id" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field name="building_id" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
         <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_1"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_2"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_3"/>
-
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_4"/>
-        <ld:field name="knowledge_category" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
-        <ld:field name="knowledge_flag" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_5"/>
+        <ld:field name="knowledge" type-name="knowledge_scholar_category_flag" ld:level="1" ld:meta="global"/>
+        <ld:field name="timer" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
     </ld:global-type>
     <ld:global-type ld:meta="class-type" ld:level="0" type-name="activity_event_discuss_topicst" inherits-from="activity_event">
         <ld:field name="participants" type-name="activity_event_participants" ld:level="1" ld:meta="global"/>
+        <ld:field name="site_id" ref-target="world_site" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field name="location_id" ref-target="abstract_building" aux-value="$$.site_id" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field name="building_id" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+
         <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_1"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_2"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_3"/>
-
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_4"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_5"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_6"/>
-
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_7"/>
+        <ld:field name="knowledge" type-name="knowledge_scholar_category_flag" ld:level="1" ld:meta="global"/>
+        <ld:field name="timer" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
     </ld:global-type>
     <ld:global-type ld:meta="class-type" ld:level="0" type-name="activity_event_readst" inherits-from="activity_event">
         <ld:field name="participants" type-name="activity_event_participants" ld:level="1" ld:meta="global"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_1"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_2"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_3"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_4"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_5"/>
+        <ld:field name="building_id" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field name="site_id" ref-target="world_site" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field name="location_id" ref-target="abstract_building" aux-value="$$.site_id" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field name="state" comment="0 if not in progress, 1 if reading" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field name="timer" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
     </ld:global-type>
     <ld:global-type ld:meta="class-type" ld:level="0" type-name="activity_event_fill_service_orderst" inherits-from="activity_event">
         <ld:field name="histfig_id" ref-target="historical_figure" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
@@ -19580,6 +19579,8 @@
         <enum-item name="TRAIN"/>
         <enum-item name="DRIVE_ENTITY_OFF_SITE"/>
         <enum-item name="CAUSE_TROUBLE_FOR_ENTITY"/>
+        <enum-item name="KILL_HF"/>
+        <enum-item name="DRIVE_ARMIES_FROM_SITE"/>
     </ld:global-type>
     <ld:global-type ld:meta="enum-type" ld:level="0" type-name="squad_order_cannot_reason">
         text in viewscreen_unitlistst
@@ -21080,8 +21081,8 @@
         <ld:field name="knowledge" type-name="knowledge_scholar_category_flag" ld:level="1" ld:meta="global"/>
     </ld:global-type>
     <ld:global-type ld:meta="class-type" ld:level="0" type-name="general_ref_activity_eventst" inherits-from="general_ref">
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_1"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_2"/>
+        <ld:field name="activity_id" ref-target="activity_entry" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field name="event_id" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
     </ld:global-type>
     <ld:global-type ld:meta="class-type" ld:level="0" type-name="general_ref_value_levelst" inherits-from="general_ref">
         <ld:field ld:subtype="enum" name="value" base-type="int32_t" type-name="value_type" ld:level="1" ld:meta="global"/>
@@ -29392,6 +29393,7 @@
             <enum-item name="Wounds"/>
             <enum-item name="PrefLabor"/>
             <enum-item name="PrefDogs"/>
+            <enum-item name="PrefOccupation"/>
         </ld:field>
     </ld:global-type>
     <ld:global-type ld:meta="struct-type" ld:level="0" type-name="burrow" key-field="id" instance-vector="$global.ui.burrows.list">
@@ -33065,8 +33067,8 @@
 
         <ld:field type-name="unit_personality" name="personality" ld:level="1" ld:meta="global"/>
 
-        <ld:field ld:level="1" ld:meta="pointer" name="perfomance_skills" since="v0.42.01" ld:is-container="true">
-            <ld:item ld:meta="compound" ld:level="1" ld:typedef-name="T_perfomance_skills">
+        <ld:field ld:level="1" ld:meta="pointer" name="performance_skills" since="v0.42.01" ld:is-container="true">
+            <ld:item ld:meta="compound" ld:level="1" ld:typedef-name="T_performance_skills">
             <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" pointer-type="unit_instrument_skill" name="musical_instruments" ld:is-container="true"><ld:item ld:meta="pointer" ld:is-container="true" ld:level="3" type-name="unit_instrument_skill"><ld:item ld:level="4" ld:meta="global" type-name="unit_instrument_skill"/></ld:item></ld:field>
             <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" pointer-type="unit_poetic_skill" name="poetic_forms" ld:is-container="true"><ld:item ld:meta="pointer" ld:is-container="true" ld:level="3" type-name="unit_poetic_skill"><ld:item ld:level="4" ld:meta="global" type-name="unit_poetic_skill"/></ld:item></ld:field>
             <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" pointer-type="unit_musical_skill" name="musical_forms" ld:is-container="true"><ld:item ld:meta="pointer" ld:is-container="true" ld:level="3" type-name="unit_musical_skill"><ld:item ld:level="4" ld:meta="global" type-name="unit_musical_skill"/></ld:item></ld:field>
@@ -33460,7 +33462,7 @@
         <ld:field name="rusty" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
         <ld:field name="rust_counter" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
         <ld:field name="demotion_counter" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
-        <ld:field name="unk_1c" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field name="natural_skill_lvl" comment="This is the NATURAL_SKILL level for the caste in the raws. This skill cannot rust below this level." ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
     </ld:global-type>
     <ld:global-type ld:meta="struct-type" ld:level="0" type-name="unit_preference">
         <ld:field ld:subtype="enum" base-type="int16_t" name="type" ld:level="1" ld:meta="compound" ld:typedef-name="T_type">
@@ -34271,7 +34273,7 @@
     <ld:global-type ld:meta="class-type" ld:level="0" type-name="viewscreen_jobmanagementst" inherits-from="viewscreen">
         <ld:field name="sel_idx" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/> index into world.manager_orders, curpage = sel_idx/16
         <ld:field name="in_max_workshops" since="v0.43.01" ld:level="1" ld:meta="number" ld:subtype="bool" ld:bits="8"/>
-        <ld:field ld:level="1" ld:meta="primitive" ld:subtype="stl-string" ld:anon-name="anon_1"/>
+        <ld:field name="max_workshops" since="v0.43.01" ld:level="1" ld:meta="primitive" ld:subtype="stl-string"/>
     </ld:global-type>
     <ld:global-type ld:meta="class-type" ld:level="0" type-name="viewscreen_justicest" inherits-from="viewscreen">
         <ld:field name="jails_needed" ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
@@ -35096,7 +35098,16 @@
     </ld:global-type>
     <ld:global-type ld:meta="class-type" ld:level="0" type-name="viewscreen_overallstatusst" inherits-from="viewscreen">
         <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="visible_pages" ld:is-container="true">
-            <ld:item ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
+            <ld:item ld:subtype="enum" name="page" base-type="int16_t" ld:level="2" ld:meta="compound" ld:typedef-name="T_visible_pages">
+                <enum-item name="Animals"/>
+                <enum-item name="Kitchen"/>
+                <enum-item name="Stone"/>
+                <enum-item name="Stocks"/>
+                <enum-item name="Health"/>
+                <enum-item name="Prices"/>
+                <enum-item name="Currency"/>
+                <enum-item name="Justice"/>
+            </ld:item>
         </ld:field>
         <ld:field name="page_cursor" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
     </ld:global-type>
@@ -35139,8 +35150,8 @@
         </ld:field>
     </ld:global-type>
     <ld:global-type ld:meta="class-type" ld:level="0" type-name="viewscreen_pricest" inherits-from="viewscreen">
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_1"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_2"/>
+        <ld:field name="category_idx" ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
+        <ld:field name="item_idx" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
     </ld:global-type>
     <ld:global-type ld:meta="class-type" ld:level="0" type-name="viewscreen_reportlistst" inherits-from="viewscreen">
         <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="units" pointer-type="unit" ld:is-container="true"><ld:item ld:meta="pointer" ld:is-container="true" ld:level="2" type-name="unit"><ld:item ld:level="3" ld:meta="global" type-name="unit"/></ld:item></ld:field>
@@ -35721,10 +35732,10 @@
         <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" ld:is-container="true" ld:anon-name="anon_3"/>
         <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" ld:is-container="true" ld:anon-name="anon_4"/>
         <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" ld:is-container="true" ld:anon-name="anon_5"/>
-        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" type-name="int16_t" ld:is-container="true" ld:anon-name="anon_6"><ld:item ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
-        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" type-name="int32_t" ld:is-container="true" ld:anon-name="anon_7"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
-        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" type-name="int16_t" ld:is-container="true" ld:anon-name="anon_8"><ld:item ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
-        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" type-name="int16_t" ld:is-container="true" ld:anon-name="anon_9"><ld:item ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="list_unk1" type-name="int16_t" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="list_unk2" type-name="int32_t" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="list_unk3" type-name="int16_t" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="list_visible" type-name="int16_t" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
         <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="traits" ld:is-container="true">
             <ld:item ld:level="2" ld:meta="pointer" ld:is-container="true">
                 <ld:item ld:meta="compound" ld:level="2" ld:typedef-name="T_traits">
@@ -35754,9 +35765,9 @@
             </ld:item>
         </ld:field>
         <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="traits_visible" type-name="int32_t" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int8_t" ld:bits="8" ld:anon-name="anon_10"/>
-        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" ld:is-container="true" ld:anon-name="anon_11"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_12"/>?
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int8_t" ld:bits="8" ld:anon-name="anon_6"/>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" ld:is-container="true" ld:anon-name="anon_7"/>
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_8"/>?
         <ld:field name="item_count_edit" ld:level="1" ld:meta="number" ld:subtype="bool" ld:bits="8"/>
         <ld:field name="item_count_entry" ld:level="1" ld:meta="primitive" ld:subtype="stl-string"/>
     </ld:global-type>
@@ -37289,9 +37300,10 @@
                 
             </ld:item>
         </ld:field>
-        <ld:field ld:level="1" ld:meta="static-array" name="unk_1c" count="22" type-name="int16_t" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
-        <ld:field ld:level="1" ld:meta="static-array" name="unk_48" count="32" type-name="int32_t" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
-        <ld:field ld:level="1" ld:meta="static-array" name="unk_v42_1" count="32" type-name="int32_t" since="v0.42.01" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
+        <ld:field ld:level="1" ld:meta="static-array" name="ethic" count="22" index-enum="ethic_type" ld:is-container="true">
+            <ld:item ld:subtype="enum" base-type="int16_t" type-name="ethic_response" ld:level="2" ld:meta="global"/>
+        </ld:field>
+        <ld:field ld:level="1" ld:meta="static-array" name="values" type-name="int32_t" count="64" index-enum="value_type" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
         <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="unk_c8" pointer-type="entity_event" ld:is-container="true"><ld:item ld:meta="pointer" ld:is-container="true" ld:level="2" type-name="entity_event"><ld:item ld:level="3" ld:meta="global" type-name="entity_event"/></ld:item></ld:field>
         <ld:field name="unk_d8" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
         <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="unk_dc" type-name="int32_t" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
@@ -39072,7 +39084,7 @@
 
             <ld:field name="type" refers-to="$$._parent.caste[$].ref-target" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
 
-            <ld:field name="unk_str1" since="v0.34.08" ld:level="2" ld:meta="primitive" ld:subtype="stl-string"/>
+            <ld:field name="filter" since="v0.34.08" ld:level="2" ld:meta="primitive" ld:subtype="stl-string"/>
 
             <ld:field ld:level="2" ld:meta="static-array" name="item_types" count="107" comment="true array" ld:is-container="true">
                 <ld:item ld:meta="container" ld:level="3" ld:subtype="stl-vector" ld:is-container="true">
@@ -39120,7 +39132,7 @@
             <ld:field name="side" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
             <ld:field name="interaction" refers-to="$$._parent.interactions[$]" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
 
-            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="interactions" type-name="pointer" since="v0.34.01" ld:is-container="true"><ld:item ld:level="3" ld:meta="pointer" ld:subtype="pointer"/></ld:field>
+            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="interactions" pointer-type="interaction_effect" since="v0.34.01" ld:is-container="true"><ld:item ld:meta="pointer" ld:is-container="true" ld:level="3" type-name="interaction_effect"><ld:item ld:level="4" ld:meta="global" type-name="interaction_effect"/></ld:item></ld:field>
             <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="creature_cnt" type-name="int32_t" index-refers-to="(find-instance $creature_raw $)" ld:is-container="true"><ld:item ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
             <ld:field name="unk_int1" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
         </ld:field>
