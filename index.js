@@ -941,7 +941,7 @@ function process(body, ctx) {
 		}
 
 		else if (b.type == 'IfStatement') {
-			var cs = srcstack[srcstack.length-1].comments;
+			/*var cs = srcstack[srcstack.length-1].comments;
 			var as = null;
 			if (cs) {
 				for (var j = 0; j < cs.length; j++) {
@@ -955,21 +955,36 @@ function process(body, ctx) {
 						break;
 					}
 				}
-			}
+			}*/
 
-			b.clauses.forEach(function(c) {
-				if (c.condition) {
+			b.clauses.forEach(function(clause) {
+				var cs = srcstack[srcstack.length-1].comments;
+			var as = null;
+			if (cs) {
+				for (var j = 0; j < cs.length; j++) {
+					var c = cs[j];
+					if (c.loc.start.line == clause.loc.start.line && c.value.substr(0,3) == 'as:') {
+						var m = c.value.match(/as:\s*([^\s]+)/);
+						if (m) {
+							as = m[1].split(',');
+						}
+							
+						break;
+					}
+				}
+			}
+				if (clause.condition) {
 					var ctx2 = { parent:ctx, types:{} };
 					ensureArray(as).forEach(function(a) {
 						var a2 = a.split('=');
 						ctx2.types[a2[0]] = expandtype(a2[1], ctx);
 					});
-					var t = checktype(c.condition, ctx2, { in_if:true });
+					var t = checktype(clause.condition, ctx2, { in_if:true });
 					// if (t == '__unknown')
-					// 	err(b.loc.start.line, 'type of expression is unknown', chalk.bold(sub(c.condition.range)));
+					// 	err(b.loc.start.line, 'type of expression is unknown', chalk.bold(sub(clause.condition.range)));
 				}
 				
-				if (find_comment_dfver(c)) {
+				if (find_comment_dfver(clause)) {
 					var ctx2 = { parent:ctx, types:{} };
 					ensureArray(as).forEach(function(a) {
 						var a2 = a.split('=');
@@ -977,7 +992,7 @@ function process(body, ctx) {
 						ctx2.temps = ctx2.temps || {};
 						ctx2.temps[a2[0]] = true;
 					});
-					rettype = process(c.body, ctx2) || rettype;
+					rettype = process(clause.body, ctx2) || rettype;
 				}
 			});
 		}

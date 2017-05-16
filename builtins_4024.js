@@ -193,6 +193,7 @@ module.exports = {
 		'native.itemcache_get': 'native.itemcache',
 		'native.itemcache_get_category': 'native.type_category',
 		'native.itemcache_search': 'native.group_info[]',
+		'native.custom_command': 'string',
 		
 		'mp.pack': 'string',
 		
