@@ -1052,6 +1052,7 @@ function err(line)
 	var fn = srcstack[srcstack.length-1].fn.split('/').slice(-1)[0];
 	args.splice(0, 1, chalk.red('ERROR ' + fn + ':' + line));
 	console.log.apply(null, args);
+	process.exitCode = 2;
 }
 
 function warn(line)
@@ -1063,6 +1064,7 @@ function warn(line)
 	var fn = srcstack[srcstack.length-1].fn.split('/').slice(-1)[0];
 	args.splice(0, 1, chalk.yellow('WARN  ' + fn + ':' + line));
 	console.log.apply(null, args);
+	process.exitCode = 2;
 }
 
 //TODO: create context for the main file so that locals don't go to rootctx

@@ -140,6 +140,7 @@ module.exports = {
 		'dfhack.units.getPosition': { _type:'tuple', _tuple:['number', 'number', 'number'] },
 		'dfhack.units.getCasteProfessionName': 'string',
 		'dfhack.units.setNickname': 'none',
+		'dfhack.units.isOwnGroup': 'bool',
 		'dfhack.items.getGeneralRef': 'df.general_ref',
 		'dfhack.items.getDescription': 'string',
 		'dfhack.items.getItemBaseValue': 'number',
