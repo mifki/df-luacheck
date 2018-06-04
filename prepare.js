@@ -390,7 +390,7 @@ function processXml(xml, ctxtypes)
 				else if (imeta == 'compound') {
 					rootctx.types.df.global[def.$['name']] = processStruct(item);
 				
-				} else if (imeta == 'container') {
+				} else if (imeta == 'container' || imeta == 'static-array') {
 					rootctx.types.df.global[def.$['name']] = container_type(item);
 					/*var item3 = item.item;
 

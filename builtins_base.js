@@ -42,13 +42,35 @@ module.exports = {
 			clock: { _type:'function', _node:'number' },
 		},
 
+		__defclass_base: {
+			ATTRS: 'table'
+		},
+
 		Script: {
 			_type: 'Script',
+			_sub: '__defclass_base',
 			_defclass: true,
 			mtime: 'number',
 			env: '_ENV',
 			path: 'string',
-			_flags: { _type:'table' }
+			_flags: 'Script.T_flags',
+			flags_mtime: 'number',
+
+			T_flags: {
+				_type:'Script.T_flags',
+
+				enable: 'bool',
+				enable_state: 'bool',
+				module: 'bool',
+				module_strict: 'bool',
+				alias: 'string',
+				alias_count: 'number',
+			},
+
+			_methods: {
+				needs_update: { _type:'function', _node:'bool' },
+				get_flags: { _type:'function', _node:'Script.T_flags' },
+			},
 		},
 
 		dfhack: {
@@ -65,7 +87,9 @@ module.exports = {
 
 			internal: {
 				_type: 'dfhack.internal',
-				scripts: { _type:'table', _array:'Script' }
+				_alias: 'dfhack.internal',
+				scripts: { _type:'table', _array:'Script' },
+				save_init: { _type:'_ENV[]', _array:'_ENV' },
 			},
 
 			persistent: {
@@ -81,6 +105,10 @@ module.exports = {
 			exception: { _type:'function' }, // TODO
 			penarray: { _type:'function' }, // TODO
 			random: { _type:'function', _node:'number' },
+
+			pen: {
+				_type: 'dfhack.pen',
+			},
 	
 			matinfo: {
 				_type: 'dfhack.matinfo',
@@ -188,6 +216,7 @@ module.exports = {
 		'string.upper': 'string',
 		'string.lower': 'string',
 		'string.match': 'string',
+		'string.format': 'string',
 
 		'bit32.band': 'number',
 		'bit32.lshift': 'number',
@@ -210,6 +239,7 @@ module.exports = {
 		'dfhack.gui.getCurViewscreen': 'df.viewscreen',
 		'dfhack.gui.getSelectedItem': 'df.item',
 		'dfhack.gui.showAnnouncement': 'none',
+		'dfhack.gui.getFocusString': 'string',
 		'dfhack.units.getProfessionName': 'string',
 		'dfhack.units.isCitizen': 'bool',
 		'dfhack.units.isOwnCiv': 'bool',
@@ -237,6 +267,8 @@ module.exports = {
 		'dfhack.items.getPosition': { _type:'tuple', _tuple:['number', 'number', 'number'] },
 		'dfhack.items.getContainer': 'df.item',
 		'dfhack.items.getHolderUnit': 'df.unit',
+		'dfhack.items.getSubtypeCount': 'number',
+		'dfhack.items.isCasteMaterial': 'bool',
 		'dfhack.matinfo.decode': 'dfhack.matinfo',
 		'dfhack.matinfo.find': 'dfhack.matinfo',
 		'dfhack.matinfo.matches': 'bool',
@@ -254,6 +286,7 @@ module.exports = {
 		'dfhack.internal.getRebaseDelta': 'number',
 		'dfhack.internal.setAddress': 'none',
 		'dfhack.internal.getAddress': 'number',
+		'dfhack.internal.getDir': { _type:'string[]', _array:'string' },
 		'dfhack.TranslateName': 'string',
 		'dfhack.buildings.deconstruct': 'none',
 		'dfhack.buildings.markedForRemoval': 'bool',
@@ -265,6 +298,8 @@ module.exports = {
 		'dfhack.gui.getSelectedBuilding': 'df.building',
 		'dfhack.screen.inGraphicsMode': 'bool',
 		'dfhack.screen.getKeyDisplay': 'string',
+		'dfhack.screen.show': 'none',
+		'dfhack.screen.isDismissed': 'bool',
 		'dfhack.run_command_silent': { _type:'tuple', _tuple:['string', 'number'] },
 		'dfhack.kitchen.addExclusion': 'bool',
 		'dfhack.kitchen.findExclusion': 'number',
@@ -273,7 +308,10 @@ module.exports = {
 		'dfhack.world.isAdventureMode': 'bool',
 		'dfhack.world.isArena': 'bool',
 		'dfhack.world.isLegends': 'bool',
+		'dfhack.world.SetCurrentWeather': 'none',
+		'dfhack.filesystem.exists': 'bool',
 		'dfhack.filesystem.mtime': 'number',
+		'dfhack.pen.parse': 'dfhack.pen',
 
 		'string.utf8capitalize': 'string',
 
