@@ -26,8 +26,8 @@ module.exports = {
 			NIL: 'null',
 		},
 
-		FileHandle: {
-			_type: 'FileHandle'
+		io: {
+			_type: 'io'
 		},
 
 		'JSON': {
@@ -46,6 +46,17 @@ module.exports = {
 			ATTRS: 'table'
 		},
 
+		dfhack_flags: {
+			_type:'dfhack_flags',
+
+			enable: 'bool',
+			enable_state: 'bool',
+			module: 'bool',
+			module_strict: 'bool',
+			alias: 'string',
+			alias_count: 'number',
+		},
+
 		Script: {
 			_type: 'Script',
 			_sub: '__defclass_base',
@@ -53,24 +64,17 @@ module.exports = {
 			mtime: 'number',
 			env: '_ENV',
 			path: 'string',
-			_flags: 'Script.T_flags',
+			_flags: 'dfhack_flags',
 			flags_mtime: 'number',
-
-			T_flags: {
-				_type:'Script.T_flags',
-
-				enable: 'bool',
-				enable_state: 'bool',
-				module: 'bool',
-				module_strict: 'bool',
-				alias: 'string',
-				alias_count: 'number',
-			},
 
 			_methods: {
 				needs_update: { _type:'function', _node:'bool' },
-				get_flags: { _type:'function', _node:'Script.T_flags' },
+				get_flags: { _type:'function', _node:'dfhack_flags' },
 			},
+		},
+
+		__dfhack_random: {
+			_type: '__dfhack_random'
 		},
 
 		dfhack: {
@@ -82,12 +86,13 @@ module.exports = {
 			BASE_G: '_G',
 
 			onStateChange: {
-				_type: 'dfhack.onStateChange'
+				_type: '__EventHolder',
+				_inp: 'number'
 			},
 
 			internal: {
 				_type: 'dfhack.internal',
-				_alias: 'dfhack.internal',
+				_alias: true,
 				scripts: { _type:'table', _array:'Script' },
 				save_init: { _type:'_ENV[]', _array:'_ENV' },
 			},
@@ -104,7 +109,6 @@ module.exports = {
 			curry: { _type:'function' }, // TODO
 			exception: { _type:'function' }, // TODO
 			penarray: { _type:'function' }, // TODO
-			random: { _type:'function', _node:'number' },
 
 			pen: {
 				_type: 'dfhack.pen',
@@ -124,20 +128,20 @@ module.exports = {
 				figure: 'df.historical_figure',
 		
 				_methods: {
-					'getCraftClass': 'df.craft_material_class',
+					getCraftClass: 'df.craft_material_class',
+					getToken: 'string',
 				},
+			},
+
+			filesystem: {
+				_type: 'dfhack.filesystem',
+				_alias: true,
 			},
 
 			screen: {
 				_type: 'dfhack.screen',
 				_alias: true,
 			},
-		},
-
-		dfhack_flags: {
-			_type: '__dfhack_flags',
-			enable: 'bool',
-			enable_state: 'bool'
 		},
 
 		native: {
@@ -223,10 +227,12 @@ module.exports = {
 		'bit32.rshift': 'number',
 		'bit32.bnot': 'number',
 
-		'io.open': { _type:'tuple', _tuple:['FileHandle', 'string', 'number'] },
+		'io.open': { _type:'tuple', _tuple:['io', 'string', 'number'] },
 
 		'dfhack.printerr': 'none',
 		'dfhack.error': 'none',
+		'dfhack.color': 'none',
+		'dfhack.print': 'none',
 		'dfhack.current_script_name': 'string',
 		'dfhack.getOSType': 'string',
 		'dfhack.getDFPath': 'string',
@@ -235,11 +241,16 @@ module.exports = {
 		'dfhack.df2console': 'string',
 		'dfhack.isMapLoaded': 'bool',
 		'dfhack.isWorldLoaded': 'bool',
-		'dfhack.timeout': 'none',
+		'dfhack.timeout': 'number',
+		'dfhack.timeout_active': 'function',
 		'dfhack.gui.getCurViewscreen': 'df.viewscreen',
 		'dfhack.gui.getSelectedItem': 'df.item',
 		'dfhack.gui.showAnnouncement': 'none',
 		'dfhack.gui.getFocusString': 'string',
+		'dfhack.random': 'number',
+		'__dfhack_random.init': 'none',
+		'__dfhack_random.random': 'number',
+		'__dfhack_random.drandom': 'number',
 		'dfhack.units.getProfessionName': 'string',
 		'dfhack.units.isCitizen': 'bool',
 		'dfhack.units.isOwnCiv': 'bool',
@@ -268,7 +279,10 @@ module.exports = {
 		'dfhack.items.getContainer': 'df.item',
 		'dfhack.items.getHolderUnit': 'df.unit',
 		'dfhack.items.getSubtypeCount': 'number',
+		'dfhack.items.getSubtypeDef': 'df.itemdef',
 		'dfhack.items.isCasteMaterial': 'bool',
+		'dfhack.items.remove': 'bool',
+		'dfhack.items.findType': 'number',
 		'dfhack.matinfo.decode': 'dfhack.matinfo',
 		'dfhack.matinfo.find': 'dfhack.matinfo',
 		'dfhack.matinfo.matches': 'bool',
@@ -276,10 +290,13 @@ module.exports = {
 		'dfhack.job.getWorker': 'df.unit',
 		'dfhack.job.getGeneralRef': 'df.general_ref',
 		'dfhack.job.removeWorker': 'none',
+		'dfhack.job.getHolder': 'df.building',
 		'dfhack.maps.getRegionBiome': 'df.region_map_entry',
 		'dfhack.maps.getBlock': 'df.map_block',
 		'dfhack.maps.getTileBlock': 'df.map_block',
 		'dfhack.maps.getTileType': 'df.tiletype',
+		'dfhack.maps.getTileFlags': { _type:'tuple', _tuple:['df.tile_designation', 'df.tile_occupancy'] },
+		'dfhack.maps.spawnFlow': 'df.flow_info',
 		'dfhack.burrows.setAssignedUnit': 'none',
 		'dfhack.internal.memmove': 'none',
 		'dfhack.internal.findScript': 'string',
@@ -287,6 +304,7 @@ module.exports = {
 		'dfhack.internal.setAddress': 'none',
 		'dfhack.internal.getAddress': 'number',
 		'dfhack.internal.getDir': { _type:'string[]', _array:'string' },
+		'dfhack.internal.runCommand': { _type:'table', _array:{ _type:'table', '1':'number', '2':'string' }, status:'number' },
 		'dfhack.TranslateName': 'string',
 		'dfhack.buildings.deconstruct': 'none',
 		'dfhack.buildings.markedForRemoval': 'bool',
@@ -310,8 +328,18 @@ module.exports = {
 		'dfhack.world.isLegends': 'bool',
 		'dfhack.world.SetCurrentWeather': 'none',
 		'dfhack.filesystem.exists': 'bool',
+		'dfhack.filesystem.isfile': 'bool',
+		'dfhack.filesystem.isdir': 'bool',
+		'dfhack.filesystem.mkdir': 'bool',
+		'dfhack.filesystem.atime': 'number',
 		'dfhack.filesystem.mtime': 'number',
+		'dfhack.filesystem.ctime': 'number',
+		'dfhack.filesystem.listdir': { _type: 'table', _array: { _type: 'table', path: 'string', isdir: 'bool' } },
+		'dfhack.filesystem.listdir_recursive': { _type: 'table', _array: { _type: 'table', path: 'string', isdir: 'bool' } },
 		'dfhack.pen.parse': 'dfhack.pen',
+
+		'df.isnull': 'bool',
+		'df.isvalid': 'string',
 
 		'string.utf8capitalize': 'string',
 
@@ -333,9 +361,10 @@ module.exports = {
 
 		'deflatelua.inflate_zlib': 'none',
 
-		'FileHandle.read': 'string',
-		'FileHandle.write': 'none',
-		'FileHandle.close': 'none',
+		'io.read': 'string',
+		'io.write': 'none',
+		'io.flush': 'none',
+		'io.close': 'none',
 	},
 
 	parent: null,

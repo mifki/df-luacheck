@@ -60,20 +60,20 @@ function container_type(fdef, type)
 
 			//TODO: set _type
 			var t = pointer_type(fdef.item, type);
-			return { _array: t, _type:t+'[]' };
+			return { _array: t, _type:t+'[]', _kind:'string' };
 		
 		} else if (imeta == 'number') {
-			return { _array: 'number' };
+			return { _array: 'number', _kind:'string' };
 		
 		} else if (imeta == 'container' || imeta == 'static-array') {
 			//TODO: set _type
-			return { _array: container_type(fdef.item, type) };
+			return { _array: container_type(fdef.item, type), _kind:'string' };
 		
 		} else if (imeta == 'primitive') {
-			return { _array: convertBasicType(item.$['subtype']) };
+			return { _array: convertBasicType(item.$['subtype']), _kind:'string' };
 		
 		} else if (imeta == 'compound') {
-			return { _array: processStruct(item) };
+			return { _array: processStruct(item), _kind:'string' };
 		
 		} else {
 			// console.log('V1', fdef);
@@ -82,7 +82,7 @@ function container_type(fdef, type)
 	}
 
 	else // vector<void*>
-		return { _array:'number' };	
+		return { _array:'number', _kind:'string' };
 }
 
 function pointer_type(fdef, type)
@@ -155,7 +155,13 @@ function processStruct(def, n)
 
 			if (meta == 'number')
 			{
-				if (fdef.$['subtype'] == 'bool' || (fdef.$['subtype'] == 'flag-bit' && fdef.$['bits'] == 1)) //TODO: can bits be >1 ?
+				if (fdef.$['type-name'])
+					try {
+						type[fname] = convertBasicType(fdef.$['type-name']);
+					} catch (e) {
+						type[fname] = 'df.' + fdef.$['type-name'];
+					}
+				else if (fdef.$['subtype'] == 'bool' || (fdef.$['subtype'] == 'flag-bit' && (fdef.$['count'] || 1) == 1))
 					type[fname] = 'bool';
 				else
 					type[fname] = 'number';
@@ -319,16 +325,23 @@ function processEnum(def, n)
 	var type = { _type: n };
 
 	type._array = 'string';
-	type._enum = true;
+	type._enum = {};
 	type._last_item = 'number';
 	type.attrs = { _array: { } };
 
 	var anon = 1;
+	var value = -1;
 	ensureArray(def.$$).forEach(function(fdef) {
 		var t = fdef['#name'];
 
 		if (t == 'enum-item') {
+			if (fdef.$ && fdef.$['value'] !== undefined) {
+				value = +fdef.$['value'];
+			} else {
+				value++;
+			}
 			var fname = fdef.$ && fdef.$['name'] || ('anon_'+anon++);
+			type._enum[value] = fname;
 			type[fname] = n;//'number';
 		}
 		
