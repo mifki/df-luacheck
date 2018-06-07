@@ -45,7 +45,7 @@ function container_type(fdef, type)
 
 	if (item) {
 		var imeta = item.$['meta'];
-		
+
 		if (imeta == 'pointer' || imeta == 'global') {
 			/*var item2 = item.item;
 			if (item2 && item2.$.meta == 'compound') {
@@ -60,21 +60,42 @@ function container_type(fdef, type)
 
 			//TODO: set _type
 			var t = pointer_type(fdef.item, type);
-			return { _array: t, _type:t+'[]', _kind:'string' };
-		
+			return { _array: t, _type:(t._type||t)+'[]', _kind:'string' };
+
 		} else if (imeta == 'number') {
-			return { _array: 'number', _kind:'string' };
-		
+			return { _array: 'number', _type: 'number[]', _kind: 'string' };
+
 		} else if (imeta == 'container' || imeta == 'static-array') {
-			//TODO: set _type
-			return { _array: container_type(fdef.item, type), _kind:'string' };
-		
+			var t = container_type(fdef.item, type);
+			return { _array: t, _type:(t._type||t)+'[]', _kind:'string' };
+
 		} else if (imeta == 'primitive') {
-			return { _array: convertBasicType(item.$['subtype']), _kind:'string' };
-		
+			var t = convertBasicType(item.$['subtype']);
+			return { _array: t, _type:(t._type||t)+'[]', _kind:'string' };
+
+		} else if (imeta == 'compound' && item.$['subtype'] == 'enum') {
+			if (item.$['typedef-name']) {
+				var tname = type._type + '.' + item.$['typedef-name'];
+				type[item.$['typedef-name']] = processEnum(item, tname);
+				return { _array: tname, _type: tname + '[]', _kind: 'string' };
+			}
+
+			var t = processEnum(item);
+			return { _array: t, _type: t + '[]', _kind: 'string' };
+
 		} else if (imeta == 'compound') {
-			return { _array: processStruct(item), _kind:'string' };
-		
+			if (item.$['typedef-name']) {
+				var tname = type._type + '.' + item.$['typedef-name'];
+			    type[item.$['typedef-name']] = processStruct(item, tname);
+				if (item.$['subtype'] == 'bitfield')
+					type[item.$['typedef-name']].whole = 'number';
+
+				return { _array: tname, _type: tname + '[]', _kind: 'string' };
+			}
+
+			var t = processStruct(item);
+			return { _array: t, _type: t + '[]', _kind: 'string' };
+
 		} else {
 			// console.log('V1', fdef);
 			//console.log('#',convertBasicType(imeta));
@@ -82,7 +103,7 @@ function container_type(fdef, type)
 	}
 
 	else // vector<void*>
-		return { _array:'number', _kind:'string' };
+		return { _array:'number', _type:'number[]', _kind:'string' };
 }
 
 function pointer_type(fdef, type)
@@ -90,18 +111,17 @@ function pointer_type(fdef, type)
 	if (fdef.item && fdef.item.$['meta'] == 'compound') {
 		var item2 = fdef.item;
 		var tname = type._type + '.' + item2.$['typedef-name'];
-		rootctx.types[tname] = processStruct(item2, tname);
-		type[item2.$['typedef-name']] = tname;
+		type[item2.$['typedef-name']] = processStruct(item2, tname);
 		return tname;
 
 		//type[fname] = processStruct(fdef.item);
-	
+
 	} else if (fdef.item && (fdef.item.$['meta'] == 'container' || fdef.item.$['meta'] == 'static-array')) {
 		return container_type(fdef.item, type);
-		
+
 	} else if (fdef.item && fdef.item.$['meta'] == 'pointer' && fdef.$['is-array'] == 'true') {
 		return { _array:pointer_type(fdef.item, type) };
-	
+
 	} else if (fdef.item && fdef.item.$['subtype'] == 'static-string') {
 		return { _type:'charptr', _array:'number' };
 
@@ -124,7 +144,7 @@ function processStruct(def, n)
 	var type = { _type: n };
 	if (def.$['inherits-from']) {
 		type._super = 'df.' + def.$['inherits-from'];
-	
+
 		var supername = def.$['inherits-from'];
 		while(1)
 		{
@@ -135,15 +155,15 @@ function processStruct(def, n)
 			} else {
 				supertype._sub = supertype._sub || [];
 				supertype._sub.push(n);
-				
+
 				if (!supertype._super)
 					break;
-					
+
 				supername = supertype._super.substr(3);
 			}
 		}
 	}
-		
+
 	var anon = 1;
 	ensureArray(def.$$).forEach(function(fdef) {
 		var t = fdef['#name'];
@@ -169,7 +189,7 @@ function processStruct(def, n)
 			else if (fdef.$['subtype'] == 'static-string')
 			{
 				type[fname] = 'string';
-			}	
+			}
 			else if (meta == 'primitive')
 			{
 				type[fname] = convertBasicType(fdef.$['subtype']);
@@ -182,19 +202,18 @@ function processStruct(def, n)
 			{
 				var t = { _array:'bool', _type:'bool[]', whole:'number' };
 				type[fname] = t;
-				
+
 				if (fdef.$['index-enum'])
 					pending_index_enums.push({ type:t, enumtype:fdef.$['index-enum'] });
 			}
 			else if (meta == 'container' || meta == 'static-array')
 			{
 				type[fname] = container_type(fdef, type);
-					
+
 				if (type[fname] && type[fname]._array)
 				{
 					var t = type[fname];
-					t._type = (t._array._type || t._array.toString()) + '[]';
-					
+
 					if (fdef.$['index-enum'])
 						pending_index_enums.push({ type:t, enumtype:fdef.$['index-enum'] });
 				}
@@ -210,10 +229,10 @@ function processStruct(def, n)
 					type[item2.$['typedef-name']] = tname;
 
 					//type[fname] = processStruct(fdef.item);
-				
+
 				} else if (fdef.item && fdef.item.$['meta'] == 'container') {
 					type[fname] = container_type(fdef.item, type);
-				
+
 				} else {
 					var t;
 					try {
@@ -238,9 +257,8 @@ function processStruct(def, n)
 			{
 				if (fdef.$['typedef-name']) {
 					var tname = n + '.' + fdef.$['typedef-name'];
-					rootctx.types[tname] = processEnum(fdef, tname);
+					type[fdef.$['typedef-name']] = processEnum(fdef, tname);
 					type[fdef.$['name']] = tname;
-					type[fdef.$['typedef-name']] = tname;
 				}
 				else
 				{
@@ -249,38 +267,37 @@ function processStruct(def, n)
 			}
 			else if (meta == 'compound')
 			{
-				//TODO: if bitfield then create 0..X fields !							
+				//TODO: if bitfield then create 0..X fields !
 
 				if (fdef.$['typedef-name']) {
 					var tname = n + '.' + fdef.$['typedef-name'];
-					rootctx.types[tname] = processStruct(fdef, tname);
+				    type[fdef.$['typedef-name']] = processStruct(fdef, tname);
 					if (fdef.$['subtype'] == 'bitfield')
-						rootctx.types[tname].whole = 'number';							
+						type[fdef.$['typedef-name']].whole = 'number';
 
 					type[fdef.$['name']] = tname;
-					type[fdef.$['typedef-name']] = tname;
 				}
 				else
-				{					
+				{
 					/*if (fdef.$['type-name'])
 						type[fdef.$['name']] = fdef.$['type-name'];
 					else*/
-					if (fdef.$['is-union'] == 'true') {
+					if (fdef.$['is-union'] == 'true' || fdef.$['anon-compound'] == 'true') {
 						var u = processStruct(fdef);
 						for (var j in u)
 							type[j] = u[j];
 					}
 					else {
 						type[fdef.$['name']] = processStruct(fdef);
-						
+
 						if (fdef.$['subtype'] == 'bitfield')
-							type[fdef.$['name']].whole = 'number';							
+							type[fdef.$['name']].whole = 'number';
 					}
 				}
 			}
 			else
 				throw new Error('unknown meta '+meta);
-		
+
 		} else if (t == 'virtual-methods') {
 			ensureArray(fdef.vmethod).forEach(function(mdef) {
 				if (mdef.$.name) {
@@ -292,17 +309,17 @@ function processStruct(def, n)
 							rettype = 'df.' + mdef.$['ret-type'];
 						}
 					}
-					
+
 					else if (mdef['ret-type']) {
 						if (mdef['ret-type'].$.meta == 'pointer')
 							rettype = 'df.' + mdef['ret-type'].$['type-name'];
 						else
 							console.log('rettype', mdef['ret-type']);
 					}
-					
+
 					else
 						rettype = 'none';
-					
+
 					if (rettype) {
 						type._methods = type._methods || {};
 						type._methods[mdef.$.name] = rettype;
@@ -311,7 +328,7 @@ function processStruct(def, n)
 			});
 		}
 	});
-	
+
 	if (def.$.meta == 'bitfield-type') {
 		type.whole = 'number';
 		type._array = 'bool';
@@ -344,7 +361,7 @@ function processEnum(def, n)
 			type._enum[value] = fname;
 			type[fname] = n;//'number';
 		}
-		
+
 		else if (t == 'enum-attr') {
 			var atype;
 			if (fdef.$['type-name']) {
@@ -354,12 +371,12 @@ function processEnum(def, n)
 					atype = 'df.' + fdef.$['type-name'];
 				}
 			}
-			
+
 			type.attrs._array[fdef.$['name']] = atype || 'string';
 		}
 	});
-	
-	
+
+
 	return type;
 }
 
@@ -387,29 +404,31 @@ function processXml(xml, ctxtypes)
 
 			if (item) {
 				var imeta = item.$['meta'];
-				
+
 				if (imeta == 'pointer' || imeta == 'global')
 					rootctx.types.df.global[def.$['name']] = 'df.'+item.$['type-name'];
-				
+
 				else if (imeta == 'number') {
 					if (item.$['subtype'] == 'bool' || (item.$['subtype'] == 'flag-bit' && item.$['bits'] == 1)) //TODO: can bits be >1 ?
 						rootctx.types.df.global[def.$['name']] = 'bool';
 					else
 						rootctx.types.df.global[def.$['name']] = 'number';
-					
+
 				} else if (imeta == 'primitive')
 					rootctx.types.df.global[def.$['name']] = convertBasicType(item.$['subtype']);
-				
+
 				else if (imeta == 'compound') {
-					rootctx.types.df.global[def.$['name']] = processStruct(item);
-				
+					rootctx.types.df.global['T_' + def.$['name']] = processStruct(item);
+					rootctx.types.df.global['T_' + def.$['name']]._type = 'df.global.T_' + def.$['name'];
+					rootctx.types.df.global[def.$['name']] = 'df.global.T_' + def.$['name'];
+
 				} else if (imeta == 'container' || imeta == 'static-array') {
 					rootctx.types.df.global[def.$['name']] = container_type(item);
 					/*var item3 = item.item;
 
 					if (item3) {
 						var imeta3 = item3.$['meta'];
-						
+
 						if (imeta3 == 'pointer' || imeta3 == 'global') {
 								rootctx.types.df.global[def.$['name']] = { _array: 'df.'+item3.$['type-name'] };
 						} else if (imeta3 == 'number')
@@ -427,11 +446,11 @@ function processXml(xml, ctxtypes)
 				}
 				else {
 					//console.log('#',convertBasicType(imeta));
-					
+
 				}
-			}			
+			}
 			else
-				;//console.log('G2', def);			
+				;//console.log('G2', def);
 		});
 	});
 }
@@ -447,7 +466,7 @@ fs.readdirSync('./df').forEach(function(f) {
 	}
 });*/
 
-processXml(fs.readFileSync('./codegen_'+dfhackver+'.out.xml'), rootctx.types.df);
+processXml(fs.readFileSync(__dirname + '/codegen_'+dfhackver+'.out.xml'), rootctx.types.df);
 
 pending_index_enums.forEach(function(e) {
 	var t = e.type;
@@ -459,7 +478,21 @@ pending_index_enums.forEach(function(e) {
 		});
 	} else
 		console.log('no enum', e.enumtype);
-	
+
 });
 
-fs.writeFileSync('./ctx_'+dfhackver+'.json', JSON.stringify(rootctx, null, 2));
+Object.keys(rootctx.functions || {}).forEach(function(f) {
+	var path = f.split(/\./g);
+	var t = rootctx.types;
+	for (var i = 0; i < path.length - 1; i++) {
+		if (!t[path[i]]) {
+			t[path[i]] = {
+				_type: path.slice(0, i + 1).join('.'),
+				_alias: true
+			};
+		}
+		t = t[path[i]];
+	}
+});
+
+fs.writeFileSync(__dirname + '/ctx_'+dfhackver+'.json', JSON.stringify(rootctx, null, 2));

@@ -16,13 +16,14 @@ var ensureArray = function(a) {
 	return a;
 };
 
-var argv = require('yargs').argv;
+var argv = require('yargs').count('verbose').argv;
 var dfhackver = argv.v;
 var dfver = dfhackver.toString().split('-')[0];
 var mainfn = argv._[0];
 var nowarn = argv.W;
+var verbose = argv.verbose;
 
-var rootctx = JSON.parse(fs.readFileSync('ctx_'+dfhackver+'.json'));
+var rootctx = JSON.parse(fs.readFileSync(__dirname + '/ctx_' + dfhackver + '.json'));
 var ctxstack = [{ _type: '__context', types: {}, parent: rootctx }];
 
 var isPreload = false;
@@ -50,6 +51,7 @@ reqignore = reqignore.concat(ensureArray(argv.x));
 var src = fs.readFileSync(mainfn).toString();
 var ast = luaparser.parse(src, { comments:true, locations:true, ranges:true });
 var srcstack = [ { src:src, fn:mainfn, comments:ast.comments } ];
+var linestack = [];
 
 function isargtype(t) {
 	if (!t)
@@ -63,9 +65,20 @@ function isargtype(t) {
 	return isargtype(t._array);
 }
 
+var keyArrayType = { _type:'__keyArray', _STRING:'number', _MOUSE_L:'bool', _MOUSE_R:'bool', _MOUSE_L_DOWN:'bool', _MOUSE_R_DOWN:'bool', _array:'bool' };
+Object.values(rootctx.types.df.interface_key._enum).forEach(function(k) {
+	keyArrayType[k] = 'bool';
+});
+
 function findtype(name, ctx) {
 	if (name == '__arg')
 		return { _type:'__arg', _array:'__arg' };
+
+	if (name == '__keyArray')
+		return keyArrayType;
+
+	if (name == 'field')
+		return { _type:'field' };
 
 	if (name == '_ENV')
 		return ctx.types['_ENV'] || ctx;
@@ -83,22 +96,45 @@ function findtype(name, ctx) {
 		return findtype(name, ctx.parent);
 }
 
-function findfn(name, ctx) {
+function deepEqual(a, b, ctx, line) {
+	if (typeof a != typeof b) {
+		return false;
+	}
+
+	if (!a || !b) {
+		return !a && !b;
+	}
+
+	if (typeof a != 'object') {
+		return a == b;
+	}
+
+	return Object.keys(a).concat(Object.keys(b)).every(function(k) {
+		if (k == '_array') {
+			return deepEqual(a[k] || arrayType(a, ctx, line), b[k] || arrayType(b, ctx, line), ctx, line);
+		}
+		return deepEqual(a[k], b[k], ctx, line);
+	});
+}
+
+function findfn(name, ctx, line) {
 	var dot = name.lastIndexOf('.');
 	if (dot != -1) {
-		var t = expandtype(name.substr(0, dot), ctx);
+		var t = expandtype(name.substr(0, dot), ctx, line, true);
 		if (t && t._type == '__arg') {
 			t = 'string';
 		}
 		var n = name.substr(dot+1);
 		if (t && t != '__unknown') {
-			for (var o = t; o; o = expandtype(o._super,ctx)) {
-				if (o._module && findfn(n, o._module))
-					return findfn(n, o._module);
+			for (var o = t; o; o = expandtype(o._super, ctx, line, true)) {
+				if (o._module && findfn(n, o._module, line))
+					return findfn(n, o._module, line);
 				if (o._methods && o._methods[n])
 					return o._methods[n];
 				if (o.functions && o.functions[n])
 					return { _type:'function', _node:o.functions[n] };
+				if (o._defclass && n == 'ATTRS')
+					return { _type:'function', _node:'none', _defclass_ATTRS:t };
 			}
 		}
 	}
@@ -110,7 +146,7 @@ function findfn(name, ctx) {
 		return ctx.functions[name];
 
 	if (ctx.parent)
-		return findfn(name, ctx.parent);
+		return findfn(name, ctx.parent, line);
 }
 
 function findguess(name, ctx) {
@@ -135,7 +171,7 @@ function fix_custom_type_name(type, fn, line, lvl)
 	});
 }
 
-function expandtype(name, ctx, line) {
+function expandtype(name, ctx, line, quiet) {
 	if (typeof name == 'string' && name.slice(-2) == '[]')
 		return { _type:name, _array:name.slice(0,-2) }
 
@@ -162,13 +198,17 @@ function expandtype(name, ctx, line) {
 
 	if (typeof name == 'string') {
 		var q = findtype(name, ctx);
-		if (q)
+		if (q) {
 			return q;
+		}
 
 		var a = name.split('.');
 		var t = findtype(a[0], ctx);
 		for (var j = 1; j < a.length; j++) {
 			if (!t) {
+				if (!quiet) {
+					err(line, 'Cannot find', chalk.bold(a.slice(0, j).join('.')), 'in', chalk.bold(name));
+				}
 				return '__unknown';
 			}
 
@@ -180,10 +220,47 @@ function expandtype(name, ctx, line) {
 				t = t[a[j]];
 			}
 		}
+		if (!t) {
+			if (!quiet) {
+				err(line, 'Cannot find', chalk.bold(name));
+			}
+			return '__unknown';
+		}
 		return t;
 	}
 
 	return name;
+}
+
+function arrayType(t, ctx, line, key) {
+	if (t._enum && key && (key._type||key) == 'string') {
+		return t._type;
+	}
+
+	if (t._array) {
+		return expandtype(t._array, ctx, line);
+	}
+
+	if (!t._type || t._type == '__context') {
+		return null;
+	}
+
+	var fieldTypes = Object.keys(t).filter(function(k) {
+		return k != '_type' && k != '_alias' && (t._type.slice(0, 3) != 'df.' || k != 'whole') && t[k];
+	}).map(function(k) {
+		return t[k];
+	});
+
+	if (fieldTypes.length == 0) {
+		return '__unknown';
+	}
+	if (fieldTypes.every(function(t) {
+		return (t._type||t) == (fieldTypes[0]._type||fieldTypes[0]);
+	})) {
+		return expandtype(fieldTypes[0]._type||fieldTypes[0], ctx, line);
+	}
+
+	return null;
 }
 
 function checktype(expr, ctx, opts) {
@@ -204,15 +281,31 @@ function checktype(expr, ctx, opts) {
 			return '__unknown';
 		}
 
-		if (expr.index.type == 'StringLiteral') {
+		var index = expr.index;
+		if (index.type == 'Identifier') {
+			for (var c = ctx; c; c = c.parent) {
+				if (c._params && c._params.indexOf(index.name) > -1) {
+					var arg = c._args[c._params.indexOf(index.name)];
+					if (arg && arg.type.indexOf('Literal') > -1) {
+						index = arg;
+					}
+					break;
+				}
+				if (c.types && c.types[index.name]) {
+					break;
+				}
+			}
+		}
+
+		if (index.type == 'StringLiteral') {
 			return checktype({
 				type: 'MemberExpression',
 				indexer: '.',
 				identifier: {
 					type: 'Identifier',
-					name: expr.index.value,
-					loc: expr.index.loc,
-					range: expr.index.range
+					name: index.value,
+					loc: index.loc,
+					range: index.range
 				},
 				base: expr.base,
 				loc: expr.loc,
@@ -223,33 +316,21 @@ function checktype(expr, ctx, opts) {
 		// console.log(expr.index);
 		// var idxt = checktype(expr.index, ctx);
 		// console.log('==',t);
-		if (expr.index.type == 'NumericLiteral' && t._type) {
-			if (t[expr.index.value])
-				return expandtype(t[expr.index.value], ctx); 
+		if (index.type == 'NumericLiteral' && t._type) {
+			if (t[index.value])
+				return expandtype(t[index.value], ctx, expr.loc.start.line);
 		}
-
-		if (t._array)
-			return expandtype(t._array, ctx);
 
 		if (t._type == '__EventHolder')
 			return { _type:'function', _anyfunc:true, _inp:t._inp };
 
-		if (t._type == 'table') {
-			var fieldTypes = Object.keys(t).filter(function(k) {
-				return k != '_type';
-			}).map(function(k) {
-				return t[k];
-			});
-
-			if (fieldTypes.length == 0)
-				return '__unknown';
-			if (fieldTypes.every(function(t) {
-				return (t._type||t) == (fieldTypes[0]._type||fieldTypes[0]);
-			}))
-				return expandtype(fieldTypes[0]._type||fieldTypes[0], ctx);
+		var at = arrayType(t, ctx, expr.loc.start.line, checktype(index, ctx));
+		if (at && at != '__unknown') {
+			return at;
 		}
 
-		err(expr.loc.start.line, 'unhandled IndexExpression', sub(expr.range), t, expr.index);
+		fault(expr.loc.start.line, 'unhandled IndexExpression', sub(expr.range), t, index);
+		return '__unknown';
 	}
 
 	else if (expr.type == 'MemberExpression')
@@ -258,11 +339,12 @@ function checktype(expr, ctx, opts) {
 		if (byName)
 			return byName;
 
-		var baset = checktype(expr.base, ctx);
+		var baset = checktype(expr.base, ctx) || '__unknown';
 		if (typeof baset == 'string')
-			baset = expandtype(baset, ctx);
-		if (!baset) {
-			err(expr.loc.start.line, 'internal error: no base type', sub(expr.range), expr);
+			baset = expandtype(baset, ctx, expr.loc.start.line) || baset;
+		if (baset == '__unknown') {
+			fault(expr.loc.start.line, 'no base type', sub(expr.range), expr, ctx.types);
+			return '__unknown';
 		}
 
 		//TODO: need to update parent object type in context for abstract types
@@ -294,15 +376,15 @@ function checktype(expr, ctx, opts) {
 		}
 
 		var t = null;
-		for (var o = baset; o && !t; o = expandtype(o._super,ctx)) {
+		for (var o = baset; o && !t; o = expandtype(o._super, ctx, expr.loc.start.line)) {
 			t = o[expr.identifier.name] || (o._module && findtype(expr.identifier.name, o._module));
 		}
 
-		if (isPreload && expr.identifier.name == '__index')
+		if (isPreload && (expr.identifier.name == '__index'))
 			return { _type:'function', _anyfunc:true };
 
 		if (baset._type == '__context') {
-			return expandtype(expr.identifier.name, baset);
+			return expandtype(expr.identifier.name, baset, expr.loc.start.line);
 		}
 
 		if (!t && baset._sub) {
@@ -315,8 +397,8 @@ function checktype(expr, ctx, opts) {
 						var hint = m[1];
 
 						if (baset._sub.indexOf(hint) != -1) {
-							var subt = expandtype(hint, ctx);
-							for (var o = subt; o && !t; o = expandtype(o._super,ctx)) {
+							var subt = expandtype(hint, ctx, expr.loc.start.line);
+							for (var o = subt; o && !t; o = expandtype(o._super,ctx, expr.loc.start.line)) {
 								t = o[expr.identifier.name]
 							}
 						} else
@@ -330,7 +412,7 @@ function checktype(expr, ctx, opts) {
 
 		if (!t && baset._sub) {
 			for (var j in baset._sub) {
-				var subt = expandtype(baset._sub[j], ctx);
+				var subt = expandtype(baset._sub[j], ctx, expr.loc.start.line);
 				t = subt && subt[expr.identifier.name];
 				if (t) {
 					warn(expr.loc.start.line, 'using subclass', chalk.bold(subt._type), 'for base class', chalk.bold(baset._type), 'and field', chalk.bold(expr.identifier.name));
@@ -341,23 +423,32 @@ function checktype(expr, ctx, opts) {
 		}
 
 		if (!t) {
-			if (baset._type == '__df')
+			t = arrayType(baset, ctx, expr.loc.start.line, 'string');
+			if (t == '__unknown') {
+				t = null;
+			}
+		}
+
+		if (!t) {
+			if ((baset._defclass || baset._type == 'table') && !baset._array && opts.assignLeft) {
+				// ok
+			} else if (baset._type == '__df') {
 				err(expr.loc.start.line, 'type', chalk.bold('df.'+expr.identifier.name), 'does not exist');
-			else if (baset._type == '__global')
+			} else if (baset._type == '__global') {
 				err(expr.loc.start.line, 'global', chalk.bold(expr.identifier.name), 'does not exist');
-			else if (baset._enum)
+			} else if (baset._enum) {
 				err(expr.loc.start.line, 'value', chalk.bold(expr.identifier.name), 'does not exist in enum', chalk.bold(baset._type));
-			else {
+			} else {
 				err(expr.loc.start.line, 'field', chalk.bold(expr.identifier.name), 'does not exist in', chalk.bold(sub([expr.base.range[0], expr.identifier.range[0]-1])), 'of type', chalk.bold(baset._type||baset));
 			}
 			return '__unknown';
 		}
 
-		return expandtype(t, ctx) || '__unknown';
+		return expandtype(t, ctx, expr.loc.start.line) || '__unknown';
 	}
 
 	else if (expr.type == 'Identifier') {
-		return expandtype(expr.name, ctx) || '__unknown';
+		return expandtype(expr.name, ctx, expr.loc.start.line, opts.quiet) || '__unknown';
 	}
 
 	else if (expr.type == 'StringLiteral') {
@@ -377,7 +468,6 @@ function checktype(expr, ctx, opts) {
 	}
 
 	else if (expr.type == 'FunctionDeclaration') {
-		expr._ctx = ctx;
 		expr._src = srcstack[srcstack.length-1];
 		return { _type:'function', _node:expr, _ctx:ctx, _src:srcstack[srcstack.length-1] };
 	}
@@ -387,14 +477,14 @@ function checktype(expr, ctx, opts) {
 	}
 
 	else if (expr.type == 'BinaryExpression') {
-		var t1 = checktype(expr.left, ctx);
-		var t2 = checktype(expr.right, ctx);
+		var t1 = checktype(expr.left, ctx) || '__unknown';
+		var t2 = checktype(expr.right, ctx) || '__unknown';
 
 		var res;
 		var op = expr.operator;
 		if (op == '..')
 			res = 'string';
-		else if (op == '+' || op == '-' || op == '/' || op == '*')
+		else if (op == '+' || op == '-' || op == '/' || op == '*' || op == '&' || op == '|' || op == '%' || op == '^^' || op == '<<' || op == '>>' || op == '^')
 			res = 'number';
 		else
 			res = 'bool';
@@ -409,21 +499,25 @@ function checktype(expr, ctx, opts) {
 
 	//TODO: if this is inside if condition, return bool and don't show warnings
 	else if (expr.type == 'LogicalExpression') {
-		var t1 = checktype(expr.left, ctx, opts);
-		var t2 = checktype(expr.right, ctx, opts);
+		var lopts = opts;
+		if (expr.operator == 'or' && (expr.left.type == 'Identifier' || expr.left.type == 'MemberExpression') && sub(expr.left.range) == opts.assignedTo) {
+			lopts = Object.assign({ quiet:true }, opts);
+		}
+		var t1 = checktype(expr.left, ctx, lopts) || '__unknown';
+		var t2 = checktype(expr.right, ctx, opts) || '__unknown';
 
 		var res = 'bool';
 		if (!opts.in_if) {
 			/*if (t1 != 'bool' && t1 != 'null' && t1 != '__unknown')
 				res = t1;
 			else*/
-			if (expr.operator == 'and') { 
-				//if (t2 != 'bool' && t2 != 'null' && t2 != '__unknown')
+			if (expr.operator == 'and') {
+				if (t2 != 'none' && t2 != 'null' && t2 != '__unknown')
 					res = t2;
-				//else
-					//res = t1;
+				else
+					res = t1;
 			} else if (expr.operator == 'or') {
-				if ((t1 != 'bool' && t1 != 'null' && t1 != '__unknown') || t2 == '__unknown')
+				if ((t1 != 'bool' && t1 != 'null' && t1 != '__unknown') || t2 == '__unknown' || t2 == 'none' || t2 == 'null')
 					res = t1;
 				else
 					res = t2;
@@ -442,7 +536,7 @@ function checktype(expr, ctx, opts) {
 	else if (expr.type == 'UnaryExpression') {
 		var res;
 		var op = expr.operator;
-		if (op == '-') //todo: check operand type
+		if (op == '-' || op == '~') //todo: check operand type
 			res = 'number';
 		else if (op == '#') //todo: check operand type
 			res = 'number';
@@ -495,7 +589,7 @@ function checktype(expr, ctx, opts) {
 
 
 			} else
-				err(f.loc.start.line, 'internal error: unhandled table field type', f);
+				fault(f.loc.start.line, 'unhandled table field type', f);
 
 			if (!mixed) {
 				if (!ret._array)
@@ -512,12 +606,20 @@ function checktype(expr, ctx, opts) {
 	}
 
 	else if (expr.type == 'VarargLiteral') {
-		return { _type:'tuple', _tuple:[] };
+		var tuple = [];
+		for (var c = ctx; c; c = c.parent) {
+			if (c.types['...']) {
+				tuple = c.types['...'];
+				break;
+			}
+		}
+		return { _type:'tuple', _tuple:tuple };
+	} else {
+		fault(expr.loc.start.line, 'unhandled expression type', expr);
+		return '__unknown';
 	}
 
-	else
-		err(expr.loc.start.line, 'internal error: unhandled expression type', expr);
-
+	fault(expr.loc.start.line, 'fell through in expression handler', expr);
 	return '__unknown';
 }
 
@@ -532,6 +634,18 @@ function flatten(expr, ctx) {
 			return t._type;
 		}
 
+		if (t && t._type == '__dhack') {
+			return 'dfhack';
+		}
+
+		if (t && t._type == '__df') {
+			return 'df';
+		}
+
+		if (t && t._type == '__global') {
+			return 'df.global';
+		}
+
 		return expr.name;
 	}
 
@@ -540,9 +654,13 @@ function flatten(expr, ctx) {
 	}
 
 	if (expr.indexer == ':') {
-		var t = checktype(expr.base, ctx);
+		var t = checktype(expr.base, ctx) || '__unknown';
 		if (t == '__unknown') {
 			err(expr.loc.start.line, 'type of expression is unknown', chalk.bold(sub(expr.range)));
+		}
+
+		if (typeof(t._type || t) != 'string') {
+			fault(expr.loc.start.line, 'invalid method receiver type', t);
 		}
 
 		return (t._type || t) + '.' + expr.identifier.name;
@@ -557,7 +675,33 @@ function flatten(expr, ctx) {
 	return sub(expr.range);
 }
 
-function fntype(call, ctx) {
+function getArgTypes(args, ctx, opts) {
+	opts = opts || {};
+	var argTypes = [];
+
+	function addArg(t) {
+		if (!t || !t._type) {
+			argTypes.push(t || '__unknown');
+		} else if (t._type == 'tuple') {
+			t._tuple.forEach(addArg);
+		} else {
+			argTypes.push(t);
+		}
+	}
+
+	ensureArray(args).forEach(function(a, i) {
+		var checkopts = {};
+		if (opts.defclass && i == 0) {
+			checkopts.quiet = true;
+		}
+		addArg(checktype(a, ctx, checkopts));
+	});
+
+	return argTypes;
+}
+
+function fntype(call, ctx, opts) {
+	opts = opts || {};
 
 	if (call.type == 'TableCallExpression') {
 		call.type = 'CallExpression';
@@ -566,9 +710,12 @@ function fntype(call, ctx) {
 	if (!call.arguments && call.argument)
 		call.arguments = [ call.argument ];
 
+	var argTypes = getArgTypes(call.arguments, ctx, {
+		defclass: call.base.name == 'defclass'
+	});
+
 	var isUtils = srcstack[srcstack.length - 1].fn.slice(-10) == '/utils.lua';
 
-	//TODO: support IndexExpression
 	var fnname = null;
 	var fn = null;
 	if (call.base.type == 'Identifier') {
@@ -577,26 +724,56 @@ function fntype(call, ctx) {
 		if (call.base.base.type == 'CallExpression') {
 			var base = fntype(call.base.base, ctx);
 			if (base && (base._type == '__context' || base._module)) {
-				fn = findfn(call.base.identifier.name, base._module || base);
+				fn = findfn(call.base.identifier.name, base._module || base, call.loc.start.line);
+			}
+		} else {
+			var base = checktype(call.base.base, ctx);
+			if (base && base._defclass && (call.base.identifier.name == 'invoke_before' || call.base.identifier.name == 'invoke_after') && call.arguments[0] && call.arguments[0].type == 'StringLiteral') {
+				for (var p = base._super; p; p = p._super) {
+					if (!p._methods || !p._methods[call.arguments[0].value]) {
+						break;
+					}
+
+					fntype({
+						type: 'CallExpression',
+						base: {
+							type: 'MemberExpression',
+							base: {
+								type: 'Identifier',
+								name: p._type
+							},
+							identifier: call.base.identifier
+						},
+						arguments: call.arguments.slice(1),
+						loc: call.loc,
+						range: call.range
+					}, ctx);
+				}
+				return 'none';
+			}
+			if (base && base._defclass) {
+				fn = findfn(base._type + '.' + call.base.identifier.name, base._defclass, call.loc.start.line);
 			}
 		}
 		fnname = flatten(call.base, ctx);
-	} else if (call.base.type == 'IndexExpression' && call.base.index.type == 'NumericLiteral') {
+	} else if (call.base.type == 'IndexExpression') {
 		var baset = checktype(call.base.base, ctx);
 		if (baset == '__unknown') {
 			err(call.loc.start.line, 'type of expression is unknown', chalk.bold(sub(call.base.base.range)));
 			return '__unknown';
 		}
 
-		if (baset[call.base.index.value])
-			fn = baset[call.base.index.value]; 
-		else {
+		var t = checktype(call.base, ctx);
+		if (t) {
+			fn = t;
+		} else {
 			err(call.loc.start.line, 'unknown function', chalk.bold(sub(call.base.range)));
 			return '__unknown';
 		}
-
+	} else if (call.base.type == 'FunctionDeclaration') {
+		fn = checktype(call.base, ctx);
 	} else {
-		warn(call.loc.start.line, 'skipping function call', chalk.bold(sub(call.base.range)));
+		warn(call.loc.start.line, 'skipping function call', chalk.bold(sub(call.base.range)), call.base.type);
 		return '__unknown';
 	}
 
@@ -616,57 +793,159 @@ function fntype(call, ctx) {
 	if (fnname.match('\\.delete$'))
 		return 'none';
 
-	if (fnname.match('\\.sizeof'))
+	if (fnname.match('\\.sizeof$'))
 		return { _type:'tuple', _tuple:['number', 'number'] };
 
-	if (fnname.match('\\._field')) //TODO: check that the field exists
+	if (fnname.match('\\._field$')) //TODO: check that the field exists
 		return { _type:'field' };
 
 	//TODO: check that assignment is correct somehow ?
-	if (fnname.match('\\.assign'))
+	if (fnname.match('\\.assign$'))
 		return 'none';
 
-	if (fnname == 'df.new') {
+	if (fnname == 'df.new' && call.arguments[0] && call.arguments[0].type == 'StringLiteral' && call.arguments.length == 1) {
 		var t = call.arguments[0].value;
-		var et = expandtype(t);
-		if (et == t) {
-			return { _type:'std::' + t, value:t };
+		if (['int8_t', 'uint8_t', 'int16_t', 'uint16_t', 'int32_t', 'uint32_t', 'int64_t', 'uint64_t', 'float', 'intptr_t', 'uintptr_t', 'long'].indexOf(t) != -1) {
+			return { _type:'std::' + t, value:'number' };
 		}
-		return et;
+		if (t == 'string') {
+			return { _type:'std::string', value:'string' };
+		}
+		return expandtype(t, ctx, expr.loc.start.line);
+	} else if (fnname == 'df.new' && argTypes[0] == 'string' && argTypes[1] == 'number') {
+		return { _type:'number[]', _array:'number' };
 	}
 
-	if (fnname == 'dfhack.random.new')
+	if (fnname == 'dfhack.random.new') {
 		return expandtype('__dfhack_random', ctx);
+	}
 
-	if (fnname.match('\\.new')) 
-		return expandtype(fnname.slice(0, -4), ctx);
+	if (fnname == 'dfhack.timeout') {
+		checktype({
+			type: 'CallExpression',
+			base: call.arguments[2],
+			arguments: [],
+			loc: call.loc,
+			range: call.range
+		}, ctx);
+		return 'number';
+	}
 
-	if (fnname.match('^df.+\\.is_instance')) 
+	if (fnname == 'dfhack.with_finalize' || fnname == 'dfhack.with_onerror') {
+		var t = checktype({
+			type: 'CallExpression',
+			base: call.arguments[1],
+			arguments: call.arguments.slice(2),
+			loc: call.loc,
+			range: call.range
+		}, ctx);
+		checktype({
+			type: 'CallExpression',
+			base: call.arguments[0],
+			arguments: [],
+			loc: call.arguments[0].loc,
+			range: call.arguments[0].range
+		}, ctx);
+		return t;
+	}
+
+	if (fnname == 'dfhack.call_with_finalizer' && call.arguments[0] && call.arguments[0].type == 'NumericLiteral') {
+		var errArgs = call.arguments[0].value;
+		var t = checktype({
+			type: 'CallExpression',
+			base: call.arguments[3 + errArgs],
+			arguments: call.arguments.slice(4 + errArgs),
+			loc: call.loc,
+			range: call.range
+		}, ctx);
+		checktype({
+			type: 'CallExpression',
+			base: call.arguments[2],
+			arguments: call.arguments.slice(3, errArgs),
+			loc: call.arguments[2].loc,
+			range: call.arguments[2].range
+		}, ctx);
+		return t;
+	}
+
+	if (fnname.match('^df\\..*\\.new$')) 
+		return expandtype(fnname.slice(0, -4), ctx, call.loc.start.line);
+
+	if (fnname.match('^df.*\\.is_instance$')) 
 		return 'bool';
 
 	if (fnname == 'defclass') {
-		var et = checktype(call.arguments[0], ctx);
-		if (et != '__unknown')
-			return et;
+		if (argTypes[0] && argTypes[0] != '__unknown')
+			return argTypes[0];
 
-		var pt = call.arguments[1] ? checktype(call.arguments[1], ctx) : expandtype('__defclass_base', ctx);
+		var pt = argTypes[1] && argTypes[1] != 'null' ? argTypes[1] : '__defclass_base';
 
 		var t = {
-			_defclass: true,
+			_defclass: ctx,
 			_type: flatten(call.arguments[0], ctx),
 			_super: pt
 		};
+		if (pt != '__defclass_base') {
+			t.super = pt;
+		}
 
-		pt._sub = pt._sub || [];
-		pt._sub.push(t);
+		var ctx1 = { _type:'__context', types:{}, parent:ctx };
+
+		if (call.arguments[0].type == 'Identifier') {
+			ctx1.types[call.arguments[0].name] = t;
+		}
+
+		t.ATTRS = {
+			_defclass_ATTRS: t,
+			_type: t._type + '.ATTRS',
+			_super: pt.ATTRS || ((pt._type || pt) + '.ATTRS')
+		};
+
+		var cs = srcstack[srcstack.length-1].comments;
+		if (cs) {
+			for (var j = 0; j < cs.length; j++) {
+				var c = cs[j];
+
+				if (c.loc.start.line == call.loc.start.line-1 && c.value.substr(0,9) == 'luacheck:') {
+					var extrafields = c.value.match(/defclass=([^\s]*)/);
+					if (extrafields) {
+						var fields = null;
+						try {
+							fields = jsonic(extrafields[1]);
+						} catch (e) {
+							err(c.loc.start.line, 'can not parse type definition', chalk.bold(extrafields[1]), e);
+						}
+						Object.entries(fields).forEach(function(f) {
+							var ft = expandtype(f[1], ctx1, call.loc.start.line);
+							if (ft._array) {
+								ft._array = expandtype(ft._array, ctx1, call.loc.start.line);
+							}
+							t[f[0]] = ft;
+							t.ATTRS[f[0]] = ft;
+						});
+					}
+					break;
+				}
+			}
+		}
+
+		if (pt._type) {
+			pt._sub = pt._sub || [];
+			pt._sub.push(t);
+		}
+
+		if (pt.ATTRS && pt.ATTRS._type) {
+			pt.ATTRS._sub = pt.ATTRS._sub || [];
+			pt.ATTRS._sub.push(t.ATTRS);
+		}
 
 		return t;
 	}
 
 	if (fnname == 'table.insert') {
 		var k = (call.arguments.length == 3 ? 2 : 1);
-		var t = checktype(call.arguments[0], ctx) || '__unknown';
-		var rt = checktype(call.arguments[k], ctx) || '__unknown';
+		var t = argTypes[0] || '__unknown';
+		var rt = argTypes[k] || '__unknown';
 
 		if (rt == '__unknown')
 			err(call.loc.start.line, 'type of expression is unknown', chalk.bold(sub(call.arguments[k].range)));
@@ -691,16 +970,16 @@ function fntype(call, ctx) {
 	}
 
 	if (fnname == 'utils.insert_sorted' || (isUtils && fnname == 'insert_sorted')) {
-		var vt = checktype(call.arguments[0], ctx);
-		var it = checktype(call.arguments[1], ctx);
-		var pt = call.arguments[2] && call.arguments[2].type == 'StringLiteral' ? expandtype(it[call.arguments[2].value], ctx) : it;
+		var vt = argTypes[0];
+		var it = argTypes[1];
+		var pt = call.arguments[2] && call.arguments[2].type == 'StringLiteral' ? expandtype(it[call.arguments[2].value], ctx, call.loc.start.line) : it;
 
 		return { _type:'tuple', _tuple:['bool', it, pt] };
 	}
 
 	if (fnname == 'utils.invert' || (isUtils && fnname == 'invert')) {
 		if (!call.arguments[0] || call.arguments[0].type != 'TableConstructorExpression') {
-			err(call.local.start.line, 'unable to parse utils.invert call', chalk.bold(sub(call.arguments[0].range)));
+			err(call.loc.start.line, 'unable to parse utils.invert call', chalk.bold(sub(call.range)));
 			return '__unknown';
 		}
 		var inverted = {
@@ -716,20 +995,23 @@ function fntype(call, ctx) {
 		return 'none';
 	}
 
-	if (fnname == 'copyall' || fnname == 'utils.clone' || fnname == 'utils.assign' || (isUtils && fnname == 'clone') || (isUtils && fnname == 'assign')) {
-		return checktype(call.arguments[0], ctx) || '__unknown';
+	if (fnname == 'copyall') {
+		return argTypes[0] && argTypes[0]._type ? Object.assign({}, argTypes[0], { _type:'table' }) : '__unknown';
+	}
+	if (fnname == 'utils.clone' || fnname == 'utils.assign' || (isUtils && fnname == 'clone') || (isUtils && fnname == 'assign') || fnname == 'mkinstance') {
+		return argTypes[0] || '__unknown';
 	}
 
 	if (fnname == 'utils.processArgs' || (isUtils && fnname == 'processArgs')) {
-		var t = checktype(call.arguments[1], ctx);
+		var t = argTypes[1];
 		if (!t || t._type != 'table')
 			return '__unknown';
 
 		var rt = { _type:'table' };
 		Object.keys(t).forEach(function(k) {
-			if (k == '_type')
-				return;
-			rt[k] = '__arg';
+			if (k != '_type') {
+				rt[k] = '__arg';
+			}
 		});
 		return rt;
 	}
@@ -738,8 +1020,7 @@ function fntype(call, ctx) {
 		return 'none';
 
 	if (fnname == 'df.reinterpret_cast') {
-		var t = checktype(call.arguments[0], ctx);
-		return t;
+		return argTypes[0] == 'string' ? { _type:'number[]', _array:'number' } : argTypes[0];
 	}
 
 	if (fnname == 'mkmodule') {
@@ -807,7 +1088,9 @@ function fntype(call, ctx) {
 		var ast = luaparser.parse(src, { comments:true, locations:true, ranges:true });
 		ctxstack.push(ctx2);
 		srcstack.push({src:src, fn:fn, comments:ast.comments});
+		linestack.push(call.loc.start.line);
 		var type = processAST(ast.body, ctx2);
+		linestack.pop();
 		srcstack.pop();
 		ctxstack.pop();
 		return type || ctx2;
@@ -828,13 +1111,16 @@ function fntype(call, ctx) {
 
 			if (src == null) {
 				err(call.loc.start.line, 'could not require', call.arguments[0].value);
+				return '__unknown';
 			}
 			
 			var ctx2 = { _type:'__context', types:{}, parent:ctx };
 			var ast = luaparser.parse(src, { comments:true, locations:true, ranges:true });
 			ctxstack.push(ctx == rootctx ? rootctx : ctx2);
 			srcstack.push({src:src, fn:fn, comments:ast.comments});
+			linestack.push(call.loc.start.line);
 			var type = processAST(ast.body, ctx2);
+			linestack.pop();
 			srcstack.pop();
 			ctxstack.pop();
 			return type || ctx2;
@@ -847,28 +1133,71 @@ function fntype(call, ctx) {
 		
 		return '__unknown';
 	}
-	
+
+	if (fnname == 'curry' || fnname == 'dfhack.curry') {
+		return {
+			_type: 'function',
+			_node: {
+				_curry: call.arguments[0],
+				_args: argTypes.slice(1),
+				_ctx: ctx
+			},
+			_ctx: ctx
+		};
+	}
+
+	if (fnname == 'dfhack.gui.getViewscreenByType' && argTypes[0]) {
+		for (var p = argTypes[0]; p && p._type; p = p._super && expandtype(p._super, ctx, call.loc.start.line, true)) {
+			if (p._type == 'df.viewscreen') {
+				return argTypes[0];
+			}
+		}
+	}
 
 	// console.log(fnname, call.arguments);
 	// call.arguments.forEach(function(a) {
-	// 	console.log(checktype(a, ctx));
+	//	console.log(checktype(a, ctx));
 	// });
 
-	if (fnname == 'dfhack.safecall' || fnname == 'pcall') {
+	if (fnname == 'safecall' || fnname == 'dfhack.safecall' || fnname == 'pcall') {
 		var q = fntype({
 			base: call.arguments[0],
 			arguments: call.arguments.slice(1),
 			loc: call.loc,
 			range: call.range
-		}, ctx);
+		}, ctx, { safe:true });
 
 		return { _type:'tuple', _tuple:['bool', q] };
 	}
 
-	fn = findfn(fnname,ctx);
+	if (fnname == 'select') {
+		if (call.arguments[0] && call.arguments[0].type == 'StringLiteral' && call.arguments[0].value == '#') {
+			return 'number';
+		}
+		if (argTypes.length <= 1) {
+			return '__unknown';
+		}
+		if (call.arguments[0].type == 'NumericLiteral') {
+			return argTypes[call.arguments[0].value] || '__unknown';
+		}
+		if (argTypes.slice(2).every(function (a) {
+			return (argTypes[1]._type||argTypes[1]) == (a._type||a);
+		})) {
+			return argTypes[1]._type||argTypes[1];
+		}
+		return '__unknown';
+	}
+
+	if (fnname == 'assert') {
+		return argTypes[0];
+	}
+
+	fn = findfn(fnname, ctx, call.loc.start.line);
 	}
 	if (!fn) {
-		err(call.loc.start.line, 'unknown function', chalk.bold(fnname));
+		if (!opts.safe) {
+			err(call.loc.start.line, 'unknown function', chalk.bold(fnname));
+		}
 		return '__unknown';
 	}
 
@@ -878,39 +1207,89 @@ function fntype(call, ctx) {
 				type: 'Identifier',
 				name: fnname + '.init'
 			},
-			arguments: call.arguments
+			arguments: call.arguments,
+			loc: call.loc,
+			range: call.range
 		}, ctx);
 		return fn;
+	}
+
+	if (fn && fn._defclass_ATTRS) {
+		Object.keys(argTypes[0]).forEach(function(k) {
+			if (k == '_type' || k == '_array') {
+				return;
+			}
+			fn._defclass_ATTRS[k] = argTypes[0][k];
+			fn._defclass_ATTRS.ATTRS[k] = argTypes[0][k];
+		});
+		return 'none';
 	}
 
 	if (fn._type && fn._type != 'function')
 		return fn;
 
+	if (fn._skip) {
+		return fn._out;
+	}
+
 	var ctx1 = ctx;
 	if (fn._type == 'function') {
-		fn = fn._node;
+		if (!fn._node) {
+			err(call.loc.start.line, 'missing function', chalk.bold(fnname));
+			return '__unknown';
+		}
 		ctx1 = fn._ctx;
+		fn = fn._node;
+
+		if (typeof fn == 'string') {
+			return expandtype(fn, ctx1 || ctx, call.loc.start.line);
+		}
+
+		if (fn._curry) {
+			var ctx2 = { _type:'__context', types:{}, parent:ctx1 };
+			var args = [];
+			for (var i = 0; i < fn._args.length; i++) {
+				ctx2.types['curry$' + i] = fn._args[i];
+				args.push({
+					type: 'Identifier',
+					name: 'curry$' + i,
+					loc: {start: {line: 0}},
+					range: [0, 0]
+				});
+			}
+
+			return fntype({
+				type: 'CallExpression',
+				base: fn._curry,
+				arguments: args.concat(call.arguments),
+				loc: call.loc,
+				range: call.range
+			}, ctx1);
+		}
 	}
 
 	if (typeof fn == 'string') {
-		for (var k = 0; k < call.arguments.length; k++) {
-			var t = checktype(call.arguments[k], ctx);
-		}
-
-		return expandtype(fn, ctx);
+		return expandtype(fn, ctx, call.loc.start.line);
 	}
+
+	if (fn._type && fn._type != 'function')
+		return fn;
 
 	var des = [ fnname ];
 	var save = true;
 
 	var ctx2 = { _type: '__context', types:{}, parent:ctx1 };
-	var memberOf = fn && fn.identifier && fn.identifier.type == 'MemberExpression' && expandtype(flatten(fn.identifier.base, ctx1), ctx1);
+	var memberOf = fn && fn.identifier && fn.identifier.type == 'MemberExpression' && expandtype(flatten(fn.identifier.base, ctx1), ctx1, call.loc.start.line);
 	if (memberOf && memberOf._defclass) {
 		ctx2.types.self = memberOf;
 	}
+	ctx2._args = call.arguments;
+	ctx2._params = fn.parameters.map(function (p) {
+		return p.name;
+	});
 	for (var k = 0; k < fn.parameters.length; k++) {
-		if (call.arguments.length > k) {
-			var t = checktype(call.arguments[k], ctx) || '__unknown';
+		if (argTypes.length > k) {
+			var t = argTypes[k] || '__unknown';
 			if (t == '__unknown')
 				err(call.loc.start.line, 'type of expression is unknown', chalk.bold(sub(call.arguments[k].range)));
 
@@ -923,6 +1302,7 @@ function fntype(call, ctx) {
 			des.push('null');
 		}
 	}
+	ctx2.types['...'] = argTypes.slice(fn.parameters.length);
 
 	des = des.join('_');
 
@@ -933,9 +1313,11 @@ function fntype(call, ctx) {
 		return checkedfns[des];
 
 	srcstack.push(fn._src);
+	linestack.push(call.loc.start.line);
 	callers.push(des);
-	var q = processAST(fn.body, ctx2);
+	var q = processAST(fn.body, ctx2) || '__unknown';
 	callers.pop();
+	linestack.pop();
 	srcstack.pop();
 
 	if (fn._out) {
@@ -985,40 +1367,82 @@ function processAST(body, ctx) {
 		if (b.type == 'FunctionDeclaration') {
 			var c = b.isLocal ? ctx : ctxstack[ctxstack.length - 1];
 			var n = flatten(b.identifier, ctx);
-			var existing = expandtype(n, ctx);
+			var existing = expandtype(n, ctx, b.loc.start.line, true);
 			c.functions = c.functions || {};
 			c.functions[n] = b;
 			c.functions[n]._src = srcstack[srcstack.length-1];
 			c.functions[n]._ctx = ctx;
 			c.types[n] = { _type:'function', _node:b, _ctx:ctx, _src:srcstack[srcstack.length-1] }
+			var base = null;
+			var member = null;
+			if (b.identifier.type == 'MemberExpression') {
+				base = checktype(b.identifier.base, ctx);
+				member = b.identifier.identifier.name;
+				if (base && base._type) {
+					base._methods = base._methods || {};
+					base._methods[member] = c.types[n];
+				}
+			}
 			var ctypes = c.types;
 
 			if (!b.isLocal && srcstack.length == 1) {
 				unchecked_global_fns[n] = b.loc.start.line;
 			}
 
-			var cs = srcstack[srcstack.length-1].comments;
-			if (existing && existing._anyfunc && existing._inp) {
+			var found = false;
+			if (base && base._defclass && member) {
+				for (var p = base; p; p = p._super) {
+					if (p._type == 'Screen' && (member == 'onShow' || member == 'onDismiss' || member == 'onDestroy' || member == 'onRender' || member == 'onIdle' || member == 'onHelp' || member == 'onGetSelectedUnit' || member == 'onGetSelectedItem' || member == 'onGetSelectedJob' || member == 'onGetSelectedBuilding')) {
+						fnstocheck.push({name:n, node:ctypes[n], inp:[null,'none']});
+						found = true;
+					} else if (p._type == 'Screen' && (member == 'onResize')) {
+						fnstocheck.push({name:n, node:ctypes[n], inp:[null,'number,number']});
+						found = true;
+					} else if (p._type == 'Screen' && (member == 'onInput')) {
+						fnstocheck.push({name:n, node:ctypes[n], inp:[null,'__keyArray']});
+						found = true;
+					} else if (p._type == 'View' && (member == 'onRenderFrame')) {
+						fnstocheck.push({name:n, node:ctypes[n], inp:[null,'Painter,View.frame_rect']});
+						found = true;
+					} else if (p._type == 'View' && (member == 'onRenderBody')) {
+						fnstocheck.push({name:n, node:ctypes[n], inp:[null,'Painter']});
+						found = true;
+					}
+				}
+			}
+			if (existing && existing._anyfunc && existing._inp && !found) {
 				fnstocheck.push({name:n, node:ctypes[n], inp:[null, existing._inp]});
-			} else if (cs) {
+				found = true;
+			}
+			var cs = srcstack[srcstack.length-1].comments;
+			if (cs && !found) {
 				for (var j = 0; j < cs.length; j++) {
 					var c = cs[j];
 
 					if (c.loc.start.line == b.loc.start.line-1 && c.value.substr(0,9) == 'luacheck:') {
 						var inp = c.value.match(/in=([^\s]*)/);
 						var outp = c.value.match(/out=([^\s]+)/);
+						var skip = /\bskip\b/.test(c.value);
 
 						if (outp) {
-							ctypes[n]._out = expandtype(outp[1], ctx);
+							ctypes[n]._out = expandtype(outp[1], ctx, b.loc.start.line);
 						}
 
-						if (inp) {
+						if (skip) {
+							ctypes[n]._skip = true;
+						} else if (inp) {
 							fnstocheck.push({name:n, node:ctypes[n], inp:inp});
 						}
+
+						found = true;
 
 						break;
 					}
 				}
+			}
+			if (!found && !base && b.parameters.length == 0) {
+				fnstocheck.push({name:n, node:ctypes[n], inp:[null,'none']});
+				found = true;
 			}
 		}
 
@@ -1043,22 +1467,19 @@ function processAST(body, ctx) {
 			{
 				var t = checktype(b.init[j], ctx) || '__unknown';
 
-				if (t._tuple) {
-					for (var k = 0; k < t._tuple.length; k++)
-						righttypes.push(t._tuple[k]);
+				var tuple = t._type == 'tuple' ? t._tuple || [t] : [t];
 
-					break;
+				for (var k = 0; k < tuple.length; k++) {
+					var tt = tuple[k] || '__unknown';
+					if (tt == '__unknown') {
+						if (b.init.length == 1 && tuple.length == 1 && as)
+							note(b.loc.start.line, 'type of expression is unknown', chalk.bold(sub(b.init[j].range)), 'will assume from comment', chalk.bold(as[0]));
+						else
+							err(b.loc.start.line, 'type of expression is unknown', chalk.bold(sub(b.init[j].range)));
+					}
+
+					righttypes.push(tt);
 				}
-
-				//TODO: don't show error if there's --as: comment, show warning
-				if (t == '__unknown') {
-					if (b.init.length == 1 && as)
-						warn(b.loc.start.line, 'type of expression is unknown', chalk.bold(sub(b.init[j].range)), 'will assume from comment', chalk.bold(as[0]));
-					else
-						err(b.loc.start.line, 'type of expression is unknown', chalk.bold(sub(b.init[j].range)));
-				}
-
-				righttypes.push(t);
 			}
 
 			for (var j = 0; j < b.variables.length; j++) {
@@ -1074,8 +1495,9 @@ function processAST(body, ctx) {
 					}
 
 					ctx.types[n] = t;
-				} else 
+				} else {
 					ctx.types[n] = 'null';
+				}
 			}
 		}
 
@@ -1098,12 +1520,15 @@ function processAST(body, ctx) {
 			if (b.variables[0].type == 'Identifier') {
 				var n = b.variables[0].name;
 				var t = checktype(b.init[0],ctx,{assignedTo:n});
+				if (t && t._type == 'tuple') { // TODO: check other variables
+					t = t._tuple[0];
+				}
 
 				//TODO: check that casting to correct subclass
 				//if (as && as.length > 0)
 				//	t = expandtype(as[0], ctx, b.loc.start.line);
 
-				if (t == '__unknown')
+				if (t == '__unknown' && !as)
 					err(b.loc.start.line, 'type of expression is unknown', chalk.bold(sub(b.init[0].range)));
 
 				else {
@@ -1129,7 +1554,11 @@ function processAST(body, ctx) {
 
 					if (!found) {
 						// assume all-caps and defclass types are supposed to be global.
-						var expectedGlobal = (n.toUpperCase() == n && n.toLowerCase() != n) || (n == t._type && t._defclass);
+						var expectedGlobal = (n.toUpperCase() == n && n.toLowerCase() != n) || (t && n == t._type && t._defclass);
+						if (!expectedGlobal) {
+							// assume x = x or {} is a global.
+							expectedGlobal = b.init[0].type == 'LogicalExpression' && b.init[0].operator == 'or' && b.init[0].left && b.init[0].left.type == 'Identifier' && b.init[0].left.name == n;
+						}
 						var cs = srcstack[srcstack.length-1].comments;
 						if (cs && !expectedGlobal) {
 							for (var j = 0; j < cs.length; j++) {
@@ -1143,23 +1572,25 @@ function processAST(body, ctx) {
 								}
 							}
 						}
-						if (!expectedGlobal) {
-							warn(b.loc.start.line, 'assignment to global/unknown var', b.variables[0].name);
+						if (n != '_') {
+							if (!expectedGlobal) {
+								warn(b.loc.start.line, 'assignment to global/unknown var', b.variables[0].name);
+							}
+							if (as && as.length > 0)
+								ctxstack[ctxstack.length - 1].types[n] = expandtype(as[0], ctx, b.loc.start.line);
+							else
+								ctxstack[ctxstack.length - 1].types[n] = t;
 						}
-						if (as && as.length > 0)
-							ctxstack[ctxstack.length - 1].types[n] = expandtype(as[0], ctx, b.loc.start.line);
-						else
-							ctxstack[ctxstack.length - 1].types[n] = t;
 					}
 				}
 
 			} else if (b.variables[0].type == 'MemberExpression') {
 				var lbase = checktype(b.variables[0].base, ctx) || '__unknown';
-				var lt = checktype(b.variables[0], ctx) || '__unknown';
+				var lt = checktype(b.variables[0], ctx, {assignLeft: true}) || '__unknown';
 				var rt = checktype(b.init[0],ctx,{assignedTo:sub(b.variables[0].range)}) || '__unknown';
 
 				if (lt == '__unknown' && (lbase._type == 'table' || lbase._defclass) && !lbase._array) {
-					lbase[b.variables[0].identifier.name] = rt;
+					lt = lbase[b.variables[0].identifier.name] = rt;
 				}
 
 				if (lt == '__unknown')
@@ -1167,7 +1598,7 @@ function processAST(body, ctx) {
 				if (rt == '__unknown')
 					err(b.loc.start.line, 'type of expression is unknown', chalk.bold(sub(b.init[0].range)));
 
-				if ((lt._type||lt).slice(-2) == '[]' && (lt._type||lt) == (rt._type||rt)) {
+				if (String(lt._type||lt).slice(-2) == '[]' && (lt._type||lt) == (rt._type||rt)) {
 					// ok
 				} else if (lt._anyfunc && rt._type == 'function') {
 					if (lt._inp && rt._ctx && rt._node) {
@@ -1181,10 +1612,25 @@ function processAST(body, ctx) {
 					// ok
 				} else if (rt && (rt._type||rt) == '__arg' && isargtype(lt) && lbase) {
 					lbase[b.variables[0].identifier.name] = '__arg';
-				} else if (lt._type && lt._type.slice(0, 3) == 'df.' && lt._type.slice(-2) != '[]' && rt._type == 'table' && !rt._array) {
+				} else if (srcstack[srcstack.length - 1].fn.slice(-10) == '/class.lua' && lt._type == 'function' && rt._type == 'function') {
+					lbase[b.variables[0].identifier.name] = rt;
+				} else if (lt._type && lt._type.slice(0, 3) == 'df.' && lt._type.slice(-2) != '[]' && rt._type == 'table') {
 					note(b.loc.start.line, 'assigning', chalk.bold(sub(b.init[0].range)), 'of type', chalk.bold(rt._type||rt), 'to', chalk.bold(sub(b.variables[0].range)), 'of type', chalk.bold(lt._type||lt), 'but recursive table assignment is not yet supported by luacheck');
+				} else if (lt._type && lt._type.slice(0, 3) == 'df.' && lt._type.slice(-2) == '[]' && rt._type == 'table' && rt['new'] == 'bool' && (Object.keys(rt).length == 2 || (rt._array == 'bool' && Object.keys(rt).length == 3))) {
+					// ok
+				} else if (lbase._defclass && b.variables[0].identifier.name == 'ATTRS' && rt._type == 'table') {
+					Object.keys(rt).forEach(function(k) {
+						if (k == '_type' || k == '_array') {
+							return;
+						}
+						lbase[k] = rt[k];
+						lbase.ATTRS[k] = rt[k];
+					});
 				} else if (lt != '__unknown' && rt != '__unknown' && lt != rt && rt != 'null') {
 					var ok = false;
+					if (lt._type == 'table' && rt._type == 'table') {
+						ok = deepEqual(lt, rt, ctx, b.loc.start.line);
+					}
 					if (rt._type && lt._sub) {
 						for (var j = 0; j < lt._sub.length; j++) {
 							if (lt._sub[j] == rt._type) {
@@ -1198,6 +1644,8 @@ function processAST(body, ctx) {
 							warn(b.loc.start.line, 'assigning', chalk.bold(sub(b.init[0].range)), 'of type', chalk.bold(rt._type||rt), 'to', chalk.bold(sub(b.variables[0].range)), 'of type', chalk.bold(lt._type||lt), '(suggested: use ' + chalk.bold(lt._type + '.' + lt._enum[b.init[0].value]) + ')');
 						} else if (lt._enum && rt == 'number' && b.init[0].type != 'NumericLiteral') {
 							note(b.loc.start.line, 'assigning', chalk.bold(sub(b.init[0].range)), 'of type', chalk.bold(rt._type||rt), 'to', chalk.bold(sub(b.variables[0].range)), 'of type', chalk.bold(lt._type||lt));
+						} else if (lt._type == 'table' && rt._type == 'table') {
+							err(b.loc.start.line, 'assigning', chalk.bold(sub(b.init[0].range)), 'of type', rt, 'to', chalk.bold(sub(b.variables[0].range)), 'of type', lt);
 						} else {
 							err(b.loc.start.line, 'assigning', chalk.bold(sub(b.init[0].range)), 'of type', chalk.bold(rt._type||rt), 'to', chalk.bold(sub(b.variables[0].range)), 'of type', chalk.bold(lt._type||lt));
 						}
@@ -1218,7 +1666,7 @@ function processAST(body, ctx) {
 					lbase._array = rt;
 				}
 			} else {
-				err(b.loc.start.line, 'internal error: unknown left side', b);
+				fault(b.loc.start.line, 'unknown left side', b);
 				throw new Error('unknown left side', b);
 			}
 		}
@@ -1244,9 +1692,18 @@ function processAST(body, ctx) {
 				b.iterators[0].type = 'CallExpression';
 			}
 
-			if (b.iterators[0].type == 'CallExpression' &&
-			    (b.iterators[0].base.name == 'pairs' || b.iterators[0].base.name == 'ipairs' || b.iterators[0].base.name == 'ripairs' || b.iterators[0].base.name == 'ripairs_tbl')) {
-				var ctx2 = { _type: '__context', parent:ctx, types:{} };
+			var ctx2 = { _type: '__context', parent:ctx, types:{} };
+
+			if (b.iterators[0].type == 'CallExpression' && flatten(b.iterators[0].base, ctx) == 'io.lines') {
+				ctx2.types[b.variables[0].name] = 'string';
+				rettype = processAST(b.body, ctx2) || rettype;
+			} else if (b.iterators[0].type == 'CallExpression' && flatten(b.iterators[0].base, ctx) == 'string.gmatch') {
+				b.variables.forEach(function(v) {
+					ctx2.types[v.name] = 'string';
+				});
+				rettype = processAST(b.body, ctx2) || rettype;
+			} else if (b.iterators[0].type == 'CallExpression' &&
+				(b.iterators[0].base.name == 'pairs' || b.iterators[0].base.name == 'ipairs' || b.iterators[0].base.name == 'ripairs' || b.iterators[0].base.name == 'ripairs_tbl')) {
 				var t = checktype(b.iterators[0].arguments[0],ctx) || '__unknown';
 
 				if (t == '__unknown') {
@@ -1258,24 +1715,26 @@ function processAST(body, ctx) {
 					t = { _array:'__arg' };
 				}
 
-				if ((b.iterators[0].base.name != 'pairs' || t._type != 'table') && !t._array && (t._type != 'table' || Object.keys(t).length != 1)) {
+				var at = arrayType(t, ctx, b.loc.start.line);
+				if ((b.iterators[0].base.name != 'pairs' && !t._array) || !at || at == '__unknown') {
 					err(b.loc.start.line, 'not an array', chalk.bold(sub(b.iterators[0].arguments[0].range)), t);
 					t = { _array:'__unknown' };
+					at = '__unknown';
 				}
 
 				if (as) {
-					t = expandtype(as, ctx, b.loc.start.line);
+					at = expandtype(as, ctx, b.loc.start.line);
 					if (t == '__unknown')
 						err(b.loc.start.line, 'type of expression is unknown', chalk.bold(as));
 
-					t = { _array:t };
+					t = { _array:at };
 				}
 
 				ctx2.types[b.variables[0].name] = (b.iterators[0].base.name == 'pairs' ? 'string' : 'number');
-				ctx2.types[b.variables[1].name] = expandtype(t._array, ctx);
+				if (b.variables[1])
+					ctx2.types[b.variables[1].name] = at;
 				rettype = processAST(b.body, ctx2) || rettype;
 			} else if (b.iterators[0].type == 'CallExpression' && flatten(b.iterators[0].base, ctx) == 'utils.listpairs') {
-				var ctx2 = { _type: '__context', parent:ctx, types:{} };
 				var t = checktype(b.iterators[0].arguments[0], ctx) || '__unknown';
 
 				if (t == '__unknown') {
@@ -1284,10 +1743,11 @@ function processAST(body, ctx) {
 				}
 
 				ctx2.types[b.variables[0].name] = t;
-				ctx2.types[b.variables[1].name] = expandtype(t.item, ctx);
+				if (b.variables[1])
+					ctx2.types[b.variables[1].name] = expandtype(t.item, ctx, b.loc.start.line);
 				rettype = processAST(b.body, ctx2) || rettype;
 			} else {
-				err(b.loc.start.line, 'unsupported for loop');
+				err(b.loc.start.line, 'unsupported for loop', sub(b.iterators[0].range), b.iterators[0].type);
 			}
 		}
 
@@ -1310,36 +1770,40 @@ function processAST(body, ctx) {
 
 			b.clauses.forEach(function(clause) {
 				var cs = srcstack[srcstack.length-1].comments;
-			var as = null;
-			if (cs) {
-				for (var j = 0; j < cs.length; j++) {
-					var c = cs[j];
-					if (c.loc.start.line == clause.loc.start.line && c.value.substr(0,3) == 'as:') {
-						var m = c.value.match(/as:\s*([^\s]+)/);
-						if (m) {
-							as = m[1].split(',');
-						}
+				var as = null;
+				if (cs) {
+					for (var j = 0; j < cs.length; j++) {
+						var c = cs[j];
+						if (c.loc.start.line == clause.loc.start.line && c.value.substr(0,3) == 'as:') {
+							var m = c.value.match(/as:\s*([^\s]+)/);
+							if (m) {
+								as = m[1].split(',');
+							}
 
-						break;
+							break;
+						} else if (c.loc.start.line == clause.loc.start.line && c.value.substr(0,9) == 'luacheck:') {
+							if (/\bskip\b/.test(c.value)) {
+								return;
+							}
+						}
 					}
 				}
-			}
 				if (clause.condition) {
 					var ctx2 = { _type: '__context', parent:ctx, types:{} };
 					ensureArray(as).forEach(function(a) {
 						var a2 = a.split('=');
-						ctx2.types[a2[0]] = expandtype(a2[1], ctx);
+						ctx2.types[a2[0]] = expandtype(a2[1], ctx, clause.loc.start.line);
 					});
 					var t = checktype(clause.condition, ctx2, { in_if:true });
 					// if (t == '__unknown')
-					// 	err(b.loc.start.line, 'type of expression is unknown', chalk.bold(sub(clause.condition.range)));
+					//	err(b.loc.start.line, 'type of expression is unknown', chalk.bold(sub(clause.condition.range)));
 				}
 
 				if (find_comment_dfver(clause)) {
 					var ctx2 = { _type: '__context', parent:ctx, types:{} };
 					ensureArray(as).forEach(function(a) {
 						var a2 = a.split('=');
-						ctx2.types[a2[0]] = expandtype(a2[1], ctx);
+						ctx2.types[a2[0]] = expandtype(a2[1], ctx, clause.loc.start.line);
 						ctx2.temps = ctx2.temps || {};
 						ctx2.temps[a2[0]] = true;
 					});
@@ -1349,10 +1813,28 @@ function processAST(body, ctx) {
 		}
 
 		else if (b.type == 'ReturnStatement') {
-			if (b.arguments.length) {
+			if (b.arguments.length == 1) {
 				var t = checktype(b.arguments[0], ctx);
-				if (t != 'null')
-					rettype = t;
+				if (t && t != 'none' && t != 'null' && t != '__unknown') {
+					if (rettype && rettype._type == 'tuple') {
+						rettype._tuple[0] = t;
+					} else {
+						rettype = t;
+					}
+				}
+			} else if (b.arguments.length) {
+				var existingTuple = rettype && rettype._type == 'tuple' ? rettype._tuple : [rettype];
+				var newTuple = b.arguments.map(function(a, i) {
+					var t = checktype(a, ctx);
+					if (!t || t == 'none' || t == 'null' || t == '__unknown') {
+						return existingTuple[i] || null;
+					}
+					return t;
+				});
+				while (existingTuple.length > newTuple.length) {
+					newTuple.push(existingTuple[newTuple.length]);
+				}
+				rettype = { _type:'tuple', _tuple:newTuple };
 			}
 		}
 
@@ -1367,7 +1849,7 @@ function processAST(body, ctx) {
 			if (b.condition) {
 				var t = checktype(b.condition, ctx);
 				// if (t == '__unknown')
-				// 	err(b.loc.start.line, 'type of expression is unknown', chalk.bold(sub(b.condition.range)));
+				//	err(b.loc.start.line, 'type of expression is unknown', chalk.bold(sub(b.condition.range)));
 			}
 
 			var ctx2 = { _type: '__context', parent:ctx, types:{} };
@@ -1381,11 +1863,11 @@ function processAST(body, ctx) {
 				rettype = processAST(b.body, ctx2) || rettype;
 			}
 			else
-				err(b.loc.start.line, 'internal error: unexpected type for for statement left side', b.variable.type);
+				fault(b.loc.start.line, 'unexpected type for for statement left side', b.variable.type);
 		}
 
 		else
-			err(b.loc.start.line, 'internal error: unhandled statement type', b);
+			fault(b.loc.start.line, 'unhandled statement type', b);
 
 	});
 
@@ -1407,12 +1889,38 @@ function firstlog() {
 	console.log(mainfn);
 }
 
+function printstack() {
+	if (!verbose) {
+		return;
+	}
+
+	for (var i = srcstack.length - 2; i > 0; i--) {
+		var fn = srcstack[i].fn.split('/').slice(-1)[0];
+		var line = linestack[i] || '?';
+		console.log(' -> ' + fn + ':' + line);
+	}
+}
+
+function fault(line) {
+	firstlog();
+	var args = Array.prototype.slice.call(arguments);
+	var fn = srcstack[srcstack.length-1].fn.split('/').slice(-1)[0];
+	args.splice(0, 1, chalk.magenta('INTERNAL ERROR ' + fn + ':' + line));
+	console.log.apply(null, args);
+	verbose++;
+	printstack();
+	verbose--;
+	console.log(new Error().stack.substring('Error:\n'.length));
+	process.exitCode = 2;
+}
+
 function err(line) {
 	firstlog();
 	var args = Array.prototype.slice.call(arguments);
 	var fn = srcstack[srcstack.length-1].fn.split('/').slice(-1)[0];
 	args.splice(0, 1, chalk.red('ERROR ' + fn + ':' + line));
 	console.log.apply(null, args);
+	printstack();
 	process.exitCode = 2;
 }
 
@@ -1425,6 +1933,7 @@ function warn(line) {
 	var fn = srcstack[srcstack.length-1].fn.split('/').slice(-1)[0];
 	args.splice(0, 1, chalk.yellow('WARN  ' + fn + ':' + line));
 	console.log.apply(null, args);
+	printstack();
 	process.exitCode = 2;
 }
 
@@ -1437,6 +1946,7 @@ function note(line) {
 	var fn = srcstack[srcstack.length-1].fn.split('/').slice(-1)[0];
 	args.splice(0, 1, chalk.cyan('NOTE  ' + fn + ':' + line));
 	console.log.apply(null, args);
+	printstack();
 }
 
 
@@ -1450,7 +1960,8 @@ preload.forEach(function(filename) {
 		argument: {
 			type: 'StringLiteral',
 			value: filename
-		}
+		},
+		loc: { start: { line: 0 } }
 	}, rootctx);
 });
 isPreload = false;
@@ -1464,14 +1975,14 @@ fnstocheck.forEach(function(fn) {
 
 	var ctx2 = { _type: '__context', types:{}, parent:ctx };
 
-	var memberOf = b.identifier && b.identifier.type == 'MemberExpression' && expandtype(flatten(b.identifier.base, ctx), ctx);
+	var memberOf = b.identifier && b.identifier.type == 'MemberExpression' && expandtype(flatten(b.identifier.base, ctx), ctx, b.loc.start.line, true);
 	if (memberOf && memberOf._defclass) {
 		ctx2.types.self = memberOf;
 	}
 
 	for (var k = 0; k < b.parameters.length; k++) {
 		if (argtypes.length > k) {
-			var t = expandtype(argtypes[k], ctx);
+			var t = expandtype(argtypes[k], ctx, b.loc.start.line);
 			ctx2.types[b.parameters[k].name] = t;
 		} else {
 			ctx2.types[b.parameters[k].name] = 'null';
@@ -1479,7 +1990,9 @@ fnstocheck.forEach(function(fn) {
 	}
 
 	srcstack.push(b._src);
+	linestack.push(0);
 	processAST(b.body, ctx2);
+	linestack.pop();
 	srcstack.pop();
 
 	delete unchecked_global_fns[fn.name];
