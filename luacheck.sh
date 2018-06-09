@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash
 
 luacheck_dir="$(dirname "$0")"
 
@@ -9,10 +9,10 @@ usage()
 }
 
 args=
-if [[ "$1" == "-v" ]] || [[ "$1" == "--verbose" ]]; then
+while [[ "$1" == "-v" ]] || [[ "$1" == "--verbose" ]]; do
 	args="$args --verbose"
 	shift
-fi
+done
 
 if [[ "$#" -lt 1 ]] || [[ ! -d "$1" ]]; then
 	usage
@@ -32,7 +32,7 @@ dfhack_version=$df_version-$dfhack_release
 
 cp -f "$dfhack_dir/library/include/df/codegen.out.xml" "$luacheck_dir/codegen_$dfhack_version.out.xml"
 ln -sf builtins_base.js "$luacheck_dir/builtins_$dfhack_version.js"
-node "$luacheck_dir/prepare.js" "$dfhack_version" > /dev/null
+node "$luacheck_dir/prepare.js" "$dfhack_version" > /dev/null || exit $?
 
 echo "Prepared df-luacheck for DFHack $dfhack_version."
 
@@ -42,12 +42,14 @@ rm -f "$dfhack_dir/library/lua/plugins"
 ln -sf ../../plugins/lua "$dfhack_dir/library/lua/plugins"
 if (( $# > 0 )); then
 	while (( $# > 0 )); do
-		node "$luacheck_dir/index.js" $args -v "$dfhack_version" -S "$dfhack_dir/scripts" -I "$dfhack_dir/library/lua" -I "$dfhack_dir/scripts" -p dfhack "$1" || had_error=1
+		node "$luacheck_dir/index.js" $args -v "$dfhack_version" -S "$dfhack_dir/scripts" -I "$dfhack_dir/library/lua" -I "$dfhack_dir/scripts" -p dfhack "$1"
+		if (( $? > 0 )); then had_error=1; fi
 		shift
 	done
 else
 	find "$dfhack_dir/scripts" -name '*.lua' -print0 | while IFS= read -r -d $'\0' script_path; do
-		node "$luacheck_dir/index.js" $args -v "$dfhack_version" -S "$dfhack_dir/scripts" -I "$dfhack_dir/library/lua" -I "$dfhack_dir/scripts" -p dfhack "$script_path" || had_error=1
+		node "$luacheck_dir/index.js" $args -v "$dfhack_version" -S "$dfhack_dir/scripts" -I "$dfhack_dir/library/lua" -I "$dfhack_dir/scripts" -p dfhack "$script_path"
+		if (( $? > 0 )); then had_error=1; fi
 	done
 fi
 rm -f "$dfhack_dir/library/lua/plugins"

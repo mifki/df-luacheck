@@ -284,8 +284,7 @@ function processStruct(def, n)
 					else*/
 					if (fdef.$['is-union'] == 'true' || fdef.$['anon-compound'] == 'true') {
 						var u = processStruct(fdef);
-						for (var j in u)
-							type[j] = u[j];
+						type = Object.assign({}, u, type);
 					}
 					else {
 						type[fdef.$['name']] = processStruct(fdef);

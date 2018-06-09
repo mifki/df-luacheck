@@ -8,6 +8,16 @@ module.exports = {
 		null: 'null',
 		moduleMode: 'bool',
 
+		coroutine: {
+			_type: 'coroutine'
+		},
+
+		math: {
+			_type: 'math',
+			_alias: true,
+			huge: 'number'
+		},
+
 		df: {
 			_type: '__df',
 			global: {
@@ -117,6 +127,14 @@ module.exports = {
 
 			pen: {
 				_type: 'dfhack.pen',
+				ch: 'string',
+				fg: 'number',
+				bg: 'number',
+				bold: 'bool',
+				tile: 'number',
+				tile_color: 'bool',
+				tile_fg: 'number',
+				tile_bg: 'number'
 			},
 	
 			matinfo: {
@@ -257,6 +275,7 @@ module.exports = {
 		'dfhack.isPrerelease': 'bool',
 		'dfhack.timeout_active': { _type:'function', _node:'none' },
 		'dfhack.lineedit': 'string',
+		'dfhack.saferesume': 'bool',
 		'dfhack.gui.getCurViewscreen': 'df.viewscreen',
 		'dfhack.gui.getSelectedItem': 'df.item',
 		'dfhack.gui.showAnnouncement': 'none',
@@ -280,7 +299,10 @@ module.exports = {
 		'dfhack.units.isSane': 'bool',
 		'dfhack.units.isDead': 'bool',
 		'dfhack.units.isOpposedToLife': 'bool',
+		'dfhack.units.isMale': 'bool',
+		'dfhack.units.isFemale': 'bool',
 		'dfhack.units.getNoblePositions': { _type: 'Units::NoblePosition[]', _array: 'Units::NoblePosition' },
+		'dfhack.units.getMiscTrait': 'df.unit_misc_trait',
 		'dfhack.items.checkMandates': 'bool',
 		'dfhack.items.canTrade': 'bool',
 		'dfhack.items.canTradeWithContents': 'bool',
@@ -316,6 +338,8 @@ module.exports = {
 		'dfhack.maps.spawnFlow': 'df.flow_info',
 		'dfhack.maps.enableBlockUpdates': 'none',
 		'dfhack.burrows.setAssignedUnit': 'none',
+		'dfhack.burrows.findByName': 'df.burrow',
+		'dfhack.burrows.isAssignedTile': 'bool',
 		'dfhack.internal.memmove': 'none',
 		'dfhack.internal.findScript': 'string',
 		'dfhack.internal.getRebaseDelta': 'number',
@@ -329,6 +353,8 @@ module.exports = {
 		'dfhack.internal.getMD5': 'string',
 		'dfhack.internal.getVTable': 'number',
 		'dfhack.internal.diffscan': 'number',
+		'dfhack.internal.getModifiers': { _type:'table', shift:'bool', ctrl:'bool', alt:'bool' },
+		'dfhack.internal.getModstate': 'number',
 		'dfhack.TranslateName': 'string',
 		'dfhack.buildings.deconstruct': 'none',
 		'dfhack.buildings.markedForRemoval': 'bool',
@@ -350,6 +376,8 @@ module.exports = {
 		'dfhack.screen.fillRect': 'none',
 		'dfhack.screen.paintString': 'none',
 		'dfhack.screen.paintTile': 'none',
+		'dfhack.screen.getMousePos': { _type:'tuple', _tuple:['number','number'] },
+		'dfhack.screen.readTile': 'dfhack.pen',
 		'dfhack.run_command_silent': { _type:'tuple', _tuple:['string', 'number'] },
 		'dfhack.kitchen.addExclusion': 'bool',
 		'dfhack.kitchen.findExclusion': 'number',
@@ -359,6 +387,7 @@ module.exports = {
 		'dfhack.world.isArena': 'bool',
 		'dfhack.world.isLegends': 'bool',
 		'dfhack.world.SetCurrentWeather': 'none',
+		'dfhack.world.ReadCurrentWeather': 'df.weather_type',
 		'dfhack.filesystem.exists': 'bool',
 		'dfhack.filesystem.isfile': 'bool',
 		'dfhack.filesystem.isdir': 'bool',
@@ -397,6 +426,12 @@ module.exports = {
 		'io.write': 'none',
 		'io.flush': 'none',
 		'io.close': 'none',
+
+		'coroutine.running': 'coroutine',
+		'coroutine.status': 'string',
+		'coroutine.yield': { _type:'tuple', _tuple:[] },
+
+		'__dumper.DataDumper': 'string',
 	},
 
 	parent: null,
