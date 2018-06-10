@@ -24,7 +24,7 @@ var nowarn = argv.W;
 var verbose = argv.verbose;
 
 var rootctx = JSON.parse(fs.readFileSync(__dirname + '/ctx_' + dfhackver + '.json'));
-var ctxstack = [{ _type: '__context', types: {}, parent: rootctx }];
+var ctxstack = [{ _type: '__context', types: { '...':[{_type:'__unknown_number_of',t:'string'}] }, _params:[], _args:[], parent: rootctx }];
 
 var isPreload = false;
 var hasLogged = false;
@@ -71,15 +71,12 @@ Object.values(rootctx.types.df.interface_key._enum).forEach(function(k) {
 	keyArrayType[k] = 'bool';
 });
 
-function findtype(name, ctx) {
+function findtype(name, ctx, line) {
 	if (name == '__arg')
 		return { _type:'__arg', _array:'__arg' };
 
 	if (name == '__keyArray')
 		return keyArrayType;
-
-	if (name == '__gui_Painter' && modules.gui && modules.gui._module)
-		return findtype('Painter', modules.gui._module);
 
 	if (name == 'field')
 		return { _type:'field' };
@@ -91,7 +88,7 @@ function findtype(name, ctx) {
 		return rootctx;
 
 	if (name.slice(0, 8) == 'anyfunc:')
-		return { _type:'function', _anyfunc:true, _inp:name.slice(8) };
+		return { _type:'function', _anyfunc:true, _inp:expandinput(name.slice(8), ctx, line) };
 
 	if (ctx.types[name])
 		return ctx.types[name];
@@ -123,6 +120,10 @@ function deepEqual(a, b, ctx, line) {
 
 	if (typeof a != 'object') {
 		return a == b;
+	}
+
+	if (b._type == 'table' && Object.keys(b).length == 1 && a._array) {
+		return true;
 	}
 
 	return Object.keys(a).concat(Object.keys(b)).every(function(k) {
@@ -188,9 +189,31 @@ function fix_custom_type_name(type, fn, line, lvl)
 	});
 }
 
+function expandinput(name, ctx, line) {
+	if (typeof name != 'string') {
+		return name;
+	}
+
+	if (name.slice(0,1) == '{' && name.slice(-1) == '}') {
+		var t = expandtype(name, ctx, line);
+		if (t && t._type == 'tuple') {
+			return t._tuple;
+		}
+		return t ? [t] : [];
+	}
+
+	var inp = name.split(',').map(function(n) {
+		return expandtype(n, ctx, line);
+	});
+	if (inp[0] == 'none') {
+		inp.shift();
+	}
+	return inp;
+}
+
 function expandtype(name, ctx, line, quiet) {
 	if (typeof name == 'string' && name.slice(-2) == '[]')
-		return { _type:name, _array:name.slice(0,-2) }
+		return { _type:name, _array:name.slice(0,-2) };
 
 	if (typeof name == 'string' && name.slice(0,1) == '{' && name.slice(-1) == '}') {
 		var type = null;
@@ -202,7 +225,7 @@ function expandtype(name, ctx, line, quiet) {
 
 		if (type) {
 			var fn = srcstack[srcstack.length-1].fn.split('/').slice(-1)[0].split('.')[0];
-			fix_custom_type_name(type, fn, line);
+			fix_custom_type_name(type, fn, ctx, line);
 			return type;
 		}
 	}
@@ -214,13 +237,13 @@ function expandtype(name, ctx, line, quiet) {
 		return { _type:'table' };
 
 	if (typeof name == 'string') {
-		var q = findtype(name, ctx);
+		var q = findtype(name, ctx, line);
 		if (q) {
 			return q;
 		}
 
 		var a = name.split('.');
-		var t = findtype(a[0], ctx);
+		var t = findtype(a[0], ctx, line);
 		for (var j = 1; j < a.length; j++) {
 			if (!t) {
 				if (!quiet) {
@@ -230,17 +253,19 @@ function expandtype(name, ctx, line, quiet) {
 			}
 
 			if (t._type == '__EventHolder') {
-				t = { _type:'function', _anyfunc:true, _inp:t._inp };
-			} else if (t._module) {
-				t = findtype(a[j], t._module);
+				t = { _type:'function', _anyfunc:true, _inp:expandinput(t._inp, ctx, line) };
+			} else if (t._module && !t[a[j]]) {
+				t = findtype(a[j], t._module, line);
 			} else if (t._type == '__context') {
-				t = findtype(a[j], t);
+				t = findtype(a[j], t, line);
 			} else {
 				t = t[a[j]];
 			}
 		}
 		if (!t) {
-			if (!quiet) {
+			if (name == '__unknown_number_of') {
+				fault(line, 'Cannot find', chalk.bold(name));
+			} else if (!quiet) {
 				err(line, 'Cannot find', chalk.bold(name));
 			}
 			return '__unknown';
@@ -252,7 +277,7 @@ function expandtype(name, ctx, line, quiet) {
 }
 
 function arrayType(t, ctx, line, key) {
-	if (t._enum && key && (key._type||key) == 'string') {
+	if (t._enum && key && ((key._type||key) == 'string' || (key._type||key) == '__arg')) {
 		return t._type;
 	}
 
@@ -338,10 +363,14 @@ function checktype(expr, ctx, opts) {
 		if (index.type == 'NumericLiteral' && t._type) {
 			if (t[index.value])
 				return expandtype(t[index.value], ctx, expr.loc.start.line);
+			if (t._type == 'table' && t.n == 'number' && Object.keys(t).every(function(k) {
+				return k == '_type' || k == 'n' || parseInt(k, 10) >= 1;
+			}))
+				return 'null';
 		}
 
 		if (t._type == '__EventHolder')
-			return { _type:'function', _anyfunc:true, _inp:t._inp };
+			return { _type:'function', _anyfunc:true, _inp:expandinput(t._inp, ctx, expr.loc.start.line) };
 
 		var at = arrayType(t, ctx, expr.loc.start.line, checktype(index, ctx));
 		if (at && at != '__unknown') {
@@ -353,13 +382,13 @@ function checktype(expr, ctx, opts) {
 			return '__unknown';
 		}
 
-		fault(expr.loc.start.line, 'unhandled IndexExpression', chalk.bold(sub(expr.range)), t, index);
+		fault(expr.loc.start.line, 'unhandled IndexExpression', chalk.bold(sub(expr.range)), (t._type||t) == 'table' ? t : (t._type||t), index);
 		return '__unknown';
 	}
 
 	else if (expr.type == 'MemberExpression')
 	{
-		var byName = findtype(flatten(expr, ctx), ctx);
+		var byName = findtype(flatten(expr, ctx), ctx, expr.loc.start.line);
 		if (byName)
 			return byName;
 
@@ -396,12 +425,12 @@ function checktype(expr, ctx, opts) {
 			return baset;
 
 		if (baset._type == '__EventHolder') {
-			return { _type:'function', _anyfunc:true, _inp:baset._inp };
+			return { _type:'function', _anyfunc:true, _inp:expandinput(baset._inp, ctx, expr.loc.start.line) };
 		}
 
 		var t = null;
 		for (var o = baset; o && !t; o = expandtype(o._super, o._defclass || ctx, expr.loc.start.line)) {
-			t = o[expr.identifier.name] || (o._module && findtype(expr.identifier.name, o._module));
+			t = o[expr.identifier.name] || (o._module && findtype(expr.identifier.name, o._module, expr.loc.start.line));
 		}
 
 		if (isPreload && (expr.identifier.name == '__index'))
@@ -454,16 +483,18 @@ function checktype(expr, ctx, opts) {
 		}
 
 		if (!t) {
-			if ((baset._defclass || baset._type == 'table') && !baset._array && opts.assignLeft) {
-				// ok
-			} else if (baset._type == '__df') {
-				err(expr.loc.start.line, 'type', chalk.bold('df.'+expr.identifier.name), 'does not exist');
-			} else if (baset._type == '__global') {
-				err(expr.loc.start.line, 'global', chalk.bold(expr.identifier.name), 'does not exist');
-			} else if (baset._enum) {
-				err(expr.loc.start.line, 'value', chalk.bold(expr.identifier.name), 'does not exist in enum', chalk.bold(baset._type));
-			} else {
-				err(expr.loc.start.line, 'field', chalk.bold(expr.identifier.name), 'does not exist in', chalk.bold(sub([expr.base.range[0], expr.identifier.range[0]-1])), 'of type', typeof(baset._type||baset) == 'string' ? chalk.bold(baset._type||baset) : baset);
+			if (!opts.quiet) {
+				if ((baset._defclass || baset._type == 'table') && !baset._array && opts.assignLeft) {
+					// ok
+				} else if (baset._type == '__df') {
+					err(expr.loc.start.line, 'type', chalk.bold('df.'+expr.identifier.name), 'does not exist');
+				} else if (baset._type == '__global') {
+					err(expr.loc.start.line, 'global', chalk.bold(expr.identifier.name), 'does not exist');
+				} else if (baset._enum) {
+					err(expr.loc.start.line, 'value', chalk.bold(expr.identifier.name), 'does not exist in enum', chalk.bold(baset._type));
+				} else {
+					err(expr.loc.start.line, 'field', chalk.bold(expr.identifier.name), 'does not exist in', chalk.bold(sub(expr.base.range)), 'of type', typeof(baset._type||baset) == 'string' && baset._type != 'table' ? chalk.bold(baset._type||baset) : baset);
+				}
 			}
 			return '__unknown';
 		}
@@ -588,7 +619,26 @@ function checktype(expr, ctx, opts) {
 
 		// Handle arguments to the script being converted to an array using {...}
 		if (expr.fields.length == 1 && expr.fields[0] && expr.fields[0].type == 'TableValue' && expr.fields[0].value && expr.fields[0].value.type == 'VarargLiteral') {
-			return { _type:'string[]', _array:'string' };
+			for (var c = ctx; c; c = c.parent) {
+				if (c.types['...']) {
+					var t = { _type:'table' };
+					for (var i = 0; i < c.types['...'].length; i++) {
+						if (i == c.types['...'].length - 1 && c.types['...'][i]._type == '__unknown_number_of') {
+							t._array = c.types['...'][i].t;
+							if (i == 0 && (t._array._type||t._array) != 'table') {
+								t._type = (t._array._type||t._array) + '[]';
+							}
+						} else {
+							t[i + 1] = expandtype(c.types['...'][i], ctx, expr.loc.start.line);
+						}
+					}
+					var at = arrayType(t, ctx, expr.loc.start.line);
+					if (at && at != '__unknown') {
+						t._array = at;
+					}
+					return t;
+				}
+			}
 		}
 
 		expr.fields.forEach(function(f) {
@@ -652,7 +702,7 @@ function flatten(expr, ctx) {
 		return expr;
 
 	if (expr.type == 'Identifier') {
-		var t = findtype(expr.name, ctx);
+		var t = findtype(expr.name, ctx, expr.loc.start.line);
 
 		if (t && t._alias) {
 			return t._type;
@@ -782,46 +832,13 @@ function fntype(call, ctx, opts) {
 			}
 			if (base && base._defclass && call.base.indexer == ':' && call.base.identifier.name != 'init') {
 				fn = findfn(base._type + '.' + call.base.identifier.name, base._defclass, call.loc.start.line);
-				if (base._sub) {
-					base._sub.forEach(function(sub) {
-						sub = expandtype(sub, base._defclass, call.loc.start.line, true) || '__unknown';
-						if (!sub._super || (sub._super._type||sub._super) != base._type)
-							return;
-						// double-wrap so fntype doesn't overwrite the argument types.
-						var ctx2 = {
-							_type: '__context',
-							types: {},
-							parent: {
-								_type: '__context',
-								types: { '...':argTypes },
-								parent: sub._defclass
-							}
-						};
-						fntype({
-							type: 'CallExpression',
-							base: {
-								type: 'MemberExpression',
-								indexer: ':',
-								base: {
-									type: 'Identifier',
-									name: sub._type,
-									loc: call.base.base.loc,
-									range: sub._type
-								},
-								identifier: call.base.identifier,
-								loc: call.base.loc,
-								range: sub._type + ':' + call.base.identifier.name
-							},
-							arguments: [{
-								type: 'VarargLiteral',
-								loc: call.loc,
-								range: call.range
-							}],
-							loc: call.loc,
-							range: call.range
-						}, ctx2);
-					});
-				}
+				(base._sub || []).forEach(function(subclass) {
+					var subname = subclass._type + '.' + call.base.identifier.name;
+					var subfn = findfn(subname, subclass._defclass, call.loc.start.line, true);
+					if (subfn) {
+						fnstocheck.push({ name:subname, node:subfn, inp:argTypes });
+					}
+				});
 			}
 			if (base && base._enum && call.base.identifier.name == 'next_item' && argTypes.length == 1 && argTypes[0] && argTypes[0]._type == base._type) {
 				return base;
@@ -1058,6 +1075,9 @@ function fntype(call, ctx, opts) {
 				if ((at._type||at) == '__arg' && (rt._type||rt) == 'string') {
 					at = 'string';
 				}
+				if ((at._type||at) == 'string' && (rt._type||rt) == '__arg') {
+					rt = 'string';
+				}
 				if (at && at != '__unknown' && (at._type||at) != (rt._type||rt)) {
 					warn(call.loc.start.line, 'inserting', chalk.bold(rt._type||rt), 'into an array of', chalk.bold(at._type || at));
 				}
@@ -1068,8 +1088,38 @@ function fntype(call, ctx, opts) {
 		return 'none';
 	}
 
-	if (fnname == 'table.pack' && call.arguments.length == 1 && call.arguments[0].type == 'VarargLiteral') {
-		return { _type: 'string[]', _array: 'string' };
+	if (fnname == 'table.unpack' && argTypes.length == 1 && argTypes[0]._type) {
+		var t = { _type:'tuple', _tuple:[] };
+		for (var i = 1; argTypes[0][i]; i++) {
+			t._tuple.push(argTypes[0][i]);
+		}
+		if (argTypes[0]._array) {
+			t._tuple.push({ _type:'__unknown_number_of', t:argTypes[0]._array });
+		}
+		return t;
+	} else if (fnname == 'table.unpack' && argTypes[0] && argTypes[0]._type && call.arguments[1] && call.arguments[1].type == 'NumericLiteral' && (call.arguments.length == 2 || (call.arguments.length == 3 && call.arguments[0].type == 'Identifier' && call.arguments[2].type == 'MemberExpression' && call.arguments[2].base.type == 'Identifier' && call.arguments[2].base.name == call.arguments[0].name && call.arguments[2].identifier.name == 'n'))) {
+		var t = { _type:'tuple', _tuple:[] };
+		for (var i = call.arguments[1].value; argTypes[0][i]; i++) {
+			t._tuple.push(argTypes[0][i]);
+		}
+		if (argTypes[0]._array) {
+			t._tuple.push({ _type:'__unknown_number_of', t:argTypes[0]._array });
+		}
+		return t;
+	}
+
+	if (fnname == 'table.pack' && argTypes.length && argTypes.every(function(a) {
+		return a && a != '__unknown';
+	})) {
+		var t = { _type: 'table', n: 'number' };
+		for (var i = 0; i < argTypes.length; i++) {
+			if (i == argTypes.length - 1 && argTypes[i]._type == '__unknown_number_of') {
+				t._array = argTypes[i].t;
+			} else {
+				t[i + 1] = argTypes[i];
+			}
+		}
+		return t;
 	}
 
 	if (fnname == 'utils.insert_sorted' || (isUtils && fnname == 'insert_sorted')) {
@@ -1080,16 +1130,90 @@ function fntype(call, ctx, opts) {
 		return { _type:'tuple', _tuple:['bool', it, pt] };
 	}
 
+	if (fnname == 'utils.fillTable' && call.arguments[0].type == 'Identifier') {
+		for (var c = ctx; c; c = c.parent) {
+			if (c.types[call.arguments[0].name]) {
+				if (c.types[call.arguments[0].name]._type != 'table') {
+					break;
+				}
+				c.types[call.arguments[0].name] = Object.assign({}, argTypes[0], argTypes[1], {_type: 'table'});
+				return 'none';
+			}
+		}
+	}
+
+	if (fnname == 'utils.unfillTable' && call.arguments[0].type == 'Identifier') {
+		for (var c = ctx; c; c = c.parent) {
+			if (c.types[call.arguments[0].name]) {
+				if (c.types[call.arguments[0].name]._type != 'table') {
+					break;
+				}
+				var nullified = Object.assign({}, argTypes[1]);
+				delete nullified[k];
+				for (var k in nullified) {
+					if (nullified[k] == 'null') {
+						delete nullified[k];
+					} else {
+						nullified[k] = 'null';
+					}
+				}
+				c.types[call.arguments[0].name] = Object.assign({}, argTypes[0], nullified, {_type: 'table'});
+				return 'none';
+			}
+		}
+	}
+
 	if (fnname == 'utils.invert' || (isUtils && fnname == 'invert')) {
+		if (call.arguments[0] && call.arguments[0].type == 'Identifier' && prevlocal && call.arguments[0].name == prevlocal.variables[0].name) {
+			call.arguments[0] = prevlocal.init[0];
+		}
 		if (!call.arguments[0] || call.arguments[0].type != 'TableConstructorExpression') {
 			err(call.loc.start.line, 'unable to parse utils.invert call', chalk.bold(sub(call.range)));
 			return '__unknown';
 		}
+		var lastIndex = 0;
 		var inverted = {
 			type: 'TableConstructorExpression',
-			fields: call.arguments[0].fields.map(function(f, i) {
-				return { type: 'TableKeyString', key: { type: 'Identifier', name: f.value.value }, value: { type: 'NumericLiteral', value: i } };
-			})
+			fields: call.arguments[0].fields.map(function(f) {
+				if (f.type == 'TableValue') {
+					lastIndex++;
+					return {
+						type: 'TableKey',
+						key: f.value,
+						value: {
+							type: 'NumericLiteral',
+							value: lastIndex,
+							loc: f.loc,
+							range: lastIndex.toString()
+						},
+						loc: f.loc,
+						range: f.range
+					};
+				} else if (f.type == 'TableKeyString') {
+					return {
+						type: 'TableKey',
+						key: f.value,
+						value: {
+							type: 'StringLiteral',
+							value: f.key.name,
+							loc: f.key.loc,
+							range: f.key.range
+						},
+						loc: f.loc,
+						range: f.range
+					};
+				} else {
+					return {
+						type: 'TableKey',
+						key: f.value,
+						value: f.key,
+						loc: f.loc,
+						range: f.range
+					};
+				}
+			}),
+			loc: call.arguments[0].loc,
+			range: call.arguments[0].range
 		};
 		return checktype(inverted, ctx) || '__unknown';
 	}
@@ -1098,7 +1222,7 @@ function fntype(call, ctx, opts) {
 		return 'none';
 	}
 
-	if (fnname == 'copyall') {
+	if (fnname == 'copyall' || fnname == 'utils.clone_with_default' || (isUtils && fnname == 'clone_with_default')) {
 		return argTypes[0] && argTypes[0]._type ? Object.assign({}, argTypes[0], { _type:'table' }) : '__unknown';
 	}
 	if (fnname == 'utils.clone' || fnname == 'utils.assign' || (isUtils && fnname == 'clone') || (isUtils && fnname == 'assign') || fnname == 'mkinstance') {
@@ -1130,43 +1254,13 @@ function fntype(call, ctx, opts) {
 		var m = modules[call.arguments[0].value];
 		if (!m) {
 			m = modules[call.arguments[0].value] = { _type:'table', _module:ctx };
-			if (call.arguments[0].value == 'plugins.eventful') {
-				ctx.functions = ctx.functions || {};
-				ctx.functions['enableEvent'] = 'none';
 
-				m.onWorkshopFillSidebarMenu = { _type:'__EventHolder', _inp:'df.building_actual,bool' };
-				m.postWorkshopFillSidebarMenu = { _type:'__EventHolder', _inp:'df.building_actual' };
-				m.onReactionCompleting = { _type:'__EventHolder', _inp:'df.reaction,df.reaction_product_itemst,df.unit,df.item[],df.reaction_reagent[],df.item[],bool' };
-				m.onReactionComplete = { _type:'__EventHolder', _inp:'df.reaction,df.reaction_product_itemst,df.unit,df.item[],df.reaction_reagent[],df.item[]' };
-				m.onItemContaminateWound = { _type:'__EventHolder', _inp:'df.item_actual,df.unit,df.unit_wound,number,number' };
-				m.onProjItemCheckImpact = { _type:'__EventHolder', _inp:'df.proj_itemst,bool' };
-				m.onProjItemCheckMovement = { _type:'__EventHolder', _inp:'df.proj_itemst' };
-				m.onProjUnitCheckImpact = { _type:'__EventHolder', _inp:'df.projunitst_,bool' };
-				m.onProjUnitCheckMovement = { _type:'__EventHolder', _inp:'df.proj_unitst' };
-				m.onBuildingCreatedDestroyed = { _type:'__EventHolder', _inp:'number' };
-				m.onJobInitiated = { _type:'__EventHolder', _inp:'df.job' };
-				m.onJobCompleted = { _type:'__EventHolder', _inp:'df.job' };
-				m.onUnitDeath = { _type:'__EventHolder', _inp:'number' };
-				m.onItemCreated = { _type:'__EventHolder', _inp:'number' };
-				m.onConstructionCreatedDestroyed = { _type:'__EventHolder', _inp:'df.construction' };
-				m.onSyndrome = { _type:'__EventHolder', _inp:'number,number' };
-				m.onInvasion = { _type:'__EventHolder', _inp:'number' };
-				m.onInventoryChange = { _type:'__EventHolder', _inp:'number,number,df.unit_inventory_item,df.unit_inventory_item' };
-				m.onReport = { _type:'__EventHolder', _inp:'number' };
-				m.onUnitAttack = { _type:'__EventHolder', _inp:'number,number,number' };
-				m.onUnload = { _type:'__EventHolder', _inp:'none' };
-				m.onInteraction = { _type:'__EventHolder', _inp:'string,string,number,number,number,number' };
-			} else if (call.arguments[0].value == 'plugins.rendermax') {
-				ctx.functions = ctx.functions || {};
-				ctx.functions.isEnabled = 'bool';
-				ctx.functions.lockGrids = 'none';
-				ctx.functions.unlockGrids = 'none';
-				ctx.functions.resetGrids = 'none';
-				var rgb = { _type:'table', r:'number', g:'number', b:'number' };
-				ctx.functions.getCell = { _type:'table', fm:rgb, fo:rgb, bm:rgb, bo:rgb };
-				ctx.functions.setCell = 'none';
-				ctx.functions.getGridsSize = { _type:'tuple', _tuple:['number', 'number'] };
-				ctx.functions.invalidate = 'none';
+			var defaults = rootctx.modules[call.arguments[0].value];
+			if (defaults && defaults.types) {
+				m = Object.assign(m, defaults.types);
+			}
+			if (defaults && defaults.functions) {
+				ctx.functions = Object.assign(ctx.functions || {}, defaults.functions);
 			}
 		}
 		return m;
@@ -1270,12 +1364,20 @@ function fntype(call, ctx, opts) {
 		}
 	}
 
+	if (fnname == 'table.remove') {
+		var at = arrayType(argTypes[0], ctx, call.loc.start.line, argTypes[1]);
+		if (at && at != '__unknown') {
+			return at;
+		}
+		return 'none';
+	}
+
 	// console.log(fnname, call.arguments);
 	// call.arguments.forEach(function(a) {
 	//	console.log(checktype(a, ctx));
 	// });
 
-	if (fnname == 'safecall' || fnname == 'dfhack.safecall' || fnname == 'pcall') {
+	if (fnname == 'safecall' || fnname == 'dfhack.safecall' || fnname == 'pcall' || fnname == 'dfhack.pcall') {
 		var q = fntype({
 			base: call.arguments[0],
 			arguments: call.arguments.slice(1),
@@ -1294,31 +1396,44 @@ function fntype(call, ctx, opts) {
 			return '__unknown';
 		}
 		if (call.arguments[0].type == 'NumericLiteral') {
-			return argTypes[call.arguments[0].value] || '__unknown';
+			if (argTypes.length > call.arguments[0].value) {
+				return argTypes[call.arguments[0].value] || '__unknown';
+			}
+			if (argTypes[argTypes.length - 1]._type == '__unknown_number_of') {
+				return argTypes[argTypes.length - 1].t;
+			}
+			return '__unknown';
 		}
-		if (argTypes.slice(2).every(function (a) {
-			return (argTypes[1]._type||argTypes[1]) == (a._type||a);
+		var lastArgType = argTypes[argTypes.length - 1];
+		if (lastArgType._type == '__unknown_number_of') {
+			lastArgType = lastArgType.t;
+		}
+		if (argTypes.slice(1, -1).every(function (a) {
+			return (lastArgType._type||lastArgType) == (a._type||a);
 		})) {
-			return argTypes[1]._type||argTypes[1];
+			return lastArgType;
 		}
 		return '__unknown';
 	}
 
 	if (fnname == 'assert') {
-		return argTypes[0];
+		if (argTypes[0] && argTypes[0]._type == '__unknown_number_of') {
+			return argTypes[0].t || '__unknown';
+		}
+		return argTypes[0] || '__unknown';
 	}
 
 	fn = findfn(fnname, ctx, call.loc.start.line);
 	}
 	if (!fn && call.base.type == 'MemberExpression') {
-		fn = checktype(call.base, ctx);
+		fn = checktype(call.base, ctx, { quiet:true });
 		if (fn && fn._type != 'function') {
 			fn = null;
 		}
 	}
 	if (!fn) {
 		if (!opts.safe) {
-			fault(call.loc.start.line, 'unknown function', chalk.bold(fnname));
+			err(call.loc.start.line, 'unknown function', chalk.bold(fnname));
 		}
 		return '__unknown';
 	}
@@ -1361,7 +1476,7 @@ function fntype(call, ctx, opts) {
 			}],
 			loc: call.loc,
 			range: call.range
-		}, ctx2);
+		}, ctx2, { safe:true });
 		return fn;
 	}
 
@@ -1405,10 +1520,11 @@ function fntype(call, ctx, opts) {
 		}
 
 		if (fn._curry) {
-			var ctx2 = { _type:'__context', types:{}, parent:ctx1 };
+			var ctx2 = { _type:'__context', types:{}, temps:{}, parent:ctx1 };
 			var args = [];
 			for (var i = 0; i < fn._args.length; i++) {
 				ctx2.types['curry$' + i] = fn._args[i];
+				ctx2.temps['curry$' + i] = true;
 				args.push({
 					type: 'Identifier',
 					name: 'curry$' + i,
@@ -1436,37 +1552,89 @@ function fntype(call, ctx, opts) {
 	fn = fn._node || fn;
 
 	var des = [ fnname ];
-	var save = true;
+	var save = ['safe_index'].indexOf(fnname) == -1;
 
 	var ctx2 = { _type: '__context', types:{}, parent:ctx1 };
-	var memberOf = fn && fn.identifier && fn.identifier.type == 'MemberExpression' && expandtype(flatten(fn.identifier.base, ctx1), ctx1, call.loc.start.line);
-	if (memberOf && call.base.type == 'MemberExpression' && call.base.indexer == '.') {
-		if (fn.identifier.indexer == ':') {
-			ctx2.types.self = argTypes.shift();
-		}
-	} else if (memberOf && memberOf._defclass) {
-		ctx2.types.self = memberOf;
+	if (!fn.parameters) {
+		fault(call.loc.start.line, fn);
 	}
-	ctx2._args = call.arguments;
+	ctx2._args = call.arguments.slice(0);
 	ctx2._params = fn.parameters.map(function (p) {
 		return p.name;
 	});
-	for (var k = 0; k < fn.parameters.length; k++) {
-		if (argTypes.length > k) {
+	if (fn.parameters.length && fn.parameters[fn.parameters.length - 1].type == 'VarargLiteral') {
+		ctx2._params.pop();
+	}
+	var firstArg = 0;
+	var memberOf = fn && fn.identifier && fn.identifier.type == 'MemberExpression' && expandtype(flatten(fn.identifier.base, ctx1), ctx1, call.loc.start.line);
+	var seenParam = {};
+	for (var c = ctx; c; c = c.parent) {
+		if (c._args) {
+			for (var i = 0; i < ctx2._args.length; i++) {
+				if (!seenParam[i] && ctx2._args[i].type == 'Identifier' && c._params && c._args[c._params.indexOf(ctx2._args[i].name)] && c._args[c._params.indexOf(ctx2._args[i].name)].type.indexOf('Literal') != -1) {
+					ctx2._args[i] = c._args[c._params.indexOf(ctx2._args[i].name)];
+				}
+			}
+			if (ctx2._args.length && ctx2._args[ctx2._args.length - 1].type == 'VarargLiteral') {
+				ctx2._args.pop();
+				ctx2._args = ctx2._args.concat(c._args.slice(c._params.length));
+			}
+			break;
+		}
+		for (var i = 0; i < ctx2._args.length; i++) {
+			if (!seenParam[i] && ctx2._args[i].type == 'Identifier' && c.types && c.types[ctx2._args[i].name]) {
+				seenParam[i] = true;
+			}
+		}
+	}
+	if (argTypes[argTypes.length - 1] && argTypes[argTypes.length - 1]._type == '__unknown_number_of') {
+		// root ... is an unknown number of strings.
+		var unk = argTypes.pop();
+		while (argTypes.length < ctx2._params.length) {
+			argTypes.push(unk.t);
+		}
+		argTypes.push(unk);
+	}
+	if (call.base.type == 'MemberExpression' && call.base.indexer == '.') {
+		if (fn.identifier && fn.identifier.indexer == ':') {
+			firstArg++;
+			ctx2._args.shift();
+			ctx2.types.self = argTypes.shift();
+		}
+	} else if (call.base.type == 'MemberExpression' && call.base.indexer == ':') {
+		if (fn.identifier && fn.identifier.indexer == '.') {
+			firstArg--;
+			ctx2._args.unshift(fn.identifier.base);
+			argTypes.unshift(memberOf);
+		} else {
+			ctx2.types.self = memberOf;
+		}
+	}
+	for (var k = 0; k < ctx2._args.length || k < ctx2._params.length; k++) {
+		var argName = firstArg + k < 0 ? 'receiver' : firstArg + k >= call.arguments.length || call.arguments[firstArg + k].type == 'VarargLiteral' ? '[var arg]' : call.arguments[firstArg + k].range;
+		if (ctx2._params.length <= k) {
 			var t = argTypes[k] || '__unknown';
 			if (t == '__unknown')
-				err(call.loc.start.line, 'type of expression is unknown', chalk.bold(sub(call.arguments[k].range)));
+				err(call.loc.start.line, 'type of argument', firstArg + k, 'is unknown', chalk.bold(sub(argName)));
 
-			ctx2.types[fn.parameters[k].name] = t;
+			des.push(t._type||t);
+			if (t._type == 'function')
+				save = false;
+		} else if (argTypes.length > k) {
+			var t = argTypes[k] || '__unknown';
+			if (t == '__unknown')
+				err(call.loc.start.line, 'type of argument', firstArg + k, 'is unknown', chalk.bold(sub(argName)));
+
+			ctx2.types[ctx2._params[k]] = t;
 			des.push(t._type||t);
 			if (t._type == 'function')
 				save = false;
 		} else {
-			ctx2.types[fn.parameters[k].name] = 'null';
+			ctx2.types[ctx2._params[k]] = 'null';
 			des.push('null');
 		}
 	}
-	ctx2.types['...'] = argTypes.slice(fn.parameters.length);
+	ctx2.types['...'] = argTypes.slice(ctx2._params.length);
 
 	des = des.join('_');
 
@@ -1479,7 +1647,7 @@ function fntype(call, ctx, opts) {
 	srcstack.push(fn._src);
 	linestack.push(call.loc.start.line);
 	callers.push(des);
-	var q = processAST(fn.body, ctx2) || '__unknown';
+	var q = processAST(fn.body, ctx2) || 'none';
 	callers.pop();
 	linestack.pop();
 	srcstack.pop();
@@ -1524,6 +1692,7 @@ function find_comment_dfver(b)
 	return true;
 }
 
+var prevlocal = null;
 function processAST(body, ctx) {
 	if (!ctx) {
 		fault(body.loc.start.line, 'missing context');
@@ -1533,10 +1702,14 @@ function processAST(body, ctx) {
 	var rettype = null;
 
 	body.forEach(function(b) {
+		if (b.type != 'LocalStatement') {
+			prevlocal = null;
+		}
+
 		if (b.type == 'FunctionDeclaration') {
 			var c = b.isLocal ? ctx : ctxstack[ctxstack.length - 1];
 			var n = flatten(b.identifier, ctx);
-			var existing = expandtype(n, ctx, b.loc.start.line, true);
+			var existing = expandtype(n, ctx, b.loc.start.line, true) || '__unknown';
 			c.functions = c.functions || {};
 			c.functions[n] = b;
 			c.functions[n]._src = srcstack[srcstack.length-1];
@@ -1548,6 +1721,10 @@ function processAST(body, ctx) {
 				base = checktype(b.identifier.base, ctx);
 				member = b.identifier.identifier.name;
 				if (base && base._type) {
+					for (var p = base; p && existing == '__unknown'; p = p._super && expandtype(p._super, ctx, b.loc.start.line, true)) {
+						existing = p[member] || (p._methods && p._methods[member]) || '__unknown';
+					}
+
 					base._methods = base._methods || {};
 					base._methods[member] = c.types[n];
 				}
@@ -1559,25 +1736,10 @@ function processAST(body, ctx) {
 			}
 
 			var found = false;
-			if (base && base._defclass && member) {
-				for (var p = base; p; p = p._super) {
-					if (p._type == 'Screen' && (member == 'onShow' || member == 'onDismiss' || member == 'onDestroy' || member == 'onRender' || member == 'onIdle' || member == 'onHelp' || member == 'onGetSelectedUnit' || member == 'onGetSelectedItem' || member == 'onGetSelectedJob' || member == 'onGetSelectedBuilding')) {
-						fnstocheck.push({name:n, node:ctypes[n], inp:[null,'none']});
-						found = true;
-					} else if (p._type == 'Screen' && (member == 'onResize')) {
-						fnstocheck.push({name:n, node:ctypes[n], inp:[null,'number,number']});
-						found = true;
-					} else if (p._type == 'Screen' && (member == 'onInput')) {
-						fnstocheck.push({name:n, node:ctypes[n], inp:[null,'__keyArray']});
-						found = true;
-					} else if (p._type == 'View' && (member == 'render')) {
-						fnstocheck.push({name:n, node:ctypes[n], inp:[null,'__gui_Painter']});
-						found = true;
-					}
-				}
-			}
-			if (existing && existing._anyfunc && existing._inp && !found) {
-				fnstocheck.push({name:n, node:ctypes[n], inp:[null, existing._inp]});
+			if (existing && existing._anyfunc && existing._inp) {
+				ctypes[n]._anyfunc = true;
+				ctypes[n]._inp = existing._inp;
+				fnstocheck.push({name:n, node:ctypes[n], inp:existing._inp});
 				found = true;
 			}
 			var cs = srcstack[srcstack.length-1].comments;
@@ -1598,7 +1760,12 @@ function processAST(body, ctx) {
 							ctypes[n]._skip = true;
 							delete unchecked_global_fns[n];
 						} else if (inp) {
+							inp = expandinput(inp[1], ctx, b.loc.start.line);
 							fnstocheck.push({name:n, node:ctypes[n], inp:inp});
+							if (base && base._defclass) {
+								ctypes[n]._anyfunc = true;
+								ctypes[n]._inp = inp;
+							}
 						}
 
 						found = true;
@@ -1608,7 +1775,7 @@ function processAST(body, ctx) {
 				}
 			}
 			if (!found && !base && b.parameters.length == 0) {
-				fnstocheck.push({name:n, node:ctypes[n], inp:[null,'none']});
+				fnstocheck.push({name:n, node:ctypes[n], inp:[]});
 				found = true;
 			}
 		}
@@ -1664,11 +1831,22 @@ function processAST(body, ctx) {
 							err(b.loc.start.line, 'type in comment is unknown', chalk.bold(as[j]));
 					}
 
+					if (t._type == '__unknown_number_of') {
+						for (; j < b.variables.length; j++) {
+							n = b.variables[j].name;
+
+							ctx.types[n] = t.t;
+						}
+						break;
+					}
+
 					ctx.types[n] = t;
 				} else {
 					ctx.types[n] = 'null';
 				}
 			}
+
+			prevlocal = b;
 		}
 
 		else if (b.type == 'AssignmentStatement') {
@@ -1715,13 +1893,19 @@ function processAST(body, ctx) {
 					var found = false;
 					for (var c = ctx; c; c = c.parent) {
 						if (c.types[n] && !(c.temps && c.temps[n])) {
-							var lt = c.types[n];
+							var lt = expandtype(c.types[n], c, b.loc.start.line, true) || c.types[n];
 							if (retype) {
 								c.types[n] = t;
 							} else if (lt && (lt._type||lt) == '__arg' && isargtype(t)) {
 								// ok
 							} else if (t && (t._type||t) == '__arg' && isargtype(lt)) {
 								c.types[n] = '__arg';
+							} else if (lt == 'number' && t._enum) {
+								// ok
+							} else if (lt._enum && t == 'number' && b.init[0].type == 'NumericLiteral' && lt._enum[b.init[0].value]) {
+								warn(b.loc.start.line, 'assigning', chalk.bold(sub(b.init[0].range)), 'of type', chalk.bold(t._type||t), 'to', chalk.bold(sub(b.variables[0].range)), 'of type', chalk.bold(lt._type||lt), '(suggested: use ' + chalk.bold(lt._type + '.' + lt._enum[b.init[0].value]) + ')');
+							} else if (lt._enum && t == 'number' && b.init[0].type != 'NumericLiteral') {
+								note(b.loc.start.line, 'assigning', chalk.bold(sub(b.init[0].range)), 'of type', chalk.bold(t._type||t), 'to', chalk.bold(sub(b.variables[0].range)), 'of type', chalk.bold(lt._type||lt));
 							} else if (lt && t && lt._type != t._type && lt._sub && t._super) {
 								var isSubclass = false;
 								for (var p = t; p; p = p._super && expandtype(p._super, p._defclass || ctx, b.loc.start.line, true)) {
@@ -1793,7 +1977,7 @@ function processAST(body, ctx) {
 					// ok
 				} else if (lt._anyfunc && rt._type == 'function') {
 					if (lt._inp && rt._ctx && rt._node) {
-						fnstocheck.push({name:flatten(b.variables[0], ctx), node:rt, inp:[null, lt._inp]});
+						fnstocheck.push({name:flatten(b.variables[0], ctx), node:rt, inp:lt._inp});
 					}
 					ctxstack[ctxstack.length - 1].functions = ctxstack[ctxstack.length - 1].functions || {};
 					ctxstack[ctxstack.length - 1].functions[flatten(b.variables[0], ctx)] = rt;
@@ -1833,12 +2017,16 @@ function processAST(body, ctx) {
 						}
 					}
 					if (!ok) {
-						if (lt._enum && rt == 'number' && b.init[0].type == 'NumericLiteral' && lt._enum[b.init[0].value]) {
+						if (lt == 'number' && rt._enum) {
+							// ok
+						} else if (lt._enum && rt == 'number' && b.init[0].type == 'NumericLiteral' && lt._enum[b.init[0].value]) {
 							warn(b.loc.start.line, 'assigning', chalk.bold(sub(b.init[0].range)), 'of type', chalk.bold(rt._type||rt), 'to', chalk.bold(sub(b.variables[0].range)), 'of type', chalk.bold(lt._type||lt), '(suggested: use ' + chalk.bold(lt._type + '.' + lt._enum[b.init[0].value]) + ')');
 						} else if (lt._enum && rt == 'number' && b.init[0].type != 'NumericLiteral') {
 							note(b.loc.start.line, 'assigning', chalk.bold(sub(b.init[0].range)), 'of type', chalk.bold(rt._type||rt), 'to', chalk.bold(sub(b.variables[0].range)), 'of type', chalk.bold(lt._type||lt));
 						} else if (lt._type == 'table' && rt._type == 'table') {
 							err(b.loc.start.line, 'assigning', chalk.bold(sub(b.init[0].range)), 'of type', rt, 'to', chalk.bold(sub(b.variables[0].range)), 'of type', lt);
+						} else if (lt._type != 'table' && (lt._type||lt) == (rt._type||rt)) {
+							// ok
 						} else {
 							err(b.loc.start.line, 'assigning', chalk.bold(sub(b.init[0].range)), 'of type', chalk.bold(rt._type||rt), 'to', chalk.bold(sub(b.variables[0].range)), 'of type', chalk.bold(lt._type||lt));
 						}
@@ -1896,7 +2084,7 @@ function processAST(body, ctx) {
 				});
 				rettype = processAST(b.body, ctx2) || rettype;
 			} else if (b.iterators[0].type == 'CallExpression' &&
-				(b.iterators[0].base.name == 'pairs' || b.iterators[0].base.name == 'ipairs' || b.iterators[0].base.name == 'ripairs' || b.iterators[0].base.name == 'ripairs_tbl')) {
+				(b.iterators[0].base.name == 'pairs' || b.iterators[0].base.name == 'ipairs' || b.iterators[0].base.name == 'progress_ipairs' || b.iterators[0].base.name == 'ripairs' || b.iterators[0].base.name == 'ripairs_tbl')) {
 				var t = checktype(b.iterators[0].arguments[0],ctx) || '__unknown';
 
 				if (t == '__unknown') {
@@ -1909,7 +2097,19 @@ function processAST(body, ctx) {
 				}
 
 				var at = arrayType(t, ctx, b.loc.start.line);
-				if ((b.iterators[0].base.name != 'pairs' && !t._array) || ((!at || at == '__unknown') && !as)) {
+				if (b.iterators[0].base.name == 'pairs' && t._type && (!at || at == '__unknown') && Object.keys(t).length != 1 && !as) {
+					ctx2.types[b.variables[0].name] = 'string';
+					for (var p = t; t; t = t && t._super && expandtype(t._super, ctx, b.loc.start.line)) {
+						for (var k in p) {
+							if (k == '_type' || k == '_super' || k == '_sub' || !Object.hasOwnProperty.call(p, k) || !p[k] || (p[k]._type||p[k]) == '__unknown') {
+								continue;
+							}
+							if (b.variables[1])
+								ctx2.types[b.variables[1].name] = p[k];
+							rettype = processAST(b.body, ctx2) || rettype;
+						}
+					}
+				} else if ((b.iterators[0].base.name != 'pairs' && !t._array) || ((!at || at == '__unknown') && !as)) {
 					if (t._type == 'table' && Object.keys(t).length == 1) {
 						warn(b.loc.start.line, 'cannot determine element type of empty table', chalk.bold(sub(b.iterators[0].arguments[0].range)), '(suggested: add an --as:foo[] annotation to the location this variable is declared)');
 					} else {
@@ -2063,6 +2263,18 @@ function processAST(body, ctx) {
 								return true;
 							}
 							return null;
+						} else if (condition.type == 'BinaryExpression' && ['<', '<=', '~=', '==', '>=', '>'].indexOf(condition.operator) != -1 && condition.left.type == 'CallExpression' && condition.right.type == 'NumericLiteral' && condition.left.base.type == 'Identifier' && condition.left.base.name == 'select' && condition.left.arguments.length == 2 && condition.left.arguments[0].type == 'StringLiteral' && condition.left.arguments[0].value == '#' && condition.left.arguments[1].type == 'VarargLiteral') {
+							var t = checktype(condition.left.arguments[1], ctx, { quiet:true });
+							if (!t || t._type != 'tuple' || (t._tuple[t._tuple.length - 1] && t._tuple[t._tuple.length - 1]._type == '__unknown_number_of'))
+								return null;
+							return !({
+								'<': function(a, b) { return a < b; },
+								'<=': function(a, b) { return a <= b; },
+								'~=': function(a, b) { return a != b; },
+								'==': function(a, b) { return a == b; },
+								'>=': function(a, b) { return a >= b; },
+								'>': function(a, b) { return a > b; }
+							})[condition.operator](t._tuple.length, condition.right.value);
 						}
 					};
 
@@ -2153,6 +2365,8 @@ function processAST(body, ctx) {
 
 	});
 
+	prevlocal = null;
+
 	return rettype;
 }
 
@@ -2173,14 +2387,14 @@ function firstlog() {
 	console.log(mainfn);
 }
 
-function printstack() {
+function printstack(currentLine) {
 	if (!verbose) {
 		return;
 	}
 
-	for (var i = srcstack.length - 2; i > 0; i--) {
-		var fn = srcstack[i].fn.split('/').slice(-1)[0];
-		var line = linestack[i] || '?';
+	for (var i = srcstack.length - 1; i > 0; i--) {
+		var fn = srcstack[i].fn;
+		var line = (i == srcstack.length - 1 ? currentLine : linestack[i]) || '?';
 		console.log(' -> ' + fn + ':' + line);
 	}
 }
@@ -2192,7 +2406,7 @@ function fault(line) {
 	args.splice(0, 1, chalk.magenta('INTERNAL ERROR ' + fn + ':' + line));
 	console.log.apply(null, args);
 	verbose++;
-	printstack();
+	printstack(line);
 	verbose--;
 	console.log(new Error().stack.substring('Error:\n'.length));
 	process.exitCode = 2;
@@ -2204,7 +2418,7 @@ function err(line) {
 	var fn = srcstack[srcstack.length-1].fn.split('/').slice(-1)[0];
 	args.splice(0, 1, chalk.red('ERROR ' + fn + ':' + line));
 	console.log.apply(null, args);
-	printstack();
+	printstack(line);
 	process.exitCode = 2;
 }
 
@@ -2217,7 +2431,7 @@ function warn(line) {
 	var fn = srcstack[srcstack.length-1].fn.split('/').slice(-1)[0];
 	args.splice(0, 1, chalk.yellow('WARN  ' + fn + ':' + line));
 	console.log.apply(null, args);
-	printstack();
+	printstack(line);
 	process.exitCode = 2;
 }
 
@@ -2230,7 +2444,7 @@ function note(line) {
 	var fn = srcstack[srcstack.length-1].fn.split('/').slice(-1)[0];
 	args.splice(0, 1, chalk.cyan('NOTE  ' + fn + ':' + line));
 	console.log.apply(null, args);
-	printstack();
+	printstack(line);
 }
 
 
@@ -2254,8 +2468,7 @@ processAST(ast.body, ctxstack[ctxstack.length - 1]);
 fnstocheck.forEach(function(fn) {
 	var b = fn.node._node;
 	var ctx = fn.node._ctx;
-	var inp = fn.inp;
-	var argtypes = inp[1].split(',');
+	var argtypes = fn.inp;
 
 	var ctx2 = { _type: '__context', types:{}, parent:ctx };
 
@@ -2286,5 +2499,5 @@ fnstocheck.forEach(function(fn) {
 });
 
 Object.keys(unchecked_global_fns).forEach(function(f) {
-	warn(unchecked_global_fns[f], 'unchecked global function', chalk.bold(f), '(suggested: add a comment --luacheck: in=input,argument,types out=outputtype on the line immediately before this function, delete the function, or add the local keyword before the function keyword)');
+	warn(unchecked_global_fns[f], 'unchecked global function', chalk.bold(f), '(suggested: add a comment --luacheck: in=input,argument,types or --luacheck: skip on the line immediately before this function, delete the function, or add the local keyword before the function keyword)');
 });

@@ -111,8 +111,32 @@ module.exports = {
 				save_init: { _type:'_ENV[]', _array:'_ENV' },
 			},
 
+			buildings: {
+				_type: 'dfhack.buildings',
+				_alias: true,
+				input_filter_defaults: {
+					_type: 'table',
+					item_type: 'number',
+					item_subtype: 'number',
+					mat_type: 'number',
+					mat_index: 'number',
+					flags1: { _type:'table', _array:'bool' },
+					flags2: { _type:'table', _array:'bool' },
+					flags3: { _type:'table', _array:'bool' },
+					flags4: 'number',
+					flags5: 'number',
+					reaction_class: 'string',
+					has_material_reaction_product: 'string',
+					metal_ore: 'number',
+					min_dimension: 'number',
+					has_tool_use: 'number',
+					quantity: 'number'
+				}
+			},
+
 			persistent: {
 				_type: 'dfhack.persistent',
+				_alias: true,
 				__tostring: {
 					_type: 'function',
 					_anyfunc: true
@@ -153,6 +177,7 @@ module.exports = {
 				_methods: {
 					getCraftClass: 'df.craft_material_class',
 					getToken: 'string',
+					toString: 'string',
 				},
 			},
 		},
@@ -194,6 +219,7 @@ module.exports = {
 		print: 'none',
 		type: 'string',
 		collectgarbage: 'none',
+		load: { _type: 'tuple', _tuple: [{ _type: 'function', _node: { _type: 'tuple', _tuple: [] } }, 'string'] },
 
 		'debug.getinfo': {
 			_type: 'table',
@@ -221,11 +247,9 @@ module.exports = {
 		'math.pow': 'number',
 
 		'table.insert': 'none',
-		'table.remove': 'none',
 		'table.sort': 'none',
 		'table.concat': 'string',
 		'table.pack': 'table',
-		'table.unpack': { _type:'tuple', _tuple:[] },
 		
 		'string.gsub': 'string',
 		'string.sub': 'string',
@@ -276,12 +300,15 @@ module.exports = {
 		'dfhack.timeout_active': { _type:'function', _node:'none' },
 		'dfhack.lineedit': 'string',
 		'dfhack.saferesume': 'bool',
+		'dfhack.is_interactive': 'bool',
 		'dfhack.gui.getCurViewscreen': 'df.viewscreen',
 		'dfhack.gui.getSelectedItem': 'df.item',
 		'dfhack.gui.showAnnouncement': 'none',
 		'dfhack.gui.getFocusString': 'string',
 		'dfhack.gui.getCurFocus': 'string',
 		'dfhack.gui.refreshSidebar': 'bool',
+		'dfhack.gui.writeToGamelog': 'none',
+		'dfhack.gui.getAnyUnit': 'df.unit',
 		'dfhack.random': 'number',
 		'__dfhack_random.init': 'none',
 		'__dfhack_random.random': 'number',
@@ -301,8 +328,19 @@ module.exports = {
 		'dfhack.units.isOpposedToLife': 'bool',
 		'dfhack.units.isMale': 'bool',
 		'dfhack.units.isFemale': 'bool',
-		'dfhack.units.getNoblePositions': { _type: 'Units::NoblePosition[]', _array: 'Units::NoblePosition' },
+		'dfhack.units.getNoblePositions': {
+			_type: 'table',
+			_array: {
+				_type: 'table',
+				entity: 'df.historical_entity',
+				assignment: 'df.entity_position_assignment',
+				position: 'df.entity_position'
+			}
+		},
 		'dfhack.units.getMiscTrait': 'df.unit_misc_trait',
+		'dfhack.units.computeMovementSpeed': 'number',
+		'dfhack.units.computeSlowdownFactor': 'number',
+		'dfhack.units.getAge': 'number',
 		'dfhack.items.checkMandates': 'bool',
 		'dfhack.items.canTrade': 'bool',
 		'dfhack.items.canTradeWithContents': 'bool',
@@ -321,6 +359,11 @@ module.exports = {
 		'dfhack.items.isCasteMaterial': 'bool',
 		'dfhack.items.remove': 'bool',
 		'dfhack.items.findType': 'number',
+		'dfhack.items.findSubtype': 'number',
+		'dfhack.items.createItem': 'number',
+		'dfhack.items.moveToInventory': 'bool',
+		'dfhack.items.moveToGround': 'bool',
+		'dfhack.items.moveToBuilding': 'bool',
 		'dfhack.matinfo.decode': 'dfhack.matinfo',
 		'dfhack.matinfo.find': 'dfhack.matinfo',
 		'dfhack.matinfo.matches': 'bool',
@@ -355,6 +398,10 @@ module.exports = {
 		'dfhack.internal.diffscan': 'number',
 		'dfhack.internal.getModifiers': { _type:'table', shift:'bool', ctrl:'bool', alt:'bool' },
 		'dfhack.internal.getModstate': 'number',
+		'dfhack.internal.getImageBase': 'number',
+		'dfhack.internal.getRebaseDelta': 'number',
+		'dfhack.internal.adjustOffset': 'number',
+		'dfhack.internal.patchBytes': { _type:'tuple', _tuple:['bool','string'] },
 		'dfhack.TranslateName': 'string',
 		'dfhack.buildings.deconstruct': 'none',
 		'dfhack.buildings.markedForRemoval': 'bool',
@@ -388,6 +435,8 @@ module.exports = {
 		'dfhack.world.isLegends': 'bool',
 		'dfhack.world.SetCurrentWeather': 'none',
 		'dfhack.world.ReadCurrentWeather': 'df.weather_type',
+		'dfhack.world.ReadCurrentDay': 'number',
+		'dfhack.world.ReadCurrentMonth': 'number',
 		'dfhack.filesystem.exists': 'bool',
 		'dfhack.filesystem.isfile': 'bool',
 		'dfhack.filesystem.isdir': 'bool',
@@ -398,6 +447,14 @@ module.exports = {
 		'dfhack.filesystem.listdir': { _type: 'table', _array: { _type: 'table', path: 'string', isdir: 'bool' } },
 		'dfhack.filesystem.listdir_recursive': { _type: 'table', _array: { _type: 'table', path: 'string', isdir: 'bool' } },
 		'dfhack.pen.parse': 'dfhack.pen',
+		'dfhack.persistent.save': { _type: 'tuple', _tuple: [{
+			_type: 'table',
+
+			entry_id: 'number',
+			key: 'string',
+			value: 'string',
+			ints: { _type: 'number[]', _array: 'number' }
+		}, 'bool'] },
 
 		'df.isnull': 'bool',
 		'df.isvalid': 'string',
@@ -432,6 +489,57 @@ module.exports = {
 		'coroutine.yield': { _type:'tuple', _tuple:[] },
 
 		'__dumper.DataDumper': 'string',
+	},
+
+	modules: {
+		'plugins.eventful': {
+			types: {
+				onWorkshopFillSidebarMenu: { _type:'__EventHolder', _inp:'df.building_actual,bool' },
+				postWorkshopFillSidebarMenu: { _type:'__EventHolder', _inp:'df.building_actual' },
+				onReactionCompleting: { _type:'__EventHolder', _inp:'df.reaction,df.reaction_product_itemst,df.unit,df.item[],df.reaction_reagent[],df.item[],bool' },
+				onReactionComplete: { _type:'__EventHolder', _inp:'df.reaction,df.reaction_product_itemst,df.unit,df.item[],df.reaction_reagent[],df.item[]' },
+				onItemContaminateWound: { _type:'__EventHolder', _inp:'df.item_actual,df.unit,df.unit_wound,number,number' },
+				onProjItemCheckImpact: { _type:'__EventHolder', _inp:'df.proj_itemst,bool' },
+				onProjItemCheckMovement: { _type:'__EventHolder', _inp:'df.proj_itemst' },
+				onProjUnitCheckImpact: { _type:'__EventHolder', _inp:'df.projunitst_,bool' },
+				onProjUnitCheckMovement: { _type:'__EventHolder', _inp:'df.proj_unitst' },
+				onBuildingCreatedDestroyed: { _type:'__EventHolder', _inp:'number' },
+				onJobInitiated: { _type:'__EventHolder', _inp:'df.job' },
+				onJobCompleted: { _type:'__EventHolder', _inp:'df.job' },
+				onUnitDeath: { _type:'__EventHolder', _inp:'number' },
+				onItemCreated: { _type:'__EventHolder', _inp:'number' },
+				onConstructionCreatedDestroyed: { _type:'__EventHolder', _inp:'df.construction' },
+				onSyndrome: { _type:'__EventHolder', _inp:'number,number' },
+				onInvasion: { _type:'__EventHolder', _inp:'number' },
+				onInventoryChange: { _type:'__EventHolder', _inp:'number,number,df.unit_inventory_item,df.unit_inventory_item' },
+				onReport: { _type:'__EventHolder', _inp:'number' },
+				onUnitAttack: { _type:'__EventHolder', _inp:'number,number,number' },
+				onUnload: { _type:'__EventHolder', _inp:'none' },
+				onInteraction: { _type:'__EventHolder', _inp:'string,string,number,number,number,number' },
+			},
+
+			functions: {
+				'enableEvent': 'none',
+			},
+		},
+		'plugins.rendermax': {
+			functions: {
+				'isEnabled': 'bool',
+				'lockGrids': 'none',
+				'unlockGrids': 'none',
+				'resetGrids': 'none',
+				'getCell': {
+					_type: 'table',
+					fm: { _type:'table', r:'number', g:'number', b:'number' },
+					fo: { _type:'table', r:'number', g:'number', b:'number' },
+					bm: { _type:'table', r:'number', g:'number', b:'number' },
+					bo: { _type:'table', r:'number', g:'number', b:'number' },
+				},
+				'setCell': 'none',
+				'getGridsSize': { _type:'tuple', _tuple:['number','number'] },
+				'invalidate': 'none',
+			},
+		},
 	},
 
 	parent: null,
