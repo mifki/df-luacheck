@@ -60,28 +60,28 @@ function container_type(fdef, type)
 
 			//TODO: set _type
 			var t = pointer_type(fdef.item, type);
-			return { _array: t, _type:(t._type||t)+'[]', _kind:'string' };
+			return { _array: t, _type:(t._type||t)+'[]', _kind:{_type:'string', _value:'container'} };
 
 		} else if (imeta == 'number') {
-			return { _array: 'number', _type: 'number[]', _kind: 'string' };
+			return { _array: 'number', _type: 'number[]', _kind:{_type:'string', _value:'container'} };
 
 		} else if (imeta == 'container' || imeta == 'static-array') {
 			var t = container_type(fdef.item, type);
-			return { _array: t, _type:(t._type||t)+'[]', _kind:'string' };
+			return { _array: t, _type:(t._type||t)+'[]', _kind:{_type:'string', _value:'container'} };
 
 		} else if (imeta == 'primitive') {
 			var t = convertBasicType(item.$['subtype']);
-			return { _array: t, _type:(t._type||t)+'[]', _kind:'string' };
+			return { _array: t, _type:(t._type||t)+'[]', _kind:{_type:'string', _value:'container'} };
 
 		} else if (imeta == 'compound' && item.$['subtype'] == 'enum') {
 			if (item.$['typedef-name']) {
 				var tname = type._type + '.' + item.$['typedef-name'];
 				type[item.$['typedef-name']] = processEnum(item, tname);
-				return { _array: tname, _type: tname + '[]', _kind: 'string' };
+				return { _array: tname, _type: tname + '[]', _kind:{_type:'string', _value:'container'} };
 			}
 
 			var t = processEnum(item);
-			return { _array: t, _type: t + '[]', _kind: 'string' };
+			return { _array: t, _type: t + '[]', _kind: {_type:'string', _value:'container'} };
 
 		} else if (imeta == 'compound') {
 			if (item.$['typedef-name']) {
@@ -90,11 +90,11 @@ function container_type(fdef, type)
 				if (item.$['subtype'] == 'bitfield')
 					type[item.$['typedef-name']].whole = 'number';
 
-				return { _array: tname, _type: tname + '[]', _kind: 'string' };
+				return { _array: tname, _type: tname + '[]', _kind: {_type:'string', _value:'container'} };
 			}
 
 			var t = processStruct(item);
-			return { _array: t, _type: t + '[]', _kind: 'string' };
+			return { _array: t, _type: t + '[]', _kind: {_type:'string', _value:'container'} };
 
 		} else {
 			// console.log('V1', fdef);
@@ -103,7 +103,7 @@ function container_type(fdef, type)
 	}
 
 	else // vector<void*>
-		return { _array:'number', _type:'number[]', _kind:'string' };
+		return { _array:'number', _type:'number[]', _kind:{_type:'string', _value:'container'} };
 }
 
 function pointer_type(fdef, type)
@@ -125,6 +125,12 @@ function pointer_type(fdef, type)
 	} else if (fdef.item && fdef.item.$['subtype'] == 'static-string') {
 		return { _type:'charptr', _array:'number' };
 
+	} else if (!fdef.$['type-name']) {
+		if (fdef.$['is-array'] == 'true')
+			return { _array:'__unknown' };
+		else
+			return '__unknown';
+
 	} else {
 		var t;
 		try {
@@ -141,7 +147,7 @@ function pointer_type(fdef, type)
 
 function processStruct(def, n)
 {
-	var type = { _type: n };
+	var type = { _type: n, _kind: { _type: 'string', _value: def.$['meta'] } };
 	if (def.$['inherits-from']) {
 		type._super = 'df.' + def.$['inherits-from'];
 
@@ -338,7 +344,7 @@ function processStruct(def, n)
 
 function processEnum(def, n)
 {
-	var type = { _type: n };
+	var type = { _type: n, _kind: { _type: 'string', _value: 'enum-type' } };
 
 	type._array = 'string';
 	type._enum = {};
@@ -358,7 +364,8 @@ function processEnum(def, n)
 			}
 			var fname = fdef.$ && fdef.$['name'] || ('anon_'+anon++);
 			type._enum[value] = fname;
-			type[fname] = n;//'number';
+			type[fname] = { _type:n, _value:value };
+			type._last_item = { _type:'number', _value:Math.max(type._last_item._value||0, value) };
 		}
 
 		else if (t == 'enum-attr') {

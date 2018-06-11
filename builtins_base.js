@@ -22,6 +22,7 @@ module.exports = {
 			_type: '__df',
 			global: {
 				_type: '__global',
+				_kind: { _type: 'string', _value: 'global' },
 			},
 		},
 		
@@ -411,7 +412,7 @@ module.exports = {
 		'dfhack.buildings.getStockpileContents': { _type:'df.item[]', _array:'df.item' },
 		'dfhack.gui.getSelectedUnit': 'df.unit',
 		'dfhack.gui.getSelectedBuilding': 'df.building',
-		'dfhack.gui.getDwarfmodeViewDims': { _type:'tuple', map_x1:'number', map_x2:'number', menu_x1:'number', menu_x2:'number', area_x1:'number', area_x2:'number', y1:'number', y2:'number', map_y1:'number', map_y2:'number', menu_on:'bool', area_on:'bool', menu_forced:'bool' },
+		'dfhack.gui.getDwarfmodeViewDims': { _type:'table', map_x1:'number', map_x2:'number', menu_x1:'number', menu_x2:'number', area_x1:'number', area_x2:'number', y1:'number', y2:'number', map_y1:'number', map_y2:'number', menu_on:'bool', area_on:'bool', menu_forced:'bool' },
 		'dfhack.screen.inGraphicsMode': 'bool',
 		'dfhack.screen.getKeyDisplay': 'string',
 		'dfhack.screen.show': 'none',
