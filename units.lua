@@ -120,7 +120,7 @@ function unit_query_selected(unitid)
 
     local jobtitle, jobcolor = unit_jobtitle(unit, false)
 
-    local is_citizen = dfhack.units.isCitizen(unit) 
+    local is_citizen = dfhack.units.isCitizen(unit)
     local can_edit_labors = is_citizen and unit.profession ~= df.profession.CHILD and unit.profession ~= df.profession.BABY
 
     local flags = (is_citizen and 1 or 0) + (can_edit_labors and 2 or 0)
@@ -267,7 +267,7 @@ function is_hidden(unit)
     local by = bit32.rshift(pos.y, 4)
     local block = df.global.world.map.block_index[bx][by][pos.z]
     local d = block.designation[unit.pos.x%16][unit.pos.y%16]
-    
+
     return d.hidden
 end
 
@@ -297,7 +297,7 @@ function unit_fullprof(unit)
             prof = unit.enemy.undead.anon_7 -- a reanimated body part will use this string instead
         end
     end
-  
+
     if unit.curse.name_visible and #unit.curse.name > 0 then
         prof = prof .. ' ' ..unit.curse.name
     end
@@ -317,7 +317,7 @@ function unit_fullprof(unit)
         prof = prof .. ' (' .. TRAINING_LEVELS[unit.training_level] .. ')'
     end
 
-    return prof    
+    return prof
 end
 
 --todo: this should probably return the colour as well
@@ -325,7 +325,7 @@ function unit_fulltitle(unit)
     if not unit then
         return '#no unit, please report#'
     end
-    
+
     local uname = unitname(unit)
     local fullprof = unit_fullprof(unit)
     local fullname = (#uname>0 and uname .. ', ' or '') .. fullprof
@@ -363,7 +363,7 @@ function unit_jobtitle(unit, norepeatsuffix)
                     jobcolor = 6
                 else
                     jobtitle = utils.call_with_string(o, 'getDescription')
-    
+
                     if o._type ~= df.squad_order_trainst then
                         return jobtitle, jobcolor
                     end
@@ -373,7 +373,7 @@ function unit_jobtitle(unit, norepeatsuffix)
         end
 
         if #unit.military.individual_drills > 0 then
-            local act_id = unit.military.individual_drills[0] --todo: what if there are > 1 ? 
+            local act_id = unit.military.individual_drills[0] --todo: what if there are > 1 ?
             local act = df.activity_entry.find(act_id)
             if act and #act.events > 0 then
                 local s = df.new 'string'
@@ -385,7 +385,7 @@ function unit_jobtitle(unit, norepeatsuffix)
             else
                 --todo: else
             end
-    
+
         else
             local s = unit_get_squad(unit)
 
@@ -413,7 +413,7 @@ function unit_jobtitle(unit, norepeatsuffix)
             end
         end
     end
-    
+
     return jobtitle, jobcolor
 end
 
@@ -484,7 +484,7 @@ end
 function units_list_livestock()
     return execute_with_units_screen(function(ws)
         local ret = {}
-        
+
         for i,unit in ipairs(ws.units[1]) do
             local fullname = unit_fulltitle(unit)
             local right = TRAINING_LEVELS[unit.training_level]
@@ -495,11 +495,11 @@ function units_list_livestock()
                 right = right .. ' (Chained)'
             end
 
-            local profcolor = dfhack.units.getProfessionColor(unit)            
+            local profcolor = dfhack.units.getProfessionColor(unit)
 
             table.insert(ret, { fullname, unit.id, right, 0, pos2table(unit.pos), mp.NIL, profcolor, 1+8 })
         end
-    
+
         return { ret, { #ws.units[0], #ws.units[1], #ws.units[2], #ws.units[3] } }
     end)
 end
@@ -507,10 +507,10 @@ end
 function units_list_other()
     return execute_with_units_screen(function(ws)
         local ret = {}
-        
+
         for i,unit in ipairs(ws.units[2]) do
             local fullname = unit_fulltitle(unit)
-            local profcolor = dfhack.units.getProfessionColor(unit)                        
+            local profcolor = dfhack.units.getProfessionColor(unit)
             local right, rightcolor
 
 
@@ -524,7 +524,7 @@ function units_list_other()
 
             elseif unit.flags1.active_invader or unit.flags1.invader_origin then
                 right = 'Invader'
-                rightcolor = 4                
+                rightcolor = 4
             elseif unit.flags1.diplomat and #df.global.ui.dip_meeting_info > 0 and df.global.ui.dip_meeting_info[0].diplomat_id == unit.hist_figure_id then
                 right = 'Diplomat'
                 rightcolor = 15
@@ -533,7 +533,7 @@ function units_list_other()
                 rightcolor = 7
             elseif unit.flags1.forest or unit.flags1.merchant or unit.flags1.diplomat then
                 right = 'Friendly'
-                rightcolor = 2+8                
+                rightcolor = 2+8
 
             elseif unit.civ_id ~= -1 then
                 right = 'Hostile'
@@ -557,7 +557,7 @@ function units_list_other()
                         rightcolor = 4
                     else
                         right = 'Friendly'
-                        rightcolor = 2+8                
+                        rightcolor = 2+8
                     end
 
                 else
@@ -570,11 +570,11 @@ function units_list_other()
                 right = right .. ' (Caged)'
             elseif unit.flags1.chained then
                 right = right .. ' (Chained)'
-            end            
+            end
 
             table.insert(ret, { fullname, unit.id, right, 0, pos2table(unit.pos), mp.NIL, profcolor, rightcolor })
         end
-    
+
         return { ret, { #ws.units[0], #ws.units[1], #ws.units[2], #ws.units[3] } }
     end)
 end
@@ -591,7 +591,7 @@ function units_list_dead()
                 missing = incident and not incident.flags.discovered
             end
 
-            local profcolor = dfhack.units.getProfessionColor(unit)            
+            local profcolor = dfhack.units.getProfessionColor(unit)
             local stcolor = missing and 7 or 13
 
             table.insert(ret, { fullname, unit.id, missing and "Missing" or "Deceased", 0, mp.NIL, mp.NIL, profcolor, stcolor })
@@ -760,7 +760,7 @@ function unit_job_cancel(unitid, value)
     for i,v in ipairs(job.general_refs) do
         df.delete(v)
     end
-    
+
     df.delete(job)
 
     return true
@@ -846,7 +846,7 @@ function unit_get_thoughts(unitid, is_histfig)
     end
 
     local text = ''
-    
+
     for i,v in ipairs(ws.src_text) do
         if #v.value > 0 then
             text = text .. dfhack.df2utf(v.value:gsub('%[B]', '[P]', 1)) .. ' '
@@ -894,7 +894,7 @@ local relations_unit = {
     { 'Considers Bully', 12 },
     { 'Considers Brigand', 12 },
     { 'Loyal Soldier', 15 },
-    { 'Considers Monster', 13 },    
+    { 'Considers Monster', 13 },
 }
 
 local relations_hf = {
@@ -974,7 +974,7 @@ function unit_get_relationships(unitid)
     local unitws = df.viewscreen_unitst:new()
     unitws.unit = unit
     gui.simulateInput(unitws, 'UNITVIEW_RELATIONSHIPS')
-    df.delete(unitws)    
+    df.delete(unitws)
 
     local ws = dfhack.gui.getCurViewscreen()
     if ws._type ~= df.viewscreen_layer_unit_relationshipst then
@@ -1086,7 +1086,7 @@ function unit_get_inventory(unitid)
 
         --xxx: let's show hauled items on top
         table.insert(ret, (v.mode == 0) and 1 or #ret+1, { title, item.id, where })
-    end    
+    end
 
     return ret
 end
@@ -1242,11 +1242,11 @@ function unit_customize(unitid, nickname, profname)
 
     if nickname ~= nil then
         dfhack.units.setNickname(unit, nickname)
-    end    
+    end
 
     if profname ~= nil then
         unit.custom_profession = profname
-    end        
+    end
 
     return true
 end
