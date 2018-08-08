@@ -409,6 +409,13 @@ function checktype(expr, ctx, opts) {
 			return '__unknown';
 		}
 
+		if (baset._kind && baset._kind._value == 'bitfield-type') {
+			if (baset[expr.identifier.name])
+				return { _type: 'number' }; //TODO: can return value too
+			else
+				return '__unknown';
+		}
+
 		//TODO: need to update parent object type in context for abstract types
 		/*if (baset._type == 'df.viewscreen' && !baset[expr.identifier.name]) {
 			if (expr.base.type == 'Identifier') {
@@ -551,11 +558,11 @@ function checktype(expr, ctx, opts) {
 		var res;
 		var op = expr.operator;
 		if (op == '..')
-			res = 'string';
+			res = { _type:'string' };
 		else if (op == '+' || op == '-' || op == '/' || op == '*' || op == '&' || op == '|' || op == '%' || op == '^^' || op == '<<' || op == '>>' || op == '^')
-			res = 'number';
+			res = { _type:'number' };
 		else
-			res = 'bool';
+			res = { _type:'bool' };
 
 		if (t1._type == t2._type && Object.hasOwnProperty.call(t1, '_value') && Object.hasOwnProperty.call(t2, '_value')) {
 			if (op == '==') {
@@ -705,9 +712,9 @@ function checktype(expr, ctx, opts) {
 
 			} else if (f.type == 'TableKey') {
 				var kt = checktype(f.key, ctx) || '__unknown';
-				if (kt._type == 'string') {
+				if (kt == 'string' || kt._type == 'string') {
 					ret[kt._value] = t;
-				} else if (kt._type == 'number') {
+				} else if (kt == 'number' || kt._type == 'number') {
 					ret[kt._value] = t;
 					j = kt._value + 1;
 				} else if (kt._type.slice(0, 3) == 'df.' && typeof kt._value == 'number') {
@@ -917,426 +924,396 @@ function fntype(call, ctx, opts) {
 	}
 
 	if (!fn) {
-	/*if (fnname.indexOf(':') != -1) {
-		var a = fnname.split(':');
-		var objname = a[0];
-		var mname = a[1];
-		var t = expandtype(objname, ctx) || '__unknown';
-		if (t == '__unknown') {
-			err(call.loc.start.line, 'unknown object', chalk.bold(objname));
-			return '__unknown';
-		}
-		fnname = t + '.' + mname;
-	}*/
+		/*if (fnname.indexOf(':') != -1) {
+			var a = fnname.split(':');
+			var objname = a[0];
+			var mname = a[1];
+			var t = expandtype(objname, ctx) || '__unknown';
+			if (t == '__unknown') {
+				err(call.loc.start.line, 'unknown object', chalk.bold(objname));
+				return '__unknown';
+			}
+			fnname = t + '.' + mname;
+		}*/
 
-	if (fnname == 'type') {
-		if (argTypes[0]) {
-			var t = argTypes[0]._type||argTypes[0];
-			if (t == 'string' || t == 'number' || t == 'bool' || t == 'table') {
-				return { _type:'string', _value:t };
+		if (fnname == 'type') {
+			if (argTypes[0]) {
+				var t = argTypes[0]._type||argTypes[0];
+				if (t == 'string' || t == 'number' || t == 'bool' || t == 'table') {
+					return { _type:'string', _value:t };
+				}
 			}
 		}
-	}
 
-	if (fnname.match('\\.delete$'))
-		return 'none';
+		if (fnname.match('\\.delete$'))
+			return 'none';
 
-	if (fnname.match('\\.sizeof$'))
-		return { _type:'tuple', _tuple:['number', 'number'] };
+		if (fnname.match('\\.sizeof$'))
+			return { _type:'tuple', _tuple:['number', 'number'] };
 
-	if (fnname.match('\\._field$')) //TODO: check that the field exists
-		return { _type:'__field' };
+		if (fnname.match('\\._field$')) //TODO: check that the field exists
+			return { _type:'__field' };
 
-	//TODO: check that assignment is correct somehow ?
-	if (fnname.match('\\.assign$'))
-		return 'none';
+		//TODO: check that assignment is correct somehow ?
+		if (fnname.match('\\.assign$'))
+			return 'none';
 
-	if (fnname == 'df.new' && argTypes.length == 1 && argTypes[0]._type == 'string') {
-		var t = argTypes[0]._value;
-		if (['int8_t', 'uint8_t', 'int16_t', 'uint16_t', 'int32_t', 'uint32_t', 'int64_t', 'uint64_t', 'float', 'intptr_t', 'uintptr_t', 'long'].indexOf(t) != -1) {
-			return { _type:'std::' + t, value:'number' };
-		}
-		if (t == 'string') {
-			return { _type:'std::string', value:'string' };
-		}
-		return expandtype(t, ctx, expr.loc.start.line);
-	} else if (fnname == 'df.new' && argTypes.length == 1 && argTypes[0]._type.slice(0, 3) == 'df.') {
-		return argTypes[0];
-	} else if (fnname == 'df.new' && argTypes.length == 2 && (argTypes[0]._type||argTypes[0]) == 'string' && (argTypes[1]._type||argTypes[1]) == 'number') {
-		return { _type:'number[]', _array:'number' };
-	}
-
-	if (fnname == 'dfhack.random.new') {
-		return expandtype('__dfhack_random', ctx);
-	}
-
-	if (fnname == 'coroutine.create') {
-		checktype({
-			type: 'CallExpression',
-			base: call.arguments[0],
-			arguments: [],
-			loc: call.loc,
-			range: call.range
-		}, ctx);
-		return expandtype('coroutine', ctx, call.loc.start.line);
-	}
-
-	if (fnname == 'dfhack.timeout') {
-		checktype({
-			type: 'CallExpression',
-			base: call.arguments[2],
-			arguments: [],
-			loc: call.loc,
-			range: call.range
-		}, ctx);
-		return 'number';
-	}
-
-	if (fnname == 'dfhack.with_finalize' || fnname == 'dfhack.with_onerror') {
-		var t = checktype({
-			type: 'CallExpression',
-			base: call.arguments[1],
-			arguments: call.arguments.slice(2),
-			loc: call.loc,
-			range: call.range
-		}, ctx);
-		checktype({
-			type: 'CallExpression',
-			base: call.arguments[0],
-			arguments: [],
-			loc: call.arguments[0].loc,
-			range: call.arguments[0].range
-		}, ctx);
-		return t;
-	}
-
-	if (fnname == 'dfhack.call_with_finalizer' && call.arguments[0] && call.arguments[0].type == 'NumericLiteral') {
-		var errArgs = call.arguments[0].value;
-		var t = checktype({
-			type: 'CallExpression',
-			base: call.arguments[3 + errArgs],
-			arguments: call.arguments.slice(4 + errArgs),
-			loc: call.loc,
-			range: call.range
-		}, ctx);
-		checktype({
-			type: 'CallExpression',
-			base: call.arguments[2],
-			arguments: call.arguments.slice(3, errArgs),
-			loc: call.arguments[2].loc,
-			range: call.arguments[2].range
-		}, ctx);
-		return t;
-	}
-
-	if (fnname.match('^df\\..*\\.new$')) 
-		return expandtype(fnname.slice(0, -4), ctx, call.loc.start.line);
-
-	if (fnname.match('^df\\.(.*\\.)?is_instance$')) {
-		var checkType, actualType;
-		if (fnname == 'df.is_instance') {
-			checkType = argTypes[0] || '__unknown';
-			actualType = argTypes[1] || '__unknown';
-		} else {
-			checkType = expandtype(fnname.slice(0, -12), ctx, call.loc.start.line) || '__unknown';
-			actualType = argTypes[0] || '__unknown';
-		}
-
-		if ((checkType._type||checkType).slice(0, 3) != 'df.' || (actualType._type||actualType).slice(0, 3) != 'df.') {
-			return 'bool';
-		}
-		if ((checkType._type||checkType) == (actualType._type||actualType) || (checkType._sub||[]).indexOf(actualType) != -1) {
-			return { _type:'bool', _value:true };
-		}
-		if (!getflags(ctx).strictsubtype && (actualType._sub||[]).indexOf(checkType._type||checkType) != -1) {
-			return 'bool';
-		}
-		return { _type:'bool', _value:false };
-	}
-
-	if (fnname == 'defclass') {
-		if (argTypes[0] && argTypes[0] != '__unknown')
+		if (fnname == 'df.new' && argTypes.length == 1 && argTypes[0]._type == 'string') {
+			var t = argTypes[0]._value;
+			if (['int8_t', 'uint8_t', 'int16_t', 'uint16_t', 'int32_t', 'uint32_t', 'int64_t', 'uint64_t', 'float', 'intptr_t', 'uintptr_t', 'long'].indexOf(t) != -1) {
+				return { _type:'std::' + t, value:'number' };
+			}
+			if (t == 'string') {
+				return { _type:'std::string', value:'string' };
+			}
+			return expandtype(t, ctx, expr.loc.start.line);
+		} else if (fnname == 'df.new' && argTypes.length == 1 && argTypes[0]._type.slice(0, 3) == 'df.') {
 			return argTypes[0];
-
-		var pt = argTypes[1] && argTypes[1] != 'null' ? argTypes[1] : '__defclass_base';
-
-		var t = {
-			_defclass: ctx,
-			_type: flatten(call.arguments[0], ctx),
-			_super: pt
-		};
-		if (pt != '__defclass_base') {
-			t.super = pt;
+		} else if (fnname == 'df.new' && argTypes.length == 2 && (argTypes[0]._type||argTypes[0]) == 'string' && (argTypes[1]._type||argTypes[1]) == 'number') {
+			return { _type:'number[]', _array:'number' };
 		}
 
-		var ctx1 = { _type:'__context', types:{}, parent:ctx };
-
-		if (call.arguments[0].type == 'Identifier') {
-			ctx1.types[call.arguments[0].name] = t;
+		if (fnname == 'dfhack.random.new') {
+			return expandtype('__dfhack_random', ctx);
 		}
 
-		t.ATTRS = {
-			_defclass_ATTRS: t,
-			_type: t._type + '.ATTRS',
-			_super: pt.ATTRS || ((pt._type || pt) + '.ATTRS')
-		};
-
-		var cs = srcstack[srcstack.length-1].comments;
-		if (cs) {
-			for (var j = 0; j < cs.length; j++) {
-				var c = cs[j];
-
-				if (c.loc.start.line == call.loc.start.line-1 && c.value.substr(0,9) == 'luacheck:') {
-					var extrafields = c.value.match(/defclass=([^\s]*)/);
-					if (extrafields) {
-						var fields = null;
-						try {
-							fields = jsonic(extrafields[1]);
-						} catch (e) {
-							err(c.loc.start.line, 'can not parse type definition', chalk.bold(extrafields[1]), e);
-						}
-						Object.entries(fields).forEach(function(f) {
-							var ft = expandtype(f[1], ctx1, call.loc.start.line);
-							if (ft._array) {
-								ft._array = expandtype(ft._array, ctx1, call.loc.start.line);
-							}
-							t[f[0]] = ft;
-							t.ATTRS[f[0]] = ft;
-						});
-					}
-					break;
-				}
-			}
+		if (fnname == 'coroutine.create') {
+			checktype({
+				type: 'CallExpression',
+				base: call.arguments[0],
+				arguments: [],
+				loc: call.loc,
+				range: call.range
+			}, ctx);
+			return expandtype('coroutine', ctx, call.loc.start.line);
 		}
 
-		if (pt._type) {
-			pt._sub = pt._sub || [];
-			pt._sub.push(t);
-			for (var p = pt; p && p._type; p = p._super && expandtype(p._super, p._defclass || ctx, call.loc.start.line, true)) {
-				p._sub = p._sub || [];
-				p._sub.push(t);
-			}
+		if (fnname == 'dfhack.timeout') {
+			checktype({
+				type: 'CallExpression',
+				base: call.arguments[2],
+				arguments: [],
+				loc: call.loc,
+				range: call.range
+			}, ctx);
+			return 'number';
 		}
 
-		if (pt.ATTRS && pt.ATTRS._type) {
-			pt.ATTRS._sub = pt.ATTRS._sub || [];
-			pt.ATTRS._sub.push(t.ATTRS);
-			for (var p = pt; p && p.ATTRS && p.ATTRS._type; p = p._super && expandtype(p._super, p._defclass || ctx, call.loc.start.line, true)) {
-				p.ATTRS._sub = p.ATTRS._sub || [];
-				p.ATTRS._sub.push(t.ATTRS);
-			}
+		if (fnname == 'dfhack.with_finalize' || fnname == 'dfhack.with_onerror') {
+			var t = checktype({
+				type: 'CallExpression',
+				base: call.arguments[1],
+				arguments: call.arguments.slice(2),
+				loc: call.loc,
+				range: call.range
+			}, ctx);
+			checktype({
+				type: 'CallExpression',
+				base: call.arguments[0],
+				arguments: [],
+				loc: call.arguments[0].loc,
+				range: call.arguments[0].range
+			}, ctx);
+			return t;
 		}
 
-		return t;
-	}
-
-	if (fnname == 'table.insert') {
-		var k = (call.arguments.length == 3 ? 2 : 1);
-		var kt = (call.arguments.length == 3 ? argTypes[1] : 'number');
-		var t = argTypes[0] || '__unknown';
-		var rt = argTypes[k] || '__unknown';
-
-		if (rt == '__unknown')
-			err(call.loc.start.line, 'type of expression is unknown', chalk.bold(sub(call.arguments[k].range)));
-
-		if (t == '__unknown')
-			err(call.loc.start.line, 'type of expression is unknown', chalk.bold(sub(call.arguments[0].range)));
-		else {
-			if (t._type == 'table' || t._array || t._type == '__arg') {
-				var at = arrayType(t, ctx, call.loc.start.line, kt);
-				if (at && at._type != rt._type && at._sub && rt._super) {
-					for (var p = rt; p; p = p._super && expandtype(p._super, ctx, call.loc.start.line, true)) {
-						if (p._type == at._type) {
-							at = rt;
-							break;
-						}
-					}
-				}
-				if ((at._type||at) == '__arg' && (rt._type||rt) == 'string') {
-					at = 'string';
-				}
-				if ((at._type||at) == 'string' && (rt._type||rt) == '__arg') {
-					rt = 'string';
-				}
-				if (at && at != '__unknown' && (at._type||at) != (rt._type||rt)) {
-					warn(call.loc.start.line, 'inserting', chalk.bold(rt._type||rt), 'into an array of', chalk.bold(at._type || at));
-				}
-			} else
-				err(call.loc.start.line, 'type of table.insert argument is not a table', chalk.bold(sub(call.arguments[0].range)));
+		if (fnname == 'dfhack.call_with_finalizer' && call.arguments[0] && call.arguments[0].type == 'NumericLiteral') {
+			var errArgs = call.arguments[0].value;
+			var t = checktype({
+				type: 'CallExpression',
+				base: call.arguments[3 + errArgs],
+				arguments: call.arguments.slice(4 + errArgs),
+				loc: call.loc,
+				range: call.range
+			}, ctx);
+			checktype({
+				type: 'CallExpression',
+				base: call.arguments[2],
+				arguments: call.arguments.slice(3, errArgs),
+				loc: call.arguments[2].loc,
+				range: call.arguments[2].range
+			}, ctx);
+			return t;
 		}
 
-		return 'none';
-	}
+		if (fnname.match('^df\\..*\\.new$')) 
+			return expandtype(fnname.slice(0, -4), ctx, call.loc.start.line);
 
-	if (fnname == 'table.unpack' && argTypes.length == 1 && argTypes[0]._type) {
-		var t = { _type:'tuple', _tuple:[] };
-		for (var i = 1; argTypes[0][i]; i++) {
-			t._tuple.push(argTypes[0][i]);
-		}
-		if (argTypes[0]._array) {
-			t._tuple.push({ _type:'__unknown_number_of', t:argTypes[0]._array });
-		}
-		return t;
-	} else if (fnname == 'table.unpack' && argTypes[0] && argTypes[0]._type && call.arguments[1] && call.arguments[1].type == 'NumericLiteral' && (call.arguments.length == 2 || (call.arguments.length == 3 && call.arguments[0].type == 'Identifier' && call.arguments[2].type == 'MemberExpression' && call.arguments[2].base.type == 'Identifier' && call.arguments[2].base.name == call.arguments[0].name && call.arguments[2].identifier.name == 'n'))) {
-		var t = { _type:'tuple', _tuple:[] };
-		for (var i = call.arguments[1].value; argTypes[0][i]; i++) {
-			t._tuple.push(argTypes[0][i]);
-		}
-		if (argTypes[0]._array) {
-			t._tuple.push({ _type:'__unknown_number_of', t:argTypes[0]._array });
-		}
-		return t;
-	}
-
-	if (fnname == 'table.pack' && argTypes.length && argTypes.every(function(a) {
-		return a && a != '__unknown';
-	})) {
-		var t = { _type:'table', n:{ _type:'number', _value:argTypes.length } };
-		for (var i = 0; i < argTypes.length; i++) {
-			if (i == argTypes.length - 1 && argTypes[i]._type == '__unknown_number_of') {
-				t._array = argTypes[i].t;
-				t.n = 'number';
+		if (fnname.match('^df\\.(.*\\.)?is_instance$')) {
+			var checkType, actualType;
+			if (fnname == 'df.is_instance') {
+				checkType = argTypes[0] || '__unknown';
+				actualType = argTypes[1] || '__unknown';
 			} else {
-				t[i + 1] = argTypes[i];
+				checkType = expandtype(fnname.slice(0, -12), ctx, call.loc.start.line) || '__unknown';
+				actualType = argTypes[0] || '__unknown';
 			}
-		}
-		return t;
-	}
 
-	if (fnname == 'utils.insert_sorted' || (isUtils && fnname == 'insert_sorted')) {
-		var vt = argTypes[0];
-		var it = argTypes[1];
-		var pt = call.arguments[2] && call.arguments[2].type == 'StringLiteral' ? expandtype(it[call.arguments[2].value], ctx, call.loc.start.line) : it;
-
-		return { _type:'tuple', _tuple:['bool', it, pt] };
-	}
-
-	if (fnname == 'utils.fillTable' && call.arguments[0].type == 'Identifier') {
-		for (var c = ctx; c; c = c.parent) {
-			if (c.types[call.arguments[0].name]) {
-				if (c.types[call.arguments[0].name]._type != 'table') {
-					break;
-				}
-				c.types[call.arguments[0].name] = Object.assign({}, argTypes[0], argTypes[1], {_type: 'table'});
-				return 'none';
+			if ((checkType._type||checkType).slice(0, 3) != 'df.' || (actualType._type||actualType).slice(0, 3) != 'df.') {
+				return 'bool';
 			}
+			if ((checkType._type||checkType) == (actualType._type||actualType) || (checkType._sub||[]).indexOf(actualType) != -1) {
+				return { _type:'bool', _value:true };
+			}
+			if (!getflags(ctx).strictsubtype && (actualType._sub||[]).indexOf(checkType._type||checkType) != -1) {
+				return 'bool';
+			}
+			return { _type:'bool', _value:false };
 		}
-	}
 
-	if (fnname == 'utils.unfillTable' && call.arguments[0].type == 'Identifier') {
-		for (var c = ctx; c; c = c.parent) {
-			if (c.types[call.arguments[0].name]) {
-				if (c.types[call.arguments[0].name]._type != 'table') {
-					break;
-				}
-				var nullified = Object.assign({}, argTypes[1]);
-				delete nullified[k];
-				for (var k in nullified) {
-					if (nullified[k] == 'null') {
-						delete nullified[k];
-					} else {
-						nullified[k] = 'null';
+		if (fnname == 'defclass') {
+			if (argTypes[0] && argTypes[0] != '__unknown')
+				return argTypes[0];
+
+			var pt = argTypes[1] && argTypes[1] != 'null' ? argTypes[1] : '__defclass_base';
+
+			var t = {
+				_defclass: ctx,
+				_type: flatten(call.arguments[0], ctx),
+				_super: pt
+			};
+			if (pt != '__defclass_base') {
+				t.super = pt;
+			}
+
+			var ctx1 = { _type:'__context', types:{}, parent:ctx };
+
+			if (call.arguments[0].type == 'Identifier') {
+				ctx1.types[call.arguments[0].name] = t;
+			}
+
+			t.ATTRS = {
+				_defclass_ATTRS: t,
+				_type: t._type + '.ATTRS',
+				_super: pt.ATTRS || ((pt._type || pt) + '.ATTRS')
+			};
+
+			var cs = srcstack[srcstack.length-1].comments;
+			if (cs) {
+				for (var j = 0; j < cs.length; j++) {
+					var c = cs[j];
+
+					if (c.loc.start.line == call.loc.start.line-1 && c.value.substr(0,9) == 'luacheck:') {
+						var extrafields = c.value.match(/defclass=([^\s]*)/);
+						if (extrafields) {
+							var fields = null;
+							try {
+								fields = jsonic(extrafields[1]);
+							} catch (e) {
+								err(c.loc.start.line, 'can not parse type definition', chalk.bold(extrafields[1]), e);
+							}
+							Object.entries(fields).forEach(function(f) {
+								var ft = expandtype(f[1], ctx1, call.loc.start.line);
+								if (ft._array) {
+									ft._array = expandtype(ft._array, ctx1, call.loc.start.line);
+								}
+								t[f[0]] = ft;
+								t.ATTRS[f[0]] = ft;
+							});
+						}
+						break;
 					}
 				}
-				c.types[call.arguments[0].name] = Object.assign({}, argTypes[0], nullified, {_type: 'table'});
-				return 'none';
 			}
-		}
-	}
 
-	if (fnname == 'printall' || fnname == 'printall_ipairs') {
-		return 'none';
-	}
-
-	if (fnname == 'copyall' || fnname == 'utils.clone_with_default' || (isUtils && fnname == 'clone_with_default')) {
-		return argTypes[0] && argTypes[0]._type ? Object.assign({}, argTypes[0], { _type:'table' }) : '__unknown';
-	}
-	if (fnname == 'utils.clone' || fnname == 'utils.assign' || (isUtils && fnname == 'clone') || (isUtils && fnname == 'assign') || fnname == 'mkinstance') {
-		return argTypes[0] || '__unknown';
-	}
-
-	if (fnname == 'utils.processArgs' || (isUtils && fnname == 'processArgs')) {
-		var t = argTypes[1];
-		if (!t || t._type != 'table')
-			return '__unknown';
-
-		var rt = { _type:'table' };
-		Object.keys(t).forEach(function(k) {
-			if (k != '_type') {
-				rt[k] = '__arg';
+			if (pt._type) {
+				pt._sub = pt._sub || [];
+				pt._sub.push(t);
+				for (var p = pt; p && p._type; p = p._super && expandtype(p._super, p._defclass || ctx, call.loc.start.line, true)) {
+					p._sub = p._sub || [];
+					p._sub.push(t);
+				}
 			}
-		});
-		return rt;
-	}
 
-	if (fnname.match('\\[\\]\\.(insert|resize|erase)$'))
-		return 'none';
-
-	if (fnname == 'df.reinterpret_cast') {
-		return argTypes.length >= 1 && (argTypes[0]._type||argTypes[0]) == 'string' ? { _type:'number[]', _array:'number' } : argTypes[0];
-	}
-
-	if (fnname == 'mkmodule') {
-		var m = modules[call.arguments[0].value];
-		if (!m) {
-			m = modules[call.arguments[0].value] = { _type:'table', _module:ctx };
-
-			var defaults = rootctx.modules[call.arguments[0].value];
-			if (defaults && defaults.types) {
-				m = Object.assign(m, defaults.types);
+			if (pt.ATTRS && pt.ATTRS._type) {
+				pt.ATTRS._sub = pt.ATTRS._sub || [];
+				pt.ATTRS._sub.push(t.ATTRS);
+				for (var p = pt; p && p.ATTRS && p.ATTRS._type; p = p._super && expandtype(p._super, p._defclass || ctx, call.loc.start.line, true)) {
+					p.ATTRS._sub = p.ATTRS._sub || [];
+					p.ATTRS._sub.push(t.ATTRS);
+				}
 			}
-			if (defaults && defaults.functions) {
-				ctx.functions = Object.assign(ctx.functions || {}, defaults.functions);
-			}
-		}
-		return m;
-	}
 
-	if (fnname == 'loadfile') {
-		return { _type:'tuple', _tuple:[{_type:'function'}, 'number'] };
-	}
-
-	if (fnname == 'reqscript' || fnname == 'dfhack.run_script_with_env' || fnname == 'dfhack.script_environment') {
-		var arg = argTypes[fnname == 'dfhack.run_script_with_env' ? 1 : 0];
-		if (!arg || !arg._value) {
-			warn(call.loc.start.line, 'Cannot determine which script to include in', chalk.bold(sub(call.range)));
-			return '__unknown';
+			return t;
 		}
 
-		var src = null;
-		for (var i = 0; i < scriptpath.length; i++) {
-			try {
-				var fn = scriptpath[i] + '/' + arg._value.split('.').join('/') + '.lua';
-				src = fs.readFileSync(fn).toString();
-				break;
-			} catch (e) {
-				// try next
+		if (fnname == 'table.insert') {
+			var k = (call.arguments.length == 3 ? 2 : 1);
+			var kt = (call.arguments.length == 3 ? argTypes[1] : 'number');
+			var t = argTypes[0] || '__unknown';
+			var rt = argTypes[k] || '__unknown';
+
+			if (rt == '__unknown')
+				err(call.loc.start.line, 'type of expression is unknown', chalk.bold(sub(call.arguments[k].range)));
+
+			if (t == '__unknown')
+				err(call.loc.start.line, 'type of expression is unknown', chalk.bold(sub(call.arguments[0].range)));
+			else {
+				if (t._type == 'table' || t._array || t._type == '__arg') {
+					var at = arrayType(t, ctx, call.loc.start.line, kt);
+					if (at && at._type != rt._type && at._sub && rt._super) {
+						for (var p = rt; p; p = p._super && expandtype(p._super, ctx, call.loc.start.line, true)) {
+							if (p._type == at._type) {
+								at = rt;
+								break;
+							}
+						}
+					}
+					if ((at._type||at) == '__arg' && (rt._type||rt) == 'string') {
+						at = 'string';
+					}
+					if ((at._type||at) == 'string' && (rt._type||rt) == '__arg') {
+						rt = 'string';
+					}
+					if (at && at != '__unknown' && (at._type||at) != (rt._type||rt)) {
+						warn(call.loc.start.line, 'inserting', chalk.bold(rt._type||rt), 'into an array of', chalk.bold(at._type || at));
+					}
+				} else
+					err(call.loc.start.line, 'type of table.insert argument is not a table', chalk.bold(sub(call.arguments[0].range)));
+			}
+
+			return 'none';
+		}
+
+		if (fnname == 'table.unpack' && argTypes.length == 1 && argTypes[0]._type) {
+			var t = { _type:'tuple', _tuple:[] };
+			for (var i = 1; argTypes[0][i]; i++) {
+				t._tuple.push(argTypes[0][i]);
+			}
+			if (argTypes[0]._array) {
+				t._tuple.push({ _type:'__unknown_number_of', t:argTypes[0]._array });
+			}
+			return t;
+		} else if (fnname == 'table.unpack' && argTypes[0] && argTypes[0]._type && call.arguments[1] && call.arguments[1].type == 'NumericLiteral' && (call.arguments.length == 2 || (call.arguments.length == 3 && call.arguments[0].type == 'Identifier' && call.arguments[2].type == 'MemberExpression' && call.arguments[2].base.type == 'Identifier' && call.arguments[2].base.name == call.arguments[0].name && call.arguments[2].identifier.name == 'n'))) {
+			var t = { _type:'tuple', _tuple:[] };
+			for (var i = call.arguments[1].value; argTypes[0][i]; i++) {
+				t._tuple.push(argTypes[0][i]);
+			}
+			if (argTypes[0]._array) {
+				t._tuple.push({ _type:'__unknown_number_of', t:argTypes[0]._array });
+			}
+			return t;
+		}
+
+		if (fnname == 'table.pack' && argTypes.length && argTypes.every(function(a) {
+			return a && a != '__unknown';
+		})) {
+			var t = { _type:'table', n:{ _type:'number', _value:argTypes.length } };
+			for (var i = 0; i < argTypes.length; i++) {
+				if (i == argTypes.length - 1 && argTypes[i]._type == '__unknown_number_of') {
+					t._array = argTypes[i].t;
+					t.n = 'number';
+				} else {
+					t[i + 1] = argTypes[i];
+				}
+			}
+			return t;
+		}
+
+		if (fnname == 'utils.insert_sorted' || (isUtils && fnname == 'insert_sorted')) {
+			var vt = argTypes[0];
+			var it = argTypes[1];
+			var pt = call.arguments[2] && call.arguments[2].type == 'StringLiteral' ? expandtype(it[call.arguments[2].value], ctx, call.loc.start.line) : it;
+
+			return { _type:'tuple', _tuple:['bool', it, pt] };
+		}
+
+		if (fnname == 'utils.fillTable' && call.arguments[0].type == 'Identifier') {
+			for (var c = ctx; c; c = c.parent) {
+				if (c.types[call.arguments[0].name]) {
+					if (c.types[call.arguments[0].name]._type != 'table') {
+						break;
+					}
+					c.types[call.arguments[0].name] = Object.assign({}, argTypes[0], argTypes[1], {_type: 'table'});
+					return 'none';
+				}
 			}
 		}
 
-		if (src == null) {
-			err(call.loc.start.line, 'could not require', arg.value);
-			return '__unknown';
+		if (fnname == 'utils.unfillTable' && call.arguments[0].type == 'Identifier') {
+			for (var c = ctx; c; c = c.parent) {
+				if (c.types[call.arguments[0].name]) {
+					if (c.types[call.arguments[0].name]._type != 'table') {
+						break;
+					}
+					var nullified = Object.assign({}, argTypes[1]);
+					delete nullified[k];
+					for (var k in nullified) {
+						if (nullified[k] == 'null') {
+							delete nullified[k];
+						} else {
+							nullified[k] = 'null';
+						}
+					}
+					c.types[call.arguments[0].name] = Object.assign({}, argTypes[0], nullified, {_type: 'table'});
+					return 'none';
+				}
+			}
 		}
 
-		var ctx2 = { _type:'__context', types:{}, parent:ctx };
-		var ast = luaparser.parse(src, { comments:true, locations:true, ranges:true });
-		ctxstack.push(ctx2);
-		srcstack.push({src:src, fn:fn, comments:ast.comments});
-		linestack.push(call.loc.start.line);
-		var type = processAST(ast.body, ctx2);
-		linestack.pop();
-		srcstack.pop();
-		ctxstack.pop();
-		return type == 'none' ? ctx2 : type;
-	}
+		if (fnname == 'printall' || fnname == 'printall_ipairs') {
+			return 'none';
+		}
 
-	if (fnname == 'require') {
-		if (reqignore.indexOf(argTypes[0]._value) == -1) {
+		if (fnname == 'copyall' || fnname == 'utils.clone_with_default' || (isUtils && fnname == 'clone_with_default')) {
+			return argTypes[0] && argTypes[0]._type ? Object.assign({}, argTypes[0], { _type:'table' }) : '__unknown';
+		}
+		if (fnname == 'utils.clone' || fnname == 'utils.assign' || (isUtils && fnname == 'clone') || (isUtils && fnname == 'assign') || fnname == 'mkinstance') {
+			return argTypes[0] || '__unknown';
+		}
+
+		if (fnname == 'utils.processArgs' || (isUtils && fnname == 'processArgs')) {
+			var t = argTypes[1];
+			if (!t || t._type != 'table')
+				return '__unknown';
+
+			var rt = { _type:'table' };
+			Object.keys(t).forEach(function(k) {
+				if (k != '_type') {
+					rt[k] = '__arg';
+				}
+			});
+			return rt;
+		}
+
+		if (fnname.match('\\[\\]\\.(insert|resize|erase)$'))
+			return 'none';
+
+		if (fnname == 'df.reinterpret_cast') {
+			return argTypes.length >= 1 && (argTypes[0]._type||argTypes[0]) == 'string' ? { _type:'number[]', _array:'number' } : argTypes[0];
+		}
+
+		if (fnname == 'mkmodule') {
+			var m = modules[call.arguments[0].value];
+			if (!m) {
+				m = modules[call.arguments[0].value] = { _type:'table', _module:ctx };
+
+				var defaults = rootctx.modules[call.arguments[0].value];
+				if (defaults && defaults.types) {
+					m = Object.assign(m, defaults.types);
+				}
+				if (defaults && defaults.functions) {
+					ctx.functions = Object.assign(ctx.functions || {}, defaults.functions);
+				}
+			}
+			return m;
+		}
+
+		if (fnname == 'loadfile') {
+			return { _type:'tuple', _tuple:[{_type:'function'}, 'number'] };
+		}
+
+		if (fnname == 'reqscript' || fnname == 'dfhack.run_script_with_env' || fnname == 'dfhack.script_environment') {
+			var arg = argTypes[fnname == 'dfhack.run_script_with_env' ? 1 : 0];
+			if (!arg || !arg._value) {
+				warn(call.loc.start.line, 'Cannot determine which script to include in', chalk.bold(sub(call.range)));
+				return '__unknown';
+			}
+
 			var src = null;
-			for (var i = 0; i < incpath.length; i++) {
+			for (var i = 0; i < scriptpath.length; i++) {
 				try {
-					var fn = incpath[i] + '/' + argTypes[0]._value.split('.').join('/') + '.lua';
+					var fn = scriptpath[i] + '/' + arg._value.split('.').join('/') + '.lua';
 					src = fs.readFileSync(fn).toString();
 					break;
 				} catch (e) {
@@ -1345,119 +1322,150 @@ function fntype(call, ctx, opts) {
 			}
 
 			if (src == null) {
-				err(call.loc.start.line, 'could not require', argTypes[0]._value);
+				err(call.loc.start.line, 'could not require', arg.value);
 				return '__unknown';
 			}
-			
+
 			var ctx2 = { _type:'__context', types:{}, parent:ctx };
 			var ast = luaparser.parse(src, { comments:true, locations:true, ranges:true });
-			ctxstack.push(ctx == rootctx ? rootctx : ctx2);
+			ctxstack.push(ctx2);
 			srcstack.push({src:src, fn:fn, comments:ast.comments});
 			linestack.push(call.loc.start.line);
 			var type = processAST(ast.body, ctx2);
 			linestack.pop();
 			srcstack.pop();
 			ctxstack.pop();
-			return type || ctx2;
-		} else {
-			if (call.arguments[0].value == 'remote.MessagePack')
-				return rootctx.types.MessagePack;
-			if (call.arguments[0].value == 'remote.JSON')
-				return rootctx.types.JSON;
-			if (call.arguments[0].value == 'dumper')
-				return rootctx.types.__dumper;
+			return type == 'none' ? ctx2 : type;
 		}
-		
-		return '__unknown';
-	}
 
-	if (fnname == 'curry' || fnname == 'dfhack.curry') {
-		return {
-			_type: 'function',
-			_node: {
-				_curry: call.arguments[0],
-				_args: argTypes.slice(1),
+		if (fnname == 'require') {
+			if (reqignore.indexOf(argTypes[0]._value) == -1) {
+				var src = null;
+				for (var i = 0; i < incpath.length; i++) {
+					try {
+						var fn = incpath[i] + '/' + argTypes[0]._value.split('.').join('/') + '.lua';
+						src = fs.readFileSync(fn).toString();
+						break;
+					} catch (e) {
+						// try next
+					}
+				}
+
+				if (src == null) {
+					err(call.loc.start.line, 'could not require', argTypes[0]._value);
+					return '__unknown';
+				}
+				
+				var ctx2 = { _type:'__context', types:{}, parent:ctx };
+				var ast = luaparser.parse(src, { comments:true, locations:true, ranges:true });
+				ctxstack.push(ctx == rootctx ? rootctx : ctx2);
+				srcstack.push({src:src, fn:fn, comments:ast.comments});
+				linestack.push(call.loc.start.line);
+				var type = processAST(ast.body, ctx2);
+				linestack.pop();
+				srcstack.pop();
+				ctxstack.pop();
+				return type || ctx2;
+			} else {
+				if (call.arguments[0].value == 'remote.MessagePack')
+					return rootctx.types.MessagePack;
+				if (call.arguments[0].value == 'remote.JSON')
+					return rootctx.types.JSON;
+				if (call.arguments[0].value == 'dumper')
+					return rootctx.types.__dumper;
+			}
+			
+			return '__unknown';
+		}
+
+		if (fnname == 'curry' || fnname == 'dfhack.curry') {
+			return {
+				_type: 'function',
+				_node: {
+					_curry: call.arguments[0],
+					_args: argTypes.slice(1),
+					_ctx: ctx
+				},
 				_ctx: ctx
-			},
-			_ctx: ctx
-		};
-	}
+			};
+		}
 
-	if (fnname == 'dfhack.gui.getViewscreenByType' && argTypes[0]) {
-		for (var p = argTypes[0]; p && p._type; p = p._super && expandtype(p._super, ctx, call.loc.start.line, true)) {
-			if (p._type == 'df.viewscreen') {
-				return argTypes[0];
+		if (fnname == 'dfhack.gui.getViewscreenByType' && argTypes[0]) {
+			for (var p = argTypes[0]; p && p._type; p = p._super && expandtype(p._super, ctx, call.loc.start.line, true)) {
+				if (p._type == 'df.viewscreen') {
+					return argTypes[0];
+				}
 			}
 		}
-	}
 
-	if (fnname == 'table.remove') {
-		var at = arrayType(argTypes[0], ctx, call.loc.start.line, argTypes[1]);
-		if (at && at != '__unknown') {
-			return at;
-		}
-		return 'none';
-	}
-
-	// console.log(fnname, call.arguments);
-	// call.arguments.forEach(function(a) {
-	//	console.log(checktype(a, ctx));
-	// });
-
-	if (fnname == 'safecall' || fnname == 'dfhack.safecall' || fnname == 'pcall' || fnname == 'dfhack.pcall') {
-		var q = fntype({
-			base: call.arguments[0],
-			arguments: call.arguments.slice(1),
-			loc: call.loc,
-			range: call.range
-		}, ctx, { safe:true });
-
-		return { _type:'tuple', _tuple:['bool', q] };
-	}
-
-	if (fnname == 'select') {
-		if (argTypes[0] && argTypes[0]._type == 'string' && argTypes[0]._value == '#') {
-			if (argTypes[argTypes.length - 1]._type == '__unknown_number_of') {
-				return 'number';
+		if (fnname == 'table.remove') {
+			var at = arrayType(argTypes[0], ctx, call.loc.start.line, argTypes[1]);
+			if (at && at != '__unknown') {
+				return at;
 			}
-			return { _type:'number', _value:argTypes.length - 1 };
+			return 'none';
 		}
-		if (argTypes.length <= 1) {
+
+		// console.log(fnname, call.arguments);
+		// call.arguments.forEach(function(a) {
+		//	console.log(checktype(a, ctx));
+		// });
+
+		if (fnname == 'safecall' || fnname == 'dfhack.safecall' || fnname == 'pcall' || fnname == 'dfhack.pcall') {
+			var q = fntype({
+				base: call.arguments[0],
+				arguments: call.arguments.slice(1),
+				loc: call.loc,
+				range: call.range
+			}, ctx, { safe:true });
+
+			return { _type:'tuple', _tuple:['bool', q] };
+		}
+
+		if (fnname == 'select') {
+			if (argTypes[0] && argTypes[0]._type == 'string' && argTypes[0]._value == '#') {
+				if (argTypes[argTypes.length - 1]._type == '__unknown_number_of') {
+					return 'number';
+				}
+				return { _type:'number', _value:argTypes.length - 1 };
+			}
+			if (argTypes.length <= 1) {
+				return '__unknown';
+			}
+			if (argTypes[0]._type == 'number' && argTypes[0]._value) {
+				if (argTypes[0]._value >= argTypes.length - 1 && argTypes[argTypes.length - 1]._type == '__unknown_number_of') {
+					return expandtype(argTypes[argTypes.length - 1].t, ctx, call.loc.start.line);
+				}
+				if (argTypes.length > argTypes[0]._value) {
+					return argTypes[argTypes[0]._value] || '__unknown';
+				}
+				return '__unknown';
+			}
+			var lastArgType = argTypes[argTypes.length - 1];
+			if (lastArgType._type == '__unknown_number_of') {
+				lastArgType = lastArgType.t;
+			}
+			if (argTypes.slice(1, -1).every(function (a) {
+				return (lastArgType._type||lastArgType) == (a._type||a);
+			})) {
+				if (Object.hasOwnProperty.call(lastArgType, '_value')) {
+					return lastArgType._type;
+				}
+				return lastArgType;
+			}
 			return '__unknown';
 		}
-		if (argTypes[0]._type == 'number' && argTypes[0]._value) {
-			if (argTypes[0]._value >= argTypes.length - 1 && argTypes[argTypes.length - 1]._type == '__unknown_number_of') {
-				return expandtype(argTypes[argTypes.length - 1].t, ctx, call.loc.start.line);
+
+		if (fnname == 'assert') {
+			if (argTypes[0] && argTypes[0]._type == '__unknown_number_of') {
+				return expandtype(argTypes[0].t, ctx, call.loc.start.line) || '__unknown';
 			}
-			if (argTypes.length > argTypes[0]._value) {
-				return argTypes[argTypes[0]._value] || '__unknown';
-			}
-			return '__unknown';
+			return argTypes[0] || '__unknown';
 		}
-		var lastArgType = argTypes[argTypes.length - 1];
-		if (lastArgType._type == '__unknown_number_of') {
-			lastArgType = lastArgType.t;
-		}
-		if (argTypes.slice(1, -1).every(function (a) {
-			return (lastArgType._type||lastArgType) == (a._type||a);
-		})) {
-			if (Object.hasOwnProperty.call(lastArgType, '_value')) {
-				return lastArgType._type;
-			}
-			return lastArgType;
-		}
-		return '__unknown';
+
+		fn = findfn(fnname, ctx, call.loc.start.line);
 	}
 
-	if (fnname == 'assert') {
-		if (argTypes[0] && argTypes[0]._type == '__unknown_number_of') {
-			return expandtype(argTypes[0].t, ctx, call.loc.start.line) || '__unknown';
-		}
-		return argTypes[0] || '__unknown';
-	}
-
-	fn = findfn(fnname, ctx, call.loc.start.line);
-	}
 	if (!fn && call.base.type == 'MemberExpression') {
 		fn = checktype(call.base, ctx, { quiet:true });
 		if (fn && fn._type != 'function') {
@@ -1947,9 +1955,11 @@ function mightBeModified(n, body) {
 			case 'BreakStatement':
 			case 'ContinueStatement':
 			case 'CallStatement':
+			case 'GotoStatement':
+			case 'LabelStatement':
 				break;
 			default:
-				throw new Error('Unhanded type in mightBeModified: ' + body[i].type);
+				throw new Error('Unhandled type in mightBeModified: ' + body[i].type);
 		}
 	}
 	return false;
@@ -1974,7 +1984,7 @@ function processAST(body, ctx) {
 
 	function eachStatement(b, bi) {
 		if (b.type == 'FunctionDeclaration') {
-			var c = b.isLocal ? ctx : ctxstack[ctxstack.length - 1];
+			var c = b.isLocal ? ctx : rootctx;
 			var n = flatten(b.identifier, ctx);
 			var existing = expandtype(n, ctx, b.loc.start.line, true) || '__unknown';
 			c.functions = c.functions || {};
@@ -2015,7 +2025,7 @@ function processAST(body, ctx) {
 					var c = cs[j];
 
 					if (c.loc.start.line == b.loc.start.line-1 && c.value.substr(0,9) == 'luacheck:') {
-						var inp = c.value.match(/in=([^\s]*)/);
+						var inp = c.value.match(/in=([^\s]+)/);
 						var outp = c.value.match(/out=([^\s]+)/);
 						var skip = /\bskip\b/.test(c.value);
 
