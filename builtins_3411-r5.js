@@ -100,8 +100,6 @@ module.exports = {
 		print: 'none',
 		type: 'string',
 		
-		'os.time': 'number',
-
 		'math.abs': 'number',
 		'math.floor': 'number',
 		'math.ceil': 'number',
@@ -122,7 +120,6 @@ module.exports = {
 		'string.char': 'string',
 		'string.find': 'number',
 		'string.lower': 'string',
-		'string.upper': 'string',
 		
 		'bit32.band': 'number',
 		'bit32.lshift': 'number',
@@ -131,11 +128,9 @@ module.exports = {
 		
 		'dfhack.getOSType': 'string',
 		'dfhack.df2utf': 'string',
-		'dfhack.utf2df': 'string',
 		'dfhack.isMapLoaded': 'bool',
 		'dfhack.timeout': 'none',
 		'dfhack.gui.getCurViewscreen': 'df.viewscreen',
-		'dfhack.gui.getCurFocus': 'string',
 		'dfhack.units.getProfessionName': 'string',
 		'dfhack.units.isCitizen': 'bool',
 		'dfhack.units.isOwnCiv': 'bool',
@@ -198,7 +193,6 @@ module.exports = {
 		'native.itemcache_get': 'native.itemcache',
 		'native.itemcache_get_category': 'native.type_category',
 		'native.itemcache_search': 'native.group_info[]',
-		'native.custom_command': 'string',
 		
 		'mp.pack': 'string',
 		

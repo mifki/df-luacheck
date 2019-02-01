@@ -620,9 +620,9 @@
         <ld:field name="unk_71" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
 
         <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="unk_72" ld:is-container="true"/>
-        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="unk_73" ld:is-container="true"/>
-        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="unk_74" ld:is-container="true"/>
-        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="actions" pointer-type="adventure_movement_option" ld:is-container="true"><ld:item ld:meta="pointer" ld:is-container="true" ld:level="2" type-name="adventure_movement_option"><ld:item ld:level="3" ld:meta="global" type-name="adventure_movement_option"/></ld:item></ld:field>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="interacts" pointer-type="adventure_item_interact_choicest" ld:is-container="true"><ld:item ld:meta="pointer" ld:is-container="true" ld:level="2" type-name="adventure_item_interact_choicest"><ld:item ld:level="3" ld:meta="global" type-name="adventure_item_interact_choicest"/></ld:item></ld:field>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="commands" pointer-type="adventure_optionst" ld:is-container="true"><ld:item ld:meta="pointer" ld:is-container="true" ld:level="2" type-name="adventure_optionst"><ld:item ld:level="3" ld:meta="global" type-name="adventure_optionst"/></ld:item></ld:field>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="movements" pointer-type="adventure_movement_optionst" ld:is-container="true"><ld:item ld:meta="pointer" ld:is-container="true" ld:level="2" type-name="adventure_movement_optionst"><ld:item ld:level="3" ld:meta="global" type-name="adventure_movement_optionst"/></ld:item></ld:field>
         <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="unk_75" since="v0.34.08" ld:is-container="true"/>
 
         <ld:field name="unk_76" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
@@ -740,9 +740,147 @@
         <ld:field name="unk_98" ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
         <ld:field name="unk_99" ld:level="1" ld:meta="primitive" ld:subtype="stl-string"/>
     </ld:global-type>
-    <ld:global-type ld:meta="class-type" ld:level="0" type-name="adventure_movement_option" original-name="adventure_movement_optionst">
-        ...
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="text_info_elementst">
+        <virtual-methods>
+            <vmethod ld:level="1" name="getString"><ld:field ld:level="2" ld:meta="pointer" name="val" type-name="stl-string" ld:is-container="true"><ld:item ld:level="3" ld:meta="primitive" ld:subtype="stl-string"/></ld:field></vmethod>
+            <vmethod ld:level="1" name="getLong" ret-type="int32_t"><ret-type ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></vmethod>
+            <vmethod ld:level="1" is-destructor="true"/>
+        </virtual-methods>
     </ld:global-type>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="text_info_element_longst" inherits-from="text_info_elementst">
+        <ld:field name="val" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+    </ld:global-type>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="text_info_element_stringst" inherits-from="text_info_elementst">
+        <ld:field name="val" ld:level="1" ld:meta="primitive" ld:subtype="stl-string"/>
+    </ld:global-type>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="adventure_optionst">
+        <virtual-methods>
+            <vmethod ld:level="1" ld:anon-name="anon_vmethod_0"><ld:field ld:level="2" ld:meta="pointer" ld:is-container="true"/></vmethod>
+            <vmethod ld:level="1" is-destructor="true"/>
+            <vmethod ld:level="1" ret-type="int32_t" ld:anon-name="anon_vmethod_2"><ret-type ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></vmethod>
+            <vmethod ld:level="1" ret-type="int32_t" ld:anon-name="anon_vmethod_3"><ret-type ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/><ld:field ld:level="2" ld:meta="pointer" ld:is-container="true"/><ld:field ld:level="2" ld:meta="pointer" ld:is-container="true"/><ld:field ld:level="2" ld:meta="pointer" ld:is-container="true"/></vmethod>
+            <vmethod ld:level="1" ret-type="int32_t" comment="coordinate" ld:anon-name="anon_vmethod_4"><ret-type ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></vmethod>
+
+            <vmethod ld:level="1" ret-type="int32_t" comment="coordinate" ld:anon-name="anon_vmethod_5"><ret-type ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></vmethod>
+            <vmethod ld:level="1" ret-type="int32_t" comment="coordinate" ld:anon-name="anon_vmethod_6"><ret-type ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></vmethod>
+            <vmethod ld:level="1" ret-type="int32_t" comment="coordinate" ld:anon-name="anon_vmethod_7"><ret-type ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></vmethod>
+            <vmethod ld:level="1" ret-type="int32_t" comment="coordinate" ld:anon-name="anon_vmethod_8"><ret-type ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></vmethod>
+            <vmethod ld:level="1" ret-type="int32_t" comment="coordinate" ld:anon-name="anon_vmethod_9"><ret-type ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></vmethod>
+
+            <vmethod ld:level="1" ld:anon-name="anon_vmethod_10"/>
+            <vmethod ld:level="1" ret-type="int32_t" ld:anon-name="anon_vmethod_11"><ret-type ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></vmethod>
+            <vmethod ld:level="1" ret-type="bool" ld:anon-name="anon_vmethod_12"><ret-type ld:level="2" ld:meta="number" ld:subtype="bool" ld:bits="8"/></vmethod>
+            <vmethod ld:level="1" ret-type="int32_t" ld:anon-name="anon_vmethod_13"><ret-type ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></vmethod>
+            <vmethod ld:level="1" ret-type="int32_t" ld:anon-name="anon_vmethod_14"><ret-type ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></vmethod>
+        </virtual-methods>
+    </ld:global-type>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="adventure_option_eat_unit_contaminantst" inherits-from="adventure_optionst">
+        <ld:field ld:level="1" ld:meta="pointer" name="unit" type-name="unit" ld:is-container="true"><ld:item ld:level="2" ld:meta="global" type-name="unit"/></ld:field>
+        <ld:field ld:level="1" ld:meta="pointer" name="spatter" type-name="spatter" ld:is-container="true"><ld:item ld:level="2" ld:meta="global" type-name="spatter"/></ld:field>
+    </ld:global-type>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="adventure_option_eat_item_contaminantst" inherits-from="adventure_optionst">
+        <ld:field ld:level="1" ld:meta="pointer" name="unit" type-name="unit" ld:is-container="true"><ld:item ld:level="2" ld:meta="global" type-name="unit"/></ld:field>
+        <ld:field ld:level="1" ld:meta="pointer" name="inv_item" type-name="unit_inventory_item" ld:is-container="true"><ld:item ld:level="2" ld:meta="global" type-name="unit_inventory_item"/></ld:field>
+        <ld:field ld:level="1" ld:meta="pointer" ld:is-container="true" ld:anon-name="anon_1"/>
+    </ld:global-type>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="adventure_option_view_contaminantst" inherits-from="adventure_optionst">
+        <ld:field ld:level="1" ld:meta="pointer" name="unit" type-name="unit" ld:is-container="true"><ld:item ld:level="2" ld:meta="global" type-name="unit"/></ld:field>
+        <ld:field ld:level="1" ld:meta="pointer" name="spatter" type-name="spatter" ld:is-container="true"><ld:item ld:level="2" ld:meta="global" type-name="spatter"/></ld:field>
+    </ld:global-type>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="adventure_environment_optionst" inherits-from="adventure_optionst">
+        <ld:field type-name="coord" ld:level="1" ld:meta="global" ld:anon-name="anon_1"/>
+        <ld:field type-name="coord" ld:level="1" ld:meta="global" ld:anon-name="anon_2"/>
+    </ld:global-type>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="adventure_environment_place_in_it_containerst" inherits-from="adventure_environment_optionst">
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_1"/>
+    </ld:global-type>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="adventure_environment_ingest_from_containerst" inherits-from="adventure_environment_optionst">
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_1"/>
+        <ld:field ld:level="1" ld:meta="pointer" type-name="item" ld:is-container="true" ld:anon-name="anon_2"><ld:item ld:level="2" ld:meta="global" type-name="item"/></ld:field>
+    </ld:global-type>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="adventure_environment_pickup_ignite_vegst" inherits-from="adventure_environment_optionst">
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_1"/>
+    </ld:global-type>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="adventure_environment_ingest_materialst" inherits-from="adventure_environment_optionst">
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_1"/>
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_2"/>
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_3"/>
+    </ld:global-type>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="adventure_environment_pickup_make_campfirest" inherits-from="adventure_environment_optionst"/>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="adventure_environment_place_in_bld_containerst" inherits-from="adventure_environment_optionst">
+        <ld:field ld:level="1" ld:meta="pointer" type-name="building" ld:is-container="true" ld:anon-name="anon_1"><ld:item ld:level="2" ld:meta="global" type-name="building"/></ld:field>
+    </ld:global-type>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="adventure_environment_pickup_vermin_eventst" inherits-from="adventure_environment_optionst">
+        <ld:field name="vermin_idx" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+    </ld:global-type>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="adventure_environment_pickup_chop_treest" inherits-from="adventure_environment_optionst"/>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="adventure_environment_unit_suck_bloodst" inherits-from="adventure_environment_optionst">
+        <ld:field name="unit_id" ref-target="unit" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+    </ld:global-type>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="adventure_movement_optionst">
+        <ld:field type-name="coord" ld:level="1" ld:meta="global" ld:anon-name="anon_1"/>
+        <ld:field type-name="coord" ld:level="1" ld:meta="global" ld:anon-name="anon_2"/>
+        <virtual-methods>
+            <vmethod ld:level="1" ld:anon-name="anon_vmethod_0"><ld:field ld:level="2" ld:meta="pointer" ld:is-container="true"/></vmethod>
+            <vmethod ld:level="1" ld:anon-name="anon_vmethod_1"/>
+        </virtual-methods>
+    </ld:global-type>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="adventure_movement_release_hold_itemst" inherits-from="adventure_movement_optionst"/>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="adventure_movement_release_hold_tilest" inherits-from="adventure_movement_optionst"/>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="adventure_movement_attack_creaturest" inherits-from="adventure_movement_optionst">
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" type-name="int32_t" ref-target="unit" ld:is-container="true" ld:anon-name="anon_1"><ld:item ref-target="unit" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
+    </ld:global-type>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="adventure_movement_hold_tilest" inherits-from="adventure_movement_optionst">
+        <ld:field type-name="coord" ld:level="1" ld:meta="global" ld:anon-name="anon_1"/>
+    </ld:global-type>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="adventure_movement_movest" inherits-from="adventure_movement_optionst">
+        <ld:field name="unit_path_flags" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field name="unk_bitfield" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+    </ld:global-type>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="adventure_movement_climbst" inherits-from="adventure_movement_optionst">
+        <ld:field type-name="coord" ld:level="1" ld:meta="global" ld:anon-name="anon_1"/>
+    </ld:global-type>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="adventure_movement_hold_itemst" inherits-from="adventure_movement_optionst">
+        <ld:field name="item_id" ref-target="item" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+    </ld:global-type>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="adventure_movement_building_interactst" inherits-from="adventure_movement_optionst">
+        <ld:field name="building_id" ref-target="building" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+    </ld:global-type>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="adventure_movement_item_interactst" inherits-from="adventure_movement_optionst">
+        <ld:field name="item_id" ref-target="item" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+    </ld:global-type>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="adventure_movement_item_interact_guidest" inherits-from="adventure_movement_item_interactst"/>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="adventure_movement_item_interact_ridest" inherits-from="adventure_movement_item_interactst"/>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="adventure_movement_item_interact_pushst" inherits-from="adventure_movement_item_interactst"/>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="adventure_item_interact_choicest">
+        <virtual-methods>
+            <vmethod ld:level="1" ld:anon-name="anon_vmethod_0"><ld:field ld:level="2" ld:meta="pointer" ld:is-container="true"/></vmethod>
+            <vmethod ld:level="1" ld:anon-name="anon_vmethod_1"/>
+            <vmethod ld:level="1" is-destructor="true"/>
+        </virtual-methods>
+    </ld:global-type>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="adventure_item_interact_pull_outst" inherits-from="adventure_item_interact_choicest"/>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="adventure_item_interact_heat_from_tilest" inherits-from="adventure_item_interact_choicest">
+        <ld:field ld:level="1" ld:meta="pointer" type-name="item" ld:is-container="true" ld:anon-name="anon_1"><ld:item ld:level="2" ld:meta="global" type-name="item"/></ld:field>
+        <ld:field type-name="coord" ld:level="1" ld:meta="global" ld:anon-name="anon_2"/>
+        <ld:field type-name="coord" ld:level="1" ld:meta="global" ld:anon-name="anon_3"/>
+    </ld:global-type>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="adventure_item_interact_fill_from_containerst" inherits-from="adventure_item_interact_choicest">
+        <ld:field ld:level="1" ld:meta="pointer" type-name="item" ld:is-container="true" ld:anon-name="anon_1"><ld:item ld:level="2" ld:meta="global" type-name="item"/></ld:field>
+        <ld:field ld:level="1" ld:meta="pointer" type-name="item" ld:is-container="true" ld:anon-name="anon_2"><ld:item ld:level="2" ld:meta="global" type-name="item"/></ld:field>
+        <ld:field type-name="coord" ld:level="1" ld:meta="global" ld:anon-name="anon_3"/>
+        <ld:field type-name="coord" ld:level="1" ld:meta="global" ld:anon-name="anon_4"/>
+    </ld:global-type>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="adventure_item_interact_readst" inherits-from="adventure_item_interact_choicest"/>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="adventure_item_interact_fill_with_materialst" inherits-from="adventure_item_interact_choicest">
+        <ld:field ld:level="1" ld:meta="pointer" type-name="item" ld:is-container="true" ld:anon-name="anon_1"><ld:item ld:level="2" ld:meta="global" type-name="item"/></ld:field>
+        <ld:field type-name="coord" ld:level="1" ld:meta="global" ld:anon-name="anon_2"/>
+        <ld:field type-name="coord" ld:level="1" ld:meta="global" ld:anon-name="anon_3"/>
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_4"/>
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_5"/>
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_6"/>
+    </ld:global-type>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="adventure_item_interact_strugglest" inherits-from="adventure_item_interact_choicest"/>
     <ld:global-type ld:meta="enum-type" ld:level="0" type-name="announcement_type" base-type="int16_t">
         <enum-item name="REACHED_PEAK"/>
         <enum-item name="ERA_CHANGE"/>
@@ -1140,7 +1278,7 @@
 
         <ld:field name="unk_v40_1" init-value="-1" since="v0.40.1" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
         <ld:field name="unk_v40_2" init-value="-1" since="v0.40.1" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
-        <ld:field name="unk_v40_3" init-value="-1" since="v0.40.1" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field name="speaker_id" init-value="-1" since="v0.40.1" comment="unit speaking the conversation" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
     </ld:global-type>
     <ld:global-type ld:meta="struct-type" ld:level="0" type-name="popup_message">
         <ld:field name="text" ld:level="1" ld:meta="primitive" ld:subtype="stl-string"/>
@@ -4035,8 +4173,8 @@
         <ld:field ld:level="1" ld:meta="static-array" name="orientation_male" count="3" type-name="int32_t" since="v0.40.1" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
         <ld:field ld:level="1" ld:meta="static-array" name="orientation_female" count="3" type-name="int32_t" since="v0.40.1" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
 
-        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" type-name="int32_t" name="body_size_1" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
-        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" type-name="int32_t" name="body_size_2" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" type-name="int32_t" name="body_size_1" comment="age in ticks" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" type-name="int32_t" name="body_size_2" comment="size at the age at the same index in body_size_1" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
 
         <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="body_appearance_modifiers" pointer-type="body_appearance_modifier" ld:is-container="true"><ld:item ld:meta="pointer" ld:is-container="true" ld:level="2" type-name="body_appearance_modifier"><ld:item ld:level="3" ld:meta="global" type-name="body_appearance_modifier"/></ld:item></ld:field>
 
@@ -4087,7 +4225,8 @@
             <ld:item ld:meta="container" ld:level="2" ld:subtype="stl-vector" ld:is-container="true"/>
         </ld:field>
 
-        <ld:field ld:level="1" ld:meta="static-array" type-name="int32_t" name="unk18" count="2" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
+        <ld:field name="appearance_gene_count" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field name="color_gene_count" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
 
         <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="natural_skill_id" ld:is-container="true">
             <ld:item ld:subtype="enum" base-type="int16_t" type-name="job_skill" ld:level="2" ld:meta="global"/>
@@ -4894,12 +5033,12 @@
         <ld:field ld:level="1" ld:meta="static-array" name="unit_counts" type-name="int16_t" count="152" index-enum="profession" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
         <ld:field name="population" ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
         <ld:field ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_1"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_2"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_3"/>
+        <ld:field comment="in 0.23, omnivores" ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_2"/>
+        <ld:field comment="in 0.23, carnivores" ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_3"/>
         <ld:field name="trained_animals" ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
         <ld:field name="other_animals" ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_4"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_5"/>
+        <ld:field comment="in 0.23, potential soldiers" ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_4"/>
+        <ld:field comment="in 0.23, combat aptitude" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_5"/>
         <ld:field ld:level="1" ld:meta="static-array" name="item_counts" type-name="int32_t" count="112" index-enum="item_type" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
         <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="created_weapons" type-name="int32_t" index-refers-to="$global.world.raws.itemdefs.weapons[$]" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
         <ld:field name="wealth" ld:level="1" ld:meta="compound" ld:typedef-name="T_wealth">
@@ -4927,7 +5066,7 @@
         <ld:field name="total_insanities" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
         <ld:field name="total_executions" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
         <ld:field name="num_artifacts" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_6"/>
+        <ld:field comment="in 0.23, total siegers" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_6"/>
         <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="discovered_creature_foods" type-name="bool" index-refers-to="(find-creature $)" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="bool" ld:bits="8"/></ld:field>
         <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="discovered_creatures" type-name="bool" index-refers-to="(find-creature $)" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="bool" ld:bits="8"/></ld:field>
         <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="discovered_plant_foods" type-name="bool" index-refers-to="(find-plant-raw $)" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="bool" ld:bits="8"/></ld:field>
@@ -5247,7 +5386,7 @@
             <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="meat_fish_recipes" pointer-type="entity_recipe" ld:is-container="true"><ld:item ld:meta="pointer" ld:is-container="true" ld:level="3" type-name="entity_recipe"><ld:item ld:level="4" ld:meta="global" type-name="entity_recipe"/></ld:item></ld:field>
             <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="other_recipes" pointer-type="entity_recipe" ld:is-container="true"><ld:item ld:meta="pointer" ld:is-container="true" ld:level="3" type-name="entity_recipe"><ld:item ld:level="4" ld:meta="global" type-name="entity_recipe"/></ld:item></ld:field>
 
-            <ld:field ld:level="2" ld:meta="static-array" name="unk13" count="3" ld:is-container="true">
+            <ld:field ld:level="2" ld:meta="static-array" name="unk13" count="3" comment="in 0.23, these were material/matgloss pairs, never used for anything" ld:is-container="true">
                 <ld:item ld:meta="compound" ld:level="2" ld:typedef-name="T_unk13">
                 <ld:field name="unk1" init-value="-1" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
                 <ld:field name="unk2" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
@@ -5256,10 +5395,10 @@
                 
             </ld:field>
 
-            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="unk14" pointer-type="item" ld:is-container="true"><ld:item ld:meta="pointer" ld:is-container="true" ld:level="3" type-name="item"><ld:item ld:level="4" ld:meta="global" type-name="item"/></ld:item></ld:field>
+            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="unk14" pointer-type="item" comment="in 0.23, items that would be equipped by the arriving King, never used" ld:is-container="true"><ld:item ld:meta="pointer" ld:is-container="true" ld:level="3" type-name="item"><ld:item ld:level="4" ld:meta="global" type-name="item"/></ld:item></ld:field>
 
-            <ld:field name="unk15a" ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
-            <ld:field name="unk15b" ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
+            <ld:field name="unk15a" comment="in 0.23, minimum temperature" ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
+            <ld:field name="unk15b" comment="in 0.23, maximum temperature" ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
 
             <ld:field ld:level="2" ld:meta="static-array" name="ethic" count="22" index-enum="ethic_type" ld:is-container="true">
                 <ld:item ld:subtype="enum" base-type="int16_t" type-name="ethic_response" ld:level="3" ld:meta="global"/>
@@ -5404,15 +5543,15 @@
         <ld:field ld:level="1" ld:meta="pointer" name="activity_stats" type-name="entity_activity_statistics" ld:is-container="true"><ld:item ld:level="2" ld:meta="global" type-name="entity_activity_statistics"/></ld:field>
 
         <ld:field name="unknown1e" ld:level="1" ld:meta="compound" ld:typedef-name="T_unknown1e">
-            <ld:field name="unk47" ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
-            <ld:field name="unk48" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+            <ld:field name="unk47" comment="in 0.23, last communicate season" ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
+            <ld:field name="unk48" comment="in 0.23, last communicate year" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
 
-            <ld:field name="unk49a" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
-            <ld:field name="unk49b" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
-            <ld:field name="unk49c" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
-            <ld:field ld:level="2" ld:meta="static-array" name="unk49d" count="10" type-name="int32_t" ld:is-container="true"><ld:item ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
-            <ld:field name="unk49e" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
-            <ld:field name="unk49f" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+            <ld:field name="unk49a" comment="in 0.23, imports" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+            <ld:field name="unk49b" comment="in 0.23, exports" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+            <ld:field name="unk49c" comment="in 0.23, recent offerings" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+            <ld:field ld:level="2" ld:meta="static-array" name="unk49d" count="10" type-name="int32_t" comment="in 0.23, offerings history" ld:is-container="true"><ld:item ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
+            <ld:field name="unk49e" comment="in 0.23, hostility level - determined siege size, had a chance to reset to 1" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+            <ld:field name="unk49f" comment="in 0.23, determined siege size" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
             <ld:field since="v0.40.01" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_1"/>
         </ld:field>
 
@@ -5425,96 +5564,36 @@
             <ld:field name="mill_cookable" type-name="material_vec_ref" ld:level="2" ld:meta="global"/>
             <ld:field name="mill_dye" type-name="material_vec_ref" ld:level="2" ld:meta="global"/>
 
-            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="armor_leather" ld:is-container="true">
-                <ld:item ref-target="itemdef_armorst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
-            </ld:field>
-            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="armor_chain" ld:is-container="true">
-                <ld:item ref-target="itemdef_armorst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
-            </ld:field>
-            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="armor_plate" ld:is-container="true">
-                <ld:item ref-target="itemdef_armorst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
-            </ld:field>
-            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="armor_under" ld:is-container="true">
-                <ld:item ref-target="itemdef_armorst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
-            </ld:field>
-            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="armor_over" ld:is-container="true">
-                <ld:item ref-target="itemdef_armorst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
-            </ld:field>
-            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="armor_cover" ld:is-container="true">
-                <ld:item ref-target="itemdef_armorst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
-            </ld:field>
-            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="pants_leather" ld:is-container="true">
-                <ld:item ref-target="itemdef_pantsst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
-            </ld:field>
-            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="pants_chain" ld:is-container="true">
-                <ld:item ref-target="itemdef_pantsst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
-            </ld:field>
-            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="pants_plate" ld:is-container="true">
-                <ld:item ref-target="itemdef_pantsst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
-            </ld:field>
-            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="pants_under" ld:is-container="true">
-                <ld:item ref-target="itemdef_pantsst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
-            </ld:field>
-            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="pants_over" ld:is-container="true">
-                <ld:item ref-target="itemdef_pantsst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
-            </ld:field>
-            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="pants_cover" ld:is-container="true">
-                <ld:item ref-target="itemdef_pantsst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
-            </ld:field>
-            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="helm_leather" ld:is-container="true">
-                <ld:item ref-target="itemdef_helmst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
-            </ld:field>
-            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="helm_chain" ld:is-container="true">
-                <ld:item ref-target="itemdef_helmst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
-            </ld:field>
-            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="helm_plate" ld:is-container="true">
-                <ld:item ref-target="itemdef_helmst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
-            </ld:field>
-            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="helm_under" ld:is-container="true">
-                <ld:item ref-target="itemdef_helmst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
-            </ld:field>
-            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="helm_over" ld:is-container="true">
-                <ld:item ref-target="itemdef_helmst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
-            </ld:field>
-            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="helm_cover" ld:is-container="true">
-                <ld:item ref-target="itemdef_helmst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
-            </ld:field>
-            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="shoes_leather" ld:is-container="true">
-                <ld:item ref-target="itemdef_shoesst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
-            </ld:field>
-            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="shoes_chain" ld:is-container="true">
-                <ld:item ref-target="itemdef_shoesst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
-            </ld:field>
-            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="shoes_plate" ld:is-container="true">
-                <ld:item ref-target="itemdef_shoesst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
-            </ld:field>
-            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="shoes_under" ld:is-container="true">
-                <ld:item ref-target="itemdef_shoesst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
-            </ld:field>
-            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="shoes_over" ld:is-container="true">
-                <ld:item ref-target="itemdef_shoesst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
-            </ld:field>
-            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="shoes_cover" ld:is-container="true">
-                <ld:item ref-target="itemdef_shoesst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
-            </ld:field>
-            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="gloves_leather" ld:is-container="true">
-                <ld:item ref-target="itemdef_glovesst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
-            </ld:field>
-            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="gloves_chain" ld:is-container="true">
-                <ld:item ref-target="itemdef_glovesst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
-            </ld:field>
-            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="gloves_plate" ld:is-container="true">
-                <ld:item ref-target="itemdef_glovesst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
-            </ld:field>
-            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="gloves_under" ld:is-container="true">
-                <ld:item ref-target="itemdef_glovesst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
-            </ld:field>
-            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="gloves_over" ld:is-container="true">
-                <ld:item ref-target="itemdef_glovesst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
-            </ld:field>
-            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="gloves_cover" ld:is-container="true">
-                <ld:item ref-target="itemdef_glovesst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
-            </ld:field>
+            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="armor_leather" type-name="int16_t" ref-target="itemdef_armorst" ld:is-container="true"><ld:item ref-target="itemdef_armorst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
+            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="armor_chain" type-name="int16_t" ref-target="itemdef_armorst" ld:is-container="true"><ld:item ref-target="itemdef_armorst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
+            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="armor_plate" type-name="int16_t" ref-target="itemdef_armorst" ld:is-container="true"><ld:item ref-target="itemdef_armorst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
+            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="armor_under" type-name="int16_t" ref-target="itemdef_armorst" ld:is-container="true"><ld:item ref-target="itemdef_armorst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
+            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="armor_over" type-name="int16_t" ref-target="itemdef_armorst" ld:is-container="true"><ld:item ref-target="itemdef_armorst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
+            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="armor_cover" type-name="int16_t" ref-target="itemdef_armorst" ld:is-container="true"><ld:item ref-target="itemdef_armorst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
+            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="pants_leather" type-name="int16_t" ref-target="itemdef_pantsst" ld:is-container="true"><ld:item ref-target="itemdef_pantsst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
+            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="pants_chain" type-name="int16_t" ref-target="itemdef_pantsst" ld:is-container="true"><ld:item ref-target="itemdef_pantsst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
+            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="pants_plate" type-name="int16_t" ref-target="itemdef_pantsst" ld:is-container="true"><ld:item ref-target="itemdef_pantsst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
+            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="pants_under" type-name="int16_t" ref-target="itemdef_pantsst" ld:is-container="true"><ld:item ref-target="itemdef_pantsst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
+            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="pants_over" type-name="int16_t" ref-target="itemdef_pantsst" ld:is-container="true"><ld:item ref-target="itemdef_pantsst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
+            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="pants_cover" type-name="int16_t" ref-target="itemdef_pantsst" ld:is-container="true"><ld:item ref-target="itemdef_pantsst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
+            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="helm_leather" type-name="int16_t" ref-target="itemdef_helmst" ld:is-container="true"><ld:item ref-target="itemdef_helmst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
+            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="helm_chain" type-name="int16_t" ref-target="itemdef_helmst" ld:is-container="true"><ld:item ref-target="itemdef_helmst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
+            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="helm_plate" type-name="int16_t" ref-target="itemdef_helmst" ld:is-container="true"><ld:item ref-target="itemdef_helmst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
+            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="helm_under" type-name="int16_t" ref-target="itemdef_helmst" ld:is-container="true"><ld:item ref-target="itemdef_helmst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
+            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="helm_over" type-name="int16_t" ref-target="itemdef_helmst" ld:is-container="true"><ld:item ref-target="itemdef_helmst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
+            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="helm_cover" type-name="int16_t" ref-target="itemdef_helmst" ld:is-container="true"><ld:item ref-target="itemdef_helmst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
+            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="shoes_leather" type-name="int16_t" ref-target="itemdef_shoesst" ld:is-container="true"><ld:item ref-target="itemdef_shoesst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
+            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="shoes_chain" type-name="int16_t" ref-target="itemdef_shoesst" ld:is-container="true"><ld:item ref-target="itemdef_shoesst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
+            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="shoes_plate" type-name="int16_t" ref-target="itemdef_shoesst" ld:is-container="true"><ld:item ref-target="itemdef_shoesst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
+            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="shoes_under" type-name="int16_t" ref-target="itemdef_shoesst" ld:is-container="true"><ld:item ref-target="itemdef_shoesst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
+            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="shoes_over" type-name="int16_t" ref-target="itemdef_shoesst" ld:is-container="true"><ld:item ref-target="itemdef_shoesst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
+            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="shoes_cover" type-name="int16_t" ref-target="itemdef_shoesst" ld:is-container="true"><ld:item ref-target="itemdef_shoesst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
+            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="gloves_leather" type-name="int16_t" ref-target="itemdef_glovesst" ld:is-container="true"><ld:item ref-target="itemdef_glovesst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
+            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="gloves_chain" type-name="int16_t" ref-target="itemdef_glovesst" ld:is-container="true"><ld:item ref-target="itemdef_glovesst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
+            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="gloves_plate" type-name="int16_t" ref-target="itemdef_glovesst" ld:is-container="true"><ld:item ref-target="itemdef_glovesst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
+            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="gloves_under" type-name="int16_t" ref-target="itemdef_glovesst" ld:is-container="true"><ld:item ref-target="itemdef_glovesst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
+            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="gloves_over" type-name="int16_t" ref-target="itemdef_glovesst" ld:is-container="true"><ld:item ref-target="itemdef_glovesst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
+            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="gloves_cover" type-name="int16_t" ref-target="itemdef_glovesst" ld:is-container="true"><ld:item ref-target="itemdef_glovesst" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
         </ld:field>
         <ld:field ld:level="1" ld:meta="static-array" name="assignments_by_type" count="25" index-enum="entity_position_responsibility" ld:is-container="true">
             <ld:item ld:meta="container" ld:level="2" ld:subtype="stl-vector" pointer-type="entity_position_assignment" ld:is-container="true"><ld:item ld:meta="pointer" ld:is-container="true" ld:level="3" type-name="entity_position_assignment"><ld:item ld:level="4" ld:meta="global" type-name="entity_position_assignment"/></ld:item></ld:item>
@@ -5542,7 +5621,7 @@
             <ld:field name="unk12b" comment="uninitialized" ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
             <ld:field name="unk13" comment="0" ld:level="2" ld:meta="number" ld:subtype="bool" ld:bits="8"/>
             <ld:field ld:level="2" ld:meta="pointer" name="unk14" type-name="world_region" ld:is-container="true"><ld:item ld:level="3" ld:meta="global" type-name="world_region"/></ld:field>
-            <ld:field ld:level="2" ld:meta="pointer" name="unk15" type-name="world_landmass" ld:is-container="true"><ld:item ld:level="3" ld:meta="global" type-name="world_landmass"/></ld:field>
+            <ld:field ld:level="2" ld:meta="pointer" name="unk15" type-name="world_landmass" has-bad-pointers="true" ld:is-container="true"><ld:item ld:level="3" ld:meta="global" type-name="world_landmass"/></ld:field>
             <ld:field name="unk16" comment="uninitialized" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
             <ld:field name="unk17" comment="0" ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
 
@@ -5631,6 +5710,9 @@
         <enum-item name="unk_1a"/>
         <enum-item name="unk_1b"/>
         <enum-item name="QUEST_GIVER"/>
+        <enum-item name="SPECIAL_BURIAL"/>
+        <enum-item name="REQUIRES_MARKET"/>
+        <enum-item name="unk_1f"/>
     </ld:global-type>
     <ld:global-type ld:meta="struct-type" ld:level="0" type-name="entity_position" key-field="id">
         <ld:field name="code" ld:level="1" ld:meta="primitive" ld:subtype="stl-string"/>
@@ -5822,10 +5904,10 @@
                 <ld:field ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_2"/>
             </ld:field>
             <ld:field name="abduction" ld:level="2" ld:meta="compound" ld:typedef-name="T_abduction" ld:in-union="true">
-                <ld:field name="histfig_id" ref-target="historical_figure" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+                <ld:field name="histfig_id" ref-target="historical_figure" comment="abductee" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+                <ld:field name="site_id" ref-target="world_site" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+                <ld:field name="abductor_id" ref-target="historical_figure" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
                 <ld:field ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_1"/>
-                <ld:field ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_2"/>
-                <ld:field ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_3"/>
             </ld:field>
             <ld:field name="incident" ld:level="2" ld:meta="compound" ld:typedef-name="T_incident" ld:in-union="true">
                 <ld:field name="incident_id" ref-target="incident" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
@@ -5897,13 +5979,17 @@
             <ld:field name="insurrection_end" ld:level="2" ld:meta="compound" ld:typedef-name="T_insurrection_end" ld:in-union="true">
                 <ld:field name="site_id" ref-target="world_site" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
                 <ld:field name="entity_id" ref-target="historical_entity" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
-                <ld:field name="result" comment="0=overthrow, 1=fail, 2=crushed" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+                <ld:field ld:subtype="enum" name="result" ld:level="3" ld:meta="compound" ld:typedef-name="T_result">
+                    <enum-item name="Overthrow"/>
+                    <enum-item name="Failure"/>
+                    <enum-item name="Crushing"/>
+                </ld:field>
             </ld:field>
             <ld:field name="succession" ld:level="2" ld:meta="compound" ld:typedef-name="T_succession" ld:in-union="true">
                 <ld:field name="histfig_id" ref-target="historical_figure" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
                 <ld:field ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_1"/>
                 <ld:field name="entity_id" ref-target="historical_entity" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
-                <ld:field name="position_assignment_id" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+                <ld:field name="position_assignment_id" refers-to="$(find-entity $$._parent.entity_id).positions.assignments[$]" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
             </ld:field>
             <ld:field name="claim" ld:level="2" ld:meta="compound" ld:typedef-name="T_claim" ld:in-union="true">
                 <ld:field name="entity_id" ref-target="historical_entity" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
@@ -6175,6 +6261,24 @@
         <enum-item name="UNTHINKABLE"/>
         <enum-item name="REQUIRED"/>
     </ld:global-type>
+    <ld:global-type ld:meta="enum-type" ld:level="0" type-name="entity_name_type">
+        <enum-item name="OTHER"/>
+        <enum-item name="CIV"/>
+        <enum-item name="SITE"/>
+        <enum-item name="VESSEL"/>
+        <enum-item name="MILITARY_UNIT"/>
+        <enum-item name="RELIGION"/>
+        <enum-item name="TEMPLE"/>
+        <enum-item name="WAR"/>
+        <enum-item name="BATTLE"/>
+        <enum-item name="SIEGE"/>
+        <enum-item name="ROAD"/>
+        <enum-item name="BRIDGE"/>
+        <enum-item name="TUNNEL"/>
+        <enum-item name="WALL"/>
+        <enum-item name="LIBRARY"/>
+        <enum-item name="FESTIVAL"/>
+    </ld:global-type>
     <ld:global-type ld:meta="struct-type" ld:level="0" type-name="entity_raw" instance-vector="$global.world.raws.entities">
         <ld:field name="code" ld:level="1" ld:meta="primitive" ld:subtype="stl-string"/>
         <ld:field since="v0.40.01" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_1"/>
@@ -6229,15 +6333,15 @@
         <ld:field name="translation" ld:level="1" ld:meta="primitive" ld:subtype="stl-string"/>
 
         <ld:field name="symbols" ld:level="1" ld:meta="compound" ld:typedef-name="T_symbols">
-            <ld:field ld:level="2" ld:meta="static-array" name="symbols1" type-name="language_word_table" count="16" ld:is-container="true"><ld:item ld:level="3" ld:meta="global" type-name="language_word_table"/></ld:field>
-            <ld:field ld:level="2" ld:meta="static-array" name="symbols2" type-name="language_word_table" count="16" ld:is-container="true"><ld:item ld:level="3" ld:meta="global" type-name="language_word_table"/></ld:field>
-            <ld:field ld:level="2" ld:meta="static-array" name="select_symbol" count="16" ld:is-container="true">
+            <ld:field ld:level="2" ld:meta="static-array" name="symbols1" type-name="language_word_table" index-enum="entity_name_type" count="16" ld:is-container="true"><ld:item ld:level="3" ld:meta="global" type-name="language_word_table"/></ld:field>
+            <ld:field ld:level="2" ld:meta="static-array" name="symbols2" type-name="language_word_table" index-enum="entity_name_type" count="16" ld:is-container="true"><ld:item ld:level="3" ld:meta="global" type-name="language_word_table"/></ld:field>
+            <ld:field ld:level="2" ld:meta="static-array" name="select_symbol" index-enum="entity_name_type" count="16" ld:is-container="true">
                 <ld:item ld:meta="container" ld:level="3" ld:subtype="stl-vector" pointer-type="stl-string" ld:is-container="true"><ld:item ld:meta="pointer" ld:is-container="true" ld:level="4" type-name="stl-string"><ld:item ld:level="5" ld:meta="primitive" ld:subtype="stl-string"/></ld:item></ld:item>
             </ld:field>
-            <ld:field ld:level="2" ld:meta="static-array" name="subselect_symbol" count="16" ld:is-container="true">
+            <ld:field ld:level="2" ld:meta="static-array" name="subselect_symbol" index-enum="entity_name_type" count="16" ld:is-container="true">
                 <ld:item ld:meta="container" ld:level="3" ld:subtype="stl-vector" pointer-type="stl-string" ld:is-container="true"><ld:item ld:meta="pointer" ld:is-container="true" ld:level="4" type-name="stl-string"><ld:item ld:level="5" ld:meta="primitive" ld:subtype="stl-string"/></ld:item></ld:item>
             </ld:field>
-            <ld:field ld:level="2" ld:meta="static-array" name="cull_symbol" count="16" ld:is-container="true">
+            <ld:field ld:level="2" ld:meta="static-array" name="cull_symbol" index-enum="entity_name_type" count="16" ld:is-container="true">
                 <ld:item ld:meta="container" ld:level="3" ld:subtype="stl-vector" pointer-type="stl-string" ld:is-container="true"><ld:item ld:meta="pointer" ld:is-container="true" ld:level="4" type-name="stl-string"><ld:item ld:level="5" ld:meta="primitive" ld:subtype="stl-string"/></ld:item></ld:item>
             </ld:field>
         </ld:field>
@@ -6823,14 +6927,14 @@
     </ld:global-type>
     <ld:global-type ld:meta="class-type" ld:level="0" type-name="renderer">
         <ld:field ld:level="1" ld:meta="pointer" type-name="uint8_t" name="screen" is-array="true" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="uint8_t" ld:unsigned="true" ld:bits="8"/></ld:field>
-        <ld:field ld:level="1" ld:meta="pointer" type-name="int32_t" name="screentexpos" is-array="true" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
+        <ld:field ld:level="1" ld:meta="pointer" type-name="long" name="screentexpos" is-array="true" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="long" ld:bits=""/></ld:field>
         <ld:field ld:level="1" ld:meta="pointer" type-name="int8_t" name="screentexpos_addcolor" is-array="true" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int8_t" ld:bits="8"/></ld:field>
         <ld:field ld:level="1" ld:meta="pointer" type-name="uint8_t" name="screentexpos_grayscale" is-array="true" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="uint8_t" ld:unsigned="true" ld:bits="8"/></ld:field>
         <ld:field ld:level="1" ld:meta="pointer" type-name="uint8_t" name="screentexpos_cf" is-array="true" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="uint8_t" ld:unsigned="true" ld:bits="8"/></ld:field>
         <ld:field ld:level="1" ld:meta="pointer" type-name="uint8_t" name="screentexpos_cbr" is-array="true" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="uint8_t" ld:unsigned="true" ld:bits="8"/></ld:field>
 
         <ld:field ld:level="1" ld:meta="pointer" type-name="uint8_t" name="screen_old" is-array="true" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="uint8_t" ld:unsigned="true" ld:bits="8"/></ld:field>
-        <ld:field ld:level="1" ld:meta="pointer" type-name="int32_t" name="screentexpos_old" is-array="true" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
+        <ld:field ld:level="1" ld:meta="pointer" type-name="long" name="screentexpos_old" is-array="true" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="long" ld:bits=""/></ld:field>
         <ld:field ld:level="1" ld:meta="pointer" type-name="int8_t" name="screentexpos_addcolor_old" is-array="true" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int8_t" ld:bits="8"/></ld:field>
         <ld:field ld:level="1" ld:meta="pointer" type-name="uint8_t" name="screentexpos_grayscale_old" is-array="true" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="uint8_t" ld:unsigned="true" ld:bits="8"/></ld:field>
         <ld:field ld:level="1" ld:meta="pointer" type-name="uint8_t" name="screentexpos_cf_old" is-array="true" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="uint8_t" ld:unsigned="true" ld:bits="8"/></ld:field>
@@ -7094,8 +7198,10 @@
             <ld:field name="unk_18" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
             <ld:field name="unk_1c" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
             <ld:field name="unk_34" since="v0.42.01" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
-            <ld:field name="unk_38" since="v0.42.01" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+            <ld:field name="unk_38" since="v0.42.01" ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
+            <ld:field name="unk_3a" since="v0.42.01" ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
         </ld:item>
+            
             
             
             
@@ -7185,11 +7291,59 @@
                 </ld:item>
             </ld:field>
 
-            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="unk_v4201_1" since="v0.42.01" ld:is-container="true"/>
-            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="unk_v4201_2" since="v0.42.01" ld:is-container="true"/>
-            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="unk_v4201_3" since="v0.42.01" ld:is-container="true"/>
-            <ld:field name="unk_v4201_4" since="v0.42.01" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
-            <ld:field name="unk_v4201_5" since="v0.42.01" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="unk_v4201_1" type-name="int32_t" since="v0.42.01" ld:is-container="true"><ld:item ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
+            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="unk_v4201_2" type-name="int32_t" since="v0.42.01" ld:is-container="true"><ld:item ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
+            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="unk_v4201_3" type-name="int32_t" since="v0.42.01" ld:is-container="true"><ld:item ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
+            <ld:field ld:level="2" ld:meta="pointer" name="knowledge" ld:is-container="true">
+                <ld:item ld:meta="compound" ld:level="2" ld:typedef-name="T_knowledge">
+                <ld:field ld:subtype="bitfield" type-name="knowledge_scholar_flags_0" name="philosophy" ld:level="3" ld:meta="global"/>
+                <ld:field ld:subtype="bitfield" type-name="knowledge_scholar_flags_1" name="philosophy2" ld:level="3" ld:meta="global"/>
+                <ld:field ld:subtype="bitfield" type-name="knowledge_scholar_flags_2" name="math" ld:level="3" ld:meta="global"/>
+                <ld:field ld:subtype="bitfield" type-name="knowledge_scholar_flags_3" name="math2" ld:level="3" ld:meta="global"/>
+                <ld:field ld:subtype="bitfield" type-name="knowledge_scholar_flags_4" name="history" ld:level="3" ld:meta="global"/>
+                <ld:field ld:subtype="bitfield" type-name="knowledge_scholar_flags_5" name="astronomy" ld:level="3" ld:meta="global"/>
+                <ld:field ld:subtype="bitfield" type-name="knowledge_scholar_flags_6" name="naturalist" ld:level="3" ld:meta="global"/>
+                <ld:field ld:subtype="bitfield" type-name="knowledge_scholar_flags_7" name="chemistry" ld:level="3" ld:meta="global"/>
+                <ld:field ld:subtype="bitfield" type-name="knowledge_scholar_flags_8" name="geography" ld:level="3" ld:meta="global"/>
+                <ld:field ld:subtype="bitfield" type-name="knowledge_scholar_flags_9" name="medicine" ld:level="3" ld:meta="global"/>
+                <ld:field ld:subtype="bitfield" type-name="knowledge_scholar_flags_10" name="medicine2" ld:level="3" ld:meta="global"/>
+                <ld:field ld:subtype="bitfield" type-name="knowledge_scholar_flags_11" name="medicine3" ld:level="3" ld:meta="global"/>
+                <ld:field ld:subtype="bitfield" type-name="knowledge_scholar_flags_12" name="engineering" ld:level="3" ld:meta="global"/>
+                <ld:field ld:subtype="bitfield" type-name="knowledge_scholar_flags_13" name="engineering2" ld:level="3" ld:meta="global"/>
+                <ld:field name="knowledge_goal_category" ld:level="3" ld:meta="number" ld:subtype="uint16_t" ld:unsigned="true" ld:bits="16"/>
+                <ld:field ld:level="3" ld:meta="number" ld:subtype="uint16_t" ld:unsigned="true" ld:bits="16" ld:anon-name="anon_1"/>
+                <ld:field ld:level="3" ld:meta="number" ld:subtype="uint32_t" ld:unsigned="true" ld:bits="32" ld:anon-name="anon_2"/>
+                <ld:field ld:level="3" ld:meta="number" ld:subtype="uint32_t" ld:unsigned="true" ld:bits="32" ld:anon-name="anon_3"/>
+                <ld:field ld:level="3" ld:meta="number" ld:subtype="uint32_t" ld:unsigned="true" ld:bits="32" ld:anon-name="anon_4"/>
+                <ld:field ld:subtype="bitfield" name="knowledge_goal" ld:level="3" ld:meta="compound" ld:typedef-name="T_knowledge_goal">
+                    <ld:field ld:level="4" ld:meta="number" ld:subtype="flag-bit" ld:bits="1"/>
+                </ld:field>
+                <ld:field name="research_points" comment="research is finished at 100k? amount gained depends on skills, attributes" ld:level="3" ld:meta="number" ld:subtype="uint32_t" ld:unsigned="true" ld:bits="32"/>
+                <ld:field name="times_pondered" comment="one per ponder no matter what. turns into research_points somewhere around 40-60." ld:level="3" ld:meta="number" ld:subtype="uint16_t" ld:unsigned="true" ld:bits="16"/>
+            </ld:item>
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+            </ld:field>
         </ld:item>
             
             
@@ -7203,7 +7357,6 @@
             
             
 
-            
             
             
             
@@ -7269,8 +7422,43 @@
                 <ld:item ld:level="3" ld:meta="pointer" ld:is-container="true">
                     <ld:item ld:meta="compound" ld:level="3" ld:typedef-name="T_wanted">
                     <ld:field name="entity_id" ref-target="historical_entity" ld:level="4" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
-                    <ld:field ld:meta="container" ld:level="4" ld:subtype="stl-vector" type-name="int32_t" ld:is-container="true" ld:anon-name="anon_1"><ld:item ld:level="5" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
-                    <ld:field ld:meta="container" ld:level="4" ld:subtype="stl-vector" type-name="int32_t" ld:is-container="true" ld:anon-name="anon_2"><ld:item ld:level="5" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
+                    <ld:field ld:meta="container" ld:level="4" ld:subtype="stl-vector" name="types" ld:is-container="true">
+                        <ld:item ld:subtype="enum" base-type="int32_t" ld:level="5" ld:meta="compound" ld:typedef-name="T_types">
+                            0
+                            <enum-item name="Hero"/>
+                            <enum-item name="Buddy"/>
+                            <enum-item name="Grudge"/>
+                            <enum-item name="Bonded"/>
+                            <enum-item name="Violent"/>
+                            <enum-item name="Psychopath"/>
+                            <enum-item name="TradePartner"/>
+                            <enum-item name="Friendly"/>
+                            <enum-item name="Killer"/>
+                            <enum-item name="Murderer"/>
+
+                            10
+                            <enum-item name="Comrade"/>
+                            <enum-item name="RespectedGroup"/>
+                            <enum-item name="HatedGroup"/>
+                            <enum-item name="EnemyFighter"/>
+                            <enum-item name="FriendlyFighter"/>
+                            <enum-item name="Bully"/>
+                            <enum-item name="Brigand"/>
+                            <enum-item name="LoyalSoldier"/>
+                            <enum-item name="Monster"/>
+                            <enum-item name="Storyteller"/>
+
+                            20
+                            <enum-item name="Poet"/>
+                            <enum-item name="Bard"/>
+                            <enum-item name="Dancer"/>
+                            <enum-item name="Quarreler"/>
+                            <enum-item name="Flatterer"/>
+                            <enum-item name="Hunter"/>
+                            <enum-item name="ProtectorOfWeak"/>
+                        </ld:item>
+                    </ld:field>
+                    <ld:field ld:meta="container" ld:level="4" ld:subtype="stl-vector" name="levels" type-name="int32_t" comment="1 to 100: rumored to legendary" ld:is-container="true"><ld:item ld:level="5" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
                     <ld:field name="discovered_year" ld:level="4" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
                     <ld:field name="discovered_time" ld:level="4" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
                     <ld:field name="unsolved_murders" ld:level="4" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
@@ -7303,7 +7491,7 @@
             </ld:field>
             <ld:field name="cur_identity" ref-target="identity" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
             <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="all_identities" type-name="int32_t" ref-target="identity" ld:is-container="true"><ld:item ref-target="identity" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
-            <ld:field ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_2"/>
+            <ld:field name="next_identity_idx" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
         </ld:item>
             
             
@@ -9276,7 +9464,7 @@
         <ld:field name="manual_input" ld:level="1" ld:meta="primitive" ld:subtype="stl-string"/>
         <ld:field ld:subtype="enum" name="location" type-name="interaction_target_location_type" ld:level="1" ld:meta="global"/>
         <virtual-methods>
-            <vmethod ld:level="1" ret-type="interaction_source_type" name="getType"><ret-type ld:level="2" ld:meta="global" type-name="interaction_source_type"/></vmethod>
+            <vmethod ld:level="1" ret-type="interaction_target_type" name="getType"><ret-type ld:level="2" ld:meta="global" type-name="interaction_target_type"/></vmethod>
             <vmethod ld:level="1" name="write_file"> <ld:field ld:level="2" ld:meta="pointer" comment="file_compressorst" ld:is-container="true"/> </vmethod>
             <vmethod ld:level="1" name="read_file">
                 <ld:field ld:level="2" ld:meta="pointer" comment="file_compressorst" ld:is-container="true"/>
@@ -16817,6 +17005,76 @@
             </ld:item>
         </ld:field>
     </ld:global-type>
+    <ld:global-type ld:meta="enum-type" ld:level="0" type-name="language_name_category">
+        <enum-item name="Unit"/>
+        <enum-item name="Artifact"/>
+        <enum-item name="ArtifactEvil"/>
+        <enum-item name="Swamp"/>
+        <enum-item name="Desert"/>
+        <enum-item name="Forest"/>
+        <enum-item name="Mountains"/>
+        <enum-item name="Lake"/>
+        <enum-item name="Ocean"/>
+        <enum-item name="Glacier"/>
+
+        <enum-item name="Tundra"/>
+        <enum-item name="Grassland"/>
+        <enum-item name="Hills"/>
+        <enum-item name="Region"/>
+        <enum-item name="Cave"/>
+        <enum-item name="SwampEvil"/>
+        <enum-item name="DesertEvil"/>
+        <enum-item name="ForestEvil"/>
+        <enum-item name="MountainsEvil"/>
+        <enum-item name="LakeEvil"/>
+
+        <enum-item name="OceanEvil"/>
+        <enum-item name="GlacierEvil"/>
+        <enum-item name="TundraEvil"/>
+        <enum-item name="GrasslandEvil"/>
+        <enum-item name="HillsEvil"/>
+        <enum-item name="SwampGood"/>
+        <enum-item name="DesertGood"/>
+        <enum-item name="ForestGood"/>
+        <enum-item name="MountainsGood"/>
+        <enum-item name="LakeGood"/>
+
+        <enum-item name="OceanGood"/>
+        <enum-item name="GlacierGood"/>
+        <enum-item name="TundraGood"/>
+        <enum-item name="GrasslandGood"/>
+        <enum-item name="HillsGood"/>
+        <enum-item name="ArtImage"/>
+        <enum-item name="MountainPeak"/>
+        <enum-item name="Unknown1"/>
+        <enum-item name="Volcano"/>
+        <enum-item name="SmallIsland"/>
+
+        <enum-item name="Island"/>
+        <enum-item name="Continent"/>
+        <enum-item name="CommonReligion"/>
+        <enum-item name="Temple"/>
+        <enum-item name="Keep"/>
+        <enum-item name="Unknown2"/>
+        <enum-item name="SymbolArtifice"/>
+        <enum-item name="SymbolViolent"/>
+        <enum-item name="SymbolProtect"/>
+        <enum-item name="SymbolDomestic"/>
+
+        <enum-item name="SymbolFood"/>
+        <enum-item name="War"/>
+        <enum-item name="Battle"/>
+        <enum-item name="Siege"/>
+        <enum-item name="Road"/>
+        <enum-item name="Wall"/>
+        <enum-item name="Bridge"/>
+        <enum-item name="Tunnel"/>
+        <enum-item name="Tomb"/>
+        <enum-item name="SymbolProtect2"/>
+
+        <enum-item name="Library"/>
+        <enum-item name="Festival"/>
+    </ld:global-type>
     <ld:global-type ld:meta="struct-type" ld:level="0" type-name="invasion_info" instance-vector="$global.ui.invasions.list" key-field="id">
         <ld:field name="id" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
         <ld:field name="civ_id" ref-target="historical_entity" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
@@ -17560,7 +17818,7 @@
         <enum-item name="deep_surface_portal"/>
         <enum-item name="subterranean_from_layer"/>
         <enum-item name="magma_core_from_layer"/>
-        <enum-item name="feature_underworld_from_layer"/>
+        <enum-item name="underworld_from_layer"/>
     </ld:global-type>
     <ld:global-type ld:meta="class-type" ld:level="0" type-name="feature" original-name="featurest">
         <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="population" pointer-type="world_population" ld:is-container="true"><ld:item ld:meta="pointer" ld:is-container="true" ld:level="2" type-name="world_population"><ld:item ld:level="3" ld:meta="global" type-name="world_population"/></ld:item></ld:field>
@@ -17938,6 +18196,24 @@
         <ld:field name="bright" ld:level="1" ld:meta="number" ld:subtype="int8_t" ld:bits="8"/>
         <ld:field type-name="coord" name="pos" ld:level="1" ld:meta="global"/>
         <ld:field name="timer" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+    </ld:global-type>
+    <ld:global-type ld:meta="enum-type" ld:level="0" type-name="region_block_event_type">
+        <enum-item name="SphereField"/>
+    </ld:global-type>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="region_block_eventst">
+        <virtual-methods>
+            <vmethod ld:level="1" ret-type="region_block_event_type" name="getType"><ret-type ld:level="2" ld:meta="global" type-name="region_block_event_type"/></vmethod>
+            <vmethod ld:level="1" name="write_file"> <ld:field ld:level="2" ld:meta="pointer" name="file" type-name="file_compressorst" ld:is-container="true"><ld:item ld:level="3" ld:meta="global" type-name="file_compressorst"/></ld:field> </vmethod>
+            <vmethod ld:level="1" name="read_file">
+                <ld:field ld:level="2" ld:meta="pointer" name="file" type-name="file_compressorst" ld:is-container="true"><ld:item ld:level="3" ld:meta="global" type-name="file_compressorst"/></ld:field>
+                <ld:field name="loadversion" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+            </vmethod>
+            <vmethod ld:level="1" ret-type="bool" ld:anon-name="anon_vmethod_3"><ret-type ld:level="2" ld:meta="number" ld:subtype="bool" ld:bits="8"/></vmethod>
+            <vmethod ld:level="1" is-destructor="true"/>
+        </virtual-methods>
+    </ld:global-type>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="region_block_event_sphere_fieldst" inherits-from="region_block_eventst">
+        <ld:field ld:level="1" ld:meta="static-array" type-name="int16_t" count="16" ld:is-container="true" ld:anon-name="anon_1"><ld:item ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
     </ld:global-type>
     <ld:global-type ld:meta="enum-type" ld:level="0" type-name="craft_material_class" comment="not in DF">
         <enum-attr name="make_skill" type-name="job_skill" default-value="NONE"/>
@@ -18733,7 +19009,7 @@
                 <ld:item ld:meta="compound" ld:level="2" ld:typedef-name="T_unk_v42_2">
                 <ld:field ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_1"/>
                 <ld:field init-value="-1" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_2"/>
-                <ld:field name="item_id" ref-target="item" init-value="-1" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+                <ld:field name="item_id" ref-target="item" init-value="-1" comment="is unit ID for writing jobs" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
                 <ld:field init-value="0" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_3"/>
             </ld:item>
                 
@@ -19305,28 +19581,37 @@
     </ld:global-type>
     <ld:global-type ld:meta="class-type" ld:level="0" type-name="activity_event_writest" inherits-from="activity_event">
         <ld:field name="participants" type-name="activity_event_participants" ld:level="1" ld:meta="global"/>
+        <ld:field name="building_id" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field name="site_id" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field name="location_id" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
         <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_1"/>
+        <ld:field name="timer" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
         <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_2"/>
         <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_3"/>
         <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_4"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_5"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_6"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_7"/>
-
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_8"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_9"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_10"/>
+        <ld:field name="knowledge" type-name="knowledge_scholar_category_flag" ld:level="1" ld:meta="global"/>
     </ld:global-type>
     <ld:global-type ld:meta="class-type" ld:level="0" type-name="activity_event_copy_written_contentst" inherits-from="activity_event">
-        <ld:field name="histfig_id" ref-target="historical_figure" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
         <ld:field name="unit_id" ref-target="unit" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field name="histfig_id" ref-target="historical_figure" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field name="occupation_id" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field name="building_id" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field name="site_id" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field name="location_id" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field ld:subtype="bitfield" name="flagsmaybe" ld:level="1" ld:meta="compound" ld:typedef-name="T_flagsmaybe">
+            <ld:field ld:level="2" ld:meta="number" ld:subtype="flag-bit" ld:bits="1"/>
+            <ld:field ld:level="2" ld:meta="number" ld:subtype="flag-bit" ld:bits="1"/>
+            <ld:field ld:level="2" ld:meta="number" ld:subtype="flag-bit" ld:bits="1"/>
+            <ld:field ld:level="2" ld:meta="number" ld:subtype="flag-bit" ld:bits="1"/>
+            <ld:field ld:level="2" ld:meta="number" ld:subtype="flag-bit" ld:bits="1"/>
+            <ld:field ld:level="2" ld:meta="number" ld:subtype="flag-bit" ld:bits="1"/>
+            <ld:field ld:level="2" ld:meta="number" ld:subtype="flag-bit" ld:bits="1"/>
+            <ld:field ld:level="2" ld:meta="number" ld:subtype="flag-bit" ld:bits="1"/>
+            <ld:field ld:level="2" ld:meta="number" ld:subtype="flag-bit" ld:bits="1"/>
+            <ld:field ld:level="2" ld:meta="number" ld:subtype="flag-bit" ld:bits="1"/>
+        </ld:field>
         <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_1"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_2"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_3"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_4"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_5"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_6"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_7"/>
+        <ld:field name="timer" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
     </ld:global-type>
     <ld:global-type ld:meta="class-type" ld:level="0" type-name="activity_event_teach_topicst" inherits-from="activity_event">
         <ld:field name="participants" type-name="activity_event_participants" ld:level="1" ld:meta="global"/>
@@ -19677,6 +19962,13 @@
     <ld:global-type ld:meta="class-type" ld:level="0" type-name="squad_order_cause_trouble_for_entityst" inherits-from="squad_order">
         <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_1"/>
         <ld:field ld:level="1" ld:meta="primitive" ld:subtype="stl-string" ld:anon-name="anon_2"/>
+    </ld:global-type>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="squad_order_kill_hfst" inherits-from="squad_order">
+        <ld:field name="histfig_id" ref-target="historical_figure" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field name="title" ld:level="1" ld:meta="primitive" ld:subtype="stl-string"/>
+    </ld:global-type>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="squad_order_drive_armies_from_sitest" inherits-from="squad_order">
+        <ld:field ld:level="1" ld:meta="primitive" ld:subtype="stl-string" ld:anon-name="anon_1"/>
     </ld:global-type>
     <ld:global-type ld:meta="struct-type" ld:level="0" type-name="army_controller" key-field="id" instance-vector="$global.world.army_controllers.all">
         <ld:field name="id" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
@@ -20150,8 +20442,8 @@
     <ld:global-type ld:meta="struct-type" ld:level="0" type-name="plant_raw" instance-vector="$global.world.raws.plants.all">
         <ld:field name="id" ld:level="1" ld:meta="primitive" ld:subtype="stl-string"/>
 
-        <ld:field since="v0.40.01" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_1"/>
-        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" since="v0.40.01" ld:is-container="true" ld:anon-name="anon_2"/>
+        <ld:field name="index" since="v0.40.01" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" since="v0.40.01" ld:is-container="true" ld:anon-name="anon_1"/>
 
         <code-helper name="describe">$.id</code-helper>
 
@@ -20272,8 +20564,13 @@
         <ld:field name="root_density" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
         <ld:field name="root_radius" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
 
-        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" ld:is-container="true" ld:anon-name="anon_3"/>
-        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" ld:is-container="true" ld:anon-name="anon_4"/>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="stockpile_growths" type-name="int32_t" refers-to="$$._parent._parent.growths[$]" comment="indices of edible growths that are marked with STOCKPILE_PLANT_GROWTH" ld:is-container="true"><ld:item refers-to="$$._parent._parent.growths[$]" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="stockpile_growth_flags" index-refers-to="$$._parent.stockpile_growths[$].refers-to" ld:is-container="true">
+            <ld:item ld:subtype="bitfield" base-type="uint32_t" ld:level="2" ld:meta="compound" ld:typedef-name="T_stockpile_growth_flags">
+                <ld:field name="EDIBLE_RAW" ld:level="3" ld:meta="number" ld:subtype="flag-bit" ld:bits="1"/>
+                <ld:field name="EDIBLE_COOKED" ld:level="3" ld:meta="number" ld:subtype="flag-bit" ld:bits="1"/>
+            </ld:item>
+        </ld:field>
     </ld:global-type>
     <ld:global-type ld:meta="struct-type" ld:level="0" type-name="plant_growth">
         <ld:field name="id" ld:level="1" ld:meta="primitive" ld:subtype="stl-string"/>
@@ -20579,7 +20876,7 @@
             <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" name="translations" pointer-type="language_translation" ld:is-container="true"><ld:item ld:meta="pointer" ld:is-container="true" ld:level="3" type-name="language_translation"><ld:item ld:level="4" ld:meta="global" type-name="language_translation"/></ld:item></ld:field>
 
             <ld:field ld:level="2" ld:meta="static-array" name="word_table" count="2" ld:is-container="true">
-                <ld:item ld:level="3" ld:meta="static-array" type-name="language_word_table" count="62" ld:is-container="true"><ld:item ld:level="4" ld:meta="global" type-name="language_word_table"/></ld:item>
+                <ld:item ld:level="3" ld:meta="static-array" type-name="language_word_table" index-enum="language_name_category" count="62" ld:is-container="true"><ld:item ld:level="4" ld:meta="global" type-name="language_word_table"/></ld:item>
             </ld:field>
 
             -- Descriptors
@@ -21288,12 +21585,14 @@
         <ld:field name="end_year" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
     </ld:global-type>
     <ld:global-type ld:meta="enum-type" ld:level="0" type-name="histfig_site_link_type">
+        <enum-item name="OCCUPATION"/>
         <enum-item name="SEAT_OF_POWER"/>
         <enum-item name="HANGOUT"/>
         <enum-item name="HOME_SITE_ABSTRACT_BUILDING"/>
         <enum-item name="HOME_SITE_REALIZATION_BUILDING"/>
         <enum-item name="LAIR"/>
         <enum-item name="HOME_SITE_REALIZATION_SUL"/>
+        <enum-item name="HOME_SITE_SAVED_CIVZONE"/>
     </ld:global-type>
     <ld:global-type ld:meta="class-type" ld:level="0" type-name="histfig_site_link" original-name="histfig_site_linkst">
         <ld:field name="site" ref-target="world_site" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
@@ -21319,6 +21618,10 @@
     <ld:global-type ld:meta="class-type" ld:level="0" type-name="histfig_site_link_home_site_realization_buildingst" inherits-from="histfig_site_link"/>
     <ld:global-type ld:meta="class-type" ld:level="0" type-name="histfig_site_link_lairst" inherits-from="histfig_site_link"/>
     <ld:global-type ld:meta="class-type" ld:level="0" type-name="histfig_site_link_home_site_realization_sulst" inherits-from="histfig_site_link"/>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="histfig_site_link_home_site_saved_civzonest" inherits-from="histfig_site_link"/>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="histfig_site_link_occupationst" inherits-from="histfig_site_link">
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_1"/>
+    </ld:global-type>
     <ld:global-type ld:meta="enum-type" ld:level="0" type-name="histfig_hf_link_type">
         <enum-item name="MOTHER"/>
         <enum-item name="FATHER"/>
@@ -21366,6 +21669,8 @@
         <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_1"/>
         <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_2"/>
     </ld:global-type>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="histfig_hf_link_former_apprenticest" inherits-from="histfig_hf_link"/>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="histfig_hf_link_former_masterst" inherits-from="histfig_hf_link"/>
     <ld:global-type ld:meta="enum-type" ld:level="0" type-name="entity_entity_link_type" base-type="int16_t">
         <enum-item name="PARENT"/>
         <enum-item name="CHILD"/>
@@ -24398,6 +24703,10 @@
         <ld:field name="name_plural" ld:level="1" ld:meta="primitive" ld:subtype="stl-string"/>
         <ld:field name="name_adj" ld:level="1" ld:meta="primitive" ld:subtype="stl-string"/>
         <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_1"/>
+    </ld:global-type>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="creature_interaction_effect_body_appearance_modifierst" inherits-from="creature_interaction_effect">
+        <ld:field name="unk_60" ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
+        <ld:field name="unk_64" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
     </ld:global-type>
     <ld:global-type ld:meta="class-type" ld:level="0" type-name="creature_interaction_effect_bp_appearance_modifierst" inherits-from="creature_interaction_effect">
         <ld:field name="unk_6c" ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
@@ -29113,6 +29422,9 @@
         <ld:field ld:subtype="bitfield" name="material_category" type-name="job_material_category" ld:level="1" ld:meta="global"/>
         <ld:field name="unk_48" ld:level="1" ld:meta="number" ld:subtype="bool" ld:bits="8"/>
         <ld:field name="is_custom" ld:level="1" ld:meta="number" ld:subtype="bool" ld:bits="8"/>
+    </ld:global-type>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="interface_button_building_custom_category_selectorst" inherits-from="interface_button_buildingst">
+        <ld:field name="category" ld:level="1" ld:meta="primitive" ld:subtype="stl-string"/>
     </ld:global-type>
     <ld:global-type ld:meta="class-type" ld:level="0" type-name="interface_button_constructionst" inherits-from="interface_button">
         <ld:field ld:level="1" ld:meta="pointer" name="unused_c" ld:is-container="true"/>
@@ -33934,9 +34246,9 @@
         <ld:field ld:level="1" ld:meta="pointer" name="site_abandoned" type-name="history_event" has-bad-pointers="true" since="v0.40.01" ld:is-container="true"><ld:item ld:level="2" ld:meta="global" type-name="history_event"/></ld:field>
         <ld:field ld:level="1" ld:meta="pointer" name="site_created" type-name="history_event" has-bad-pointers="true" since="v0.40.01" ld:is-container="true"><ld:item ld:level="2" ld:meta="global" type-name="history_event"/></ld:field>
         <ld:field name="unk_a4" since="v0.40.01" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field name="unk_a8" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
 
         <ld:field name="finder" ld:level="1" ld:meta="compound" ld:typedef-name="T_finder">
-            <ld:field ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_1"/>
             <ld:field name="search_x" init-value="-1" comment="to world width / 16" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
             <ld:field name="search_y" comment="to world height / 16" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
 
@@ -34099,7 +34411,7 @@
         <ld:field ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_4"/>
         <ld:field name="x_iterator" comment="0 to map_width-1" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
         <ld:field name="y_iterator" comment="0 to map_height-1" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
-        <ld:field name="rgb_buffer" comment="pointer to allocated buffer" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field ld:level="1" ld:meta="pointer" name="rgb_buffer" comment="pointer to allocated buffer" ld:is-container="true"/>
         <ld:field name="map_width" comment="in world tiles" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
         <ld:field name="map_height" comment="in world tiles" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
         <ld:field name="numtiles_map_width" comment="in embark tiles" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
@@ -34816,6 +35128,43 @@
         <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" pointer-type="historical_figure" name="relation_hf" ld:is-container="true"><ld:item ld:meta="pointer" ld:is-container="true" ld:level="2" type-name="historical_figure"><ld:item ld:level="3" ld:meta="global" type-name="historical_figure"/></ld:item></ld:field>
         <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" type-name="int32_t" name="level" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>5000 for deity, 330 for friend, 30 for acquaintance
     </ld:global-type>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="world_gen_param_basest">
+        <ld:field name="name" ld:level="1" ld:meta="primitive" ld:subtype="stl-string"/>
+        <virtual-methods>
+            <vmethod ld:level="1" ld:anon-name="anon_vmethod_0"><ld:field ld:level="2" ld:meta="pointer" type-name="stl-string" ld:is-container="true"><ld:item ld:level="3" ld:meta="primitive" ld:subtype="stl-string"/></ld:field></vmethod>
+            <vmethod ld:level="1" ret-type="bool" ld:anon-name="anon_vmethod_1"><ret-type ld:level="2" ld:meta="number" ld:subtype="bool" ld:bits="8"/></vmethod>
+            <vmethod ld:level="1" ret-type="bool" ld:anon-name="anon_vmethod_2"><ret-type ld:level="2" ld:meta="number" ld:subtype="bool" ld:bits="8"/></vmethod>
+            <vmethod ld:level="1" ret-type="int32_t" name="getMinVal"><ret-type ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></vmethod>
+            <vmethod ld:level="1" ret-type="int32_t" name="getMaxVal"><ret-type ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></vmethod>
+
+            <vmethod ld:level="1" ld:anon-name="anon_vmethod_5"><ld:field ld:level="2" ld:meta="pointer" type-name="stl-string" ld:is-container="true"><ld:item ld:level="3" ld:meta="primitive" ld:subtype="stl-string"/></ld:field></vmethod>
+            <vmethod ld:level="1" name="setToDefault"/>
+            <vmethod ld:level="1" name="doIncrement"/>
+            <vmethod ld:level="1" name="doDecrement"/>
+            <vmethod ld:level="1" is-destructor="true"/>
+        </virtual-methods>
+    </ld:global-type>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="world_gen_param_seedst" inherits-from="world_gen_param_basest">
+        <ld:field ld:level="1" ld:meta="pointer" type-name="stl-string" ld:is-container="true" ld:anon-name="anon_1"><ld:item ld:level="2" ld:meta="primitive" ld:subtype="stl-string"/></ld:field>
+    </ld:global-type>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="world_gen_param_valuest" inherits-from="world_gen_param_basest">
+        <ld:field ld:level="1" ld:meta="primitive" ld:subtype="stl-string" ld:anon-name="anon_1"/>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" ld:is-container="true" ld:anon-name="anon_2"/>
+    </ld:global-type>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="world_gen_param_charst" inherits-from="world_gen_param_valuest">
+        <ld:field ld:level="1" ld:meta="pointer" type-name="int8_t" ld:is-container="true" ld:anon-name="anon_1"><ld:item ld:level="2" ld:meta="number" ld:subtype="int8_t" ld:bits="8"/></ld:field>
+        <ld:field name="min_val" ld:level="1" ld:meta="number" ld:subtype="int8_t" ld:bits="8"/>
+        <ld:field name="max_val" ld:level="1" ld:meta="number" ld:subtype="int8_t" ld:bits="8"/>
+        <ld:field name="initial_val" ld:level="1" ld:meta="number" ld:subtype="int8_t" ld:bits="8"/>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" type-name="int8_t" ld:is-container="true" ld:anon-name="anon_2"><ld:item ld:level="2" ld:meta="number" ld:subtype="int8_t" ld:bits="8"/></ld:field>
+    </ld:global-type>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="world_gen_param_memberst" inherits-from="world_gen_param_valuest">
+        <ld:field ld:level="1" ld:meta="pointer" type-name="int32_t" ld:is-container="true" ld:anon-name="anon_1"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
+        <ld:field name="min_val" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field name="max_val" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field name="initial_val" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" type-name="int32_t" ld:is-container="true" ld:anon-name="anon_2"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
+    </ld:global-type>
     <ld:global-type ld:meta="class-type" ld:level="0" type-name="viewscreen_layer_world_gen_paramst" inherits-from="viewscreen_layer">
         <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_1"/>
         <ld:field ld:level="1" ld:meta="primitive" ld:subtype="stl-string" ld:anon-name="anon_2"/>
@@ -34915,17 +35264,17 @@
         <ld:field name="map_y" ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
         <ld:field name="hide_territories" ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
         <ld:field name="civ_site_mode" ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_13"/>
+        <ld:field name="decade" ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
         <ld:field name="filter_text" ld:level="1" ld:meta="primitive" ld:subtype="stl-string"/>
         <ld:field name="filter_editing" ld:level="1" ld:meta="number" ld:subtype="int8_t" ld:bits="8"/>
-        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" type-name="int32_t" comment="index into histfigs" ld:is-container="true" ld:anon-name="anon_14"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
-        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" type-name="int32_t" comment="index into sites" ld:is-container="true" ld:anon-name="anon_15"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
-        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" type-name="int32_t" comment="index into artifacts" ld:is-container="true" ld:anon-name="anon_16"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
-        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" type-name="int32_t" comment="index into regions" ld:is-container="true" ld:anon-name="anon_17"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
-        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" type-name="int32_t" comment="index into layers" ld:is-container="true" ld:anon-name="anon_18"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
-        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" type-name="int32_t" comment="index into unk_a8" ld:is-container="true" ld:anon-name="anon_19"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
-        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" type-name="int32_t" comment="index into entities" ld:is-container="true" ld:anon-name="anon_20"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
-        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" type-name="int32_t" comment="index into structures" ld:is-container="true" ld:anon-name="anon_21"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" type-name="int32_t" comment="index into histfigs" ld:is-container="true" ld:anon-name="anon_13"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" type-name="int32_t" comment="index into sites" ld:is-container="true" ld:anon-name="anon_14"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" type-name="int32_t" comment="index into artifacts" ld:is-container="true" ld:anon-name="anon_15"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" type-name="int32_t" comment="index into regions" ld:is-container="true" ld:anon-name="anon_16"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" type-name="int32_t" comment="index into layers" ld:is-container="true" ld:anon-name="anon_17"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" type-name="int32_t" comment="index into unk_a8" ld:is-container="true" ld:anon-name="anon_18"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" type-name="int32_t" comment="index into entities" ld:is-container="true" ld:anon-name="anon_19"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" type-name="int32_t" comment="index into structures" ld:is-container="true" ld:anon-name="anon_20"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
     </ld:global-type>
     <ld:global-type ld:meta="class-type" ld:level="0" type-name="viewscreen_locationsst" inherits-from="viewscreen">
         <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="locations" pointer-type="abstract_building" ld:is-container="true"><ld:item ld:meta="pointer" ld:is-container="true" ld:level="2" type-name="abstract_building"><ld:item ld:level="3" ld:meta="global" type-name="abstract_building"/></ld:item></ld:field>
@@ -35215,64 +35564,69 @@
             <enum-item name="Background"/>
         </ld:field>
         <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="unk_vec1" since="v0.42.01" ld:is-container="true"/>
-
         <ld:field name="adventurer" ld:level="1" ld:meta="compound" ld:typedef-name="T_adventurer">
             <ld:field type-name="language_name" name="name" ld:level="2" ld:meta="global"/>
             <ld:field name="race" ref-target="creature_raw" ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
             <ld:field name="caste" ref-target="caste_raw" aux-value="$$.race" ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
-            <ld:field ld:level="2" ld:meta="static-array" name="skills" type-name="int32_t" count="135" index-enum="job_skill" ld:is-container="true"><ld:item ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
+            <ld:field ld:level="2" ld:meta="static-array" name="skills" count="135" index-enum="job_skill" ld:is-container="true">
+                <ld:item ld:subtype="enum" type-name="skill_rating" ld:level="3" ld:meta="global"/>
+            </ld:field>
             <ld:field name="entity" ref-target="historical_entity" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
             <ld:field name="histfig" refers-to="$global.world.nemesis.all[$]" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
             <ld:field name="unk_284" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
-            <ld:field name="unk_288" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+            <ld:field name="cultural_identity" ref-target="cultural_identity" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
             <ld:field name="unk_28c" ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
             <ld:field name="unk_290" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>?
             <ld:field name="unk_294" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>?
             <ld:field name="unk_298" ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
 
-            <ld:field ld:level="2" ld:meta="static-array" count="19" name="attributes" ld:is-container="true"><ld:item ld:subtype="enum" type-name="adventurer_attribute_level" ld:level="3" ld:meta="global"/></ld:field>
+            <ld:field ld:level="2" ld:meta="static-array" count="6" name="physical_levels" index-enum="physical_attribute_type" ld:is-container="true">
+                <ld:item ld:subtype="enum" type-name="adventurer_attribute_level" ld:level="3" ld:meta="global"/>
+            </ld:field>
+            <ld:field ld:level="2" ld:meta="static-array" count="13" name="mental_levels" index-enum="mental_attribute_type" ld:is-container="true">
+                <ld:item ld:subtype="enum" type-name="adventurer_attribute_level" ld:level="3" ld:meta="global"/>
+            </ld:field>
             <ld:field ld:subtype="enum" base-type="int16_t" name="status" ld:level="2" ld:meta="compound" ld:typedef-name="T_status">
                 <enum-item name="Peasant"/>
                 <enum-item name="Hero"/>
                 <enum-item name="Demigod"/>
             </ld:field>
 
-            <ld:field name="unk_v40_1a" init-value="-1" since="v0.40.01" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+            <ld:field name="commander_id" init-value="-1" since="v0.40.01" refers-to="$(find-entity $(find-instance $world_site $$._parent.site_id).cur_owner_id).positions.assignments[$]" comment="-1 is peasant" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
             <ld:field name="site_id" ref-target="world_site" since="v0.40.01" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
             <ld:field name="deity_id" ref-target="historical_figure" since="v0.40.01" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
             <ld:field name="belief_strength" since="v0.40.01" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
 
-            <ld:field name="unk_324" ld:level="2" ld:meta="compound" ld:typedef-name="T_unk_324">
+            <ld:field name="appearance" ld:level="2" ld:meta="compound" ld:typedef-name="T_appearance">
                 <ld:field name="unk_1" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
-                <ld:field name="unk_2" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
+                <ld:field name="caste_index" refers-to="$global.world.raws.creatures.list_creature[$]" comment="also refers to $global.world.raws.creatures.list_caste[$]" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
                 <ld:field name="unk_3" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
                 <ld:field name="unk_4" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
-                <ld:field ld:level="3" ld:meta="static-array" name="unk_5" count="6" type-name="unit_attribute" ld:is-container="true"><ld:item ld:level="4" ld:meta="global" type-name="unit_attribute"/></ld:field>
+                <ld:field ld:level="3" ld:meta="static-array" name="physical_attributes" count="6" type-name="unit_attribute" index-enum="physical_attribute_type" ld:is-container="true"><ld:item ld:level="4" ld:meta="global" type-name="unit_attribute"/></ld:field>
                 <ld:field name="unk_6" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
-                below vectors (unk_7-unk_13) populated on PhysicalTraits page; length depends on caste, but contents are consistent with same caste and save
-                <ld:field ld:meta="container" ld:level="3" ld:subtype="stl-vector" name="unk_7" type-name="int32_t" ld:is-container="true"><ld:item ld:level="4" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
-                <ld:field ld:meta="container" ld:level="3" ld:subtype="stl-vector" name="unk_8" type-name="int32_t" ld:is-container="true"><ld:item ld:level="4" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
+                below vectors populated on PhysicalTraits page; lengths depend on caste
+                <ld:field ld:meta="container" ld:level="3" ld:subtype="stl-vector" name="body_modifiers" type-name="int32_t" index-refers-to="(find-creature $$._parent.race).caste[$$._parent.caste].body_appearance_modifier[$]" ld:is-container="true"><ld:item ld:level="4" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
+                <ld:field ld:meta="container" ld:level="3" ld:subtype="stl-vector" name="bp_modifiers" type-name="int32_t" index-refers-to="(find-creature $$._parent.race).caste[$$._parent.caste].bp_appearance.modifiers[$]" ld:is-container="true"><ld:item ld:level="4" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
                 <ld:field name="unk_9" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
-                <ld:field ld:meta="container" ld:level="3" ld:subtype="stl-vector" name="unk_10" type-name="int32_t" ld:is-container="true"><ld:item ld:level="4" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
-                <ld:field ld:meta="container" ld:level="3" ld:subtype="stl-vector" name="unk_11" type-name="int32_t" ld:is-container="true"><ld:item ld:level="4" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
-                <ld:field ld:meta="container" ld:level="3" ld:subtype="stl-vector" name="unk_12" type-name="int32_t" ld:is-container="true"><ld:item ld:level="4" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
-                <ld:field ld:meta="container" ld:level="3" ld:subtype="stl-vector" name="unk_13" type-name="int32_t" ld:is-container="true"><ld:item ld:level="4" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
-                <ld:field ld:meta="container" ld:level="3" ld:subtype="stl-vector" name="unk_14" type-name="int16_t" ld:is-container="true"><ld:item ld:level="4" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field> physical traits? changed by randomizing in PhysicalTraits page
+                <ld:field ld:meta="container" ld:level="3" ld:subtype="stl-vector" name="tissue_style" type-name="int32_t" ld:is-container="true"><ld:item ld:level="4" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
+                <ld:field ld:meta="container" ld:level="3" ld:subtype="stl-vector" name="tissue_style_civ_id" type-name="int32_t" ld:is-container="true"><ld:item ld:level="4" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
+                <ld:field ld:meta="container" ld:level="3" ld:subtype="stl-vector" name="tissue_style_id" type-name="int32_t" ld:is-container="true"><ld:item ld:level="4" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
+                <ld:field ld:meta="container" ld:level="3" ld:subtype="stl-vector" name="tissue_style_type" type-name="int32_t" ld:is-container="true"><ld:item ld:level="4" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
+                <ld:field ld:meta="container" ld:level="3" ld:subtype="stl-vector" name="tissue_length" type-name="int32_t" ld:is-container="true"><ld:item ld:level="4" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
 
-                <ld:field ld:level="3" ld:meta="static-array" name="unk_15" count="2" ld:is-container="true">
-                    <ld:item ld:anon-compound="true" ld:level="4" ld:meta="compound" ld:typedef-name="T_unk_15">
-                        <ld:field ld:level="4" ld:meta="pointer" name="unk_15_a" ld:is-container="true"/>
-                        <ld:field name="unk_15_b" ld:level="4" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
-                    </ld:item>
-                </ld:field>
-                <ld:field ld:meta="container" ld:level="3" ld:subtype="stl-vector" name="unk_16" type-name="int32_t" ld:is-container="true"><ld:item ld:level="4" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
+                <ld:field ld:level="3" ld:meta="pointer" name="unk_15_a" ld:is-container="true"/>
+                <ld:field name="appearance_gene_count" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
+                <ld:field ld:level="3" ld:meta="pointer" name="unk_15_b" ld:is-container="true"/>
+                <ld:field name="color_gene_count" ld:level="3" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
+
+                <ld:field ld:meta="container" ld:level="3" ld:subtype="stl-vector" name="color_modifiers" type-name="int32_t" index-refers-to="(find-creature $$._parent.race).caste[$$._parent.caste].color_modifiers[$]" ld:is-container="true"><ld:item ld:level="4" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
             </ld:field>
             <ld:field name="unk_17" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>?
             <ld:field name="unk_18" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>?
-            <ld:field name="unk_19" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
-            <ld:field name="unk_20" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
-            <ld:field name="unk_21" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>?
-            <ld:field name="unk_22" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>?
+            <ld:field name="birth_year" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+            <ld:field name="birth_tick" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+            <ld:field name="old_year" comment="-1 for immortals" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+            <ld:field name="old_tick" comment="-1 for immortals" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
 
             <ld:field name="unk_468" ld:level="2" ld:meta="compound" ld:typedef-name="T_unk_468">
                 <ld:field ld:meta="container" ld:level="3" ld:subtype="stl-vector" name="unk_23_a" ld:is-container="true"/>
@@ -35316,7 +35670,7 @@
         <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="skill_list" ld:is-container="true">
             <ld:item ld:subtype="enum" base-type="int16_t" type-name="job_skill" ld:level="2" ld:meta="global"/>
         </ld:field>
-        <ld:field name="skill_idx" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field name="skill_idx" refers-to="$$._parent.skill_list[$]" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
         <ld:field name="skill_points_remaining" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
 
         <ld:field name="unk_31" ld:level="1" ld:meta="number" ld:subtype="int8_t" ld:bits="8"/>
@@ -35369,6 +35723,26 @@
                 </ld:item>
             </ld:item>
         </ld:field>
+    </ld:global-type>
+    <ld:global-type ld:meta="struct-type" ld:level="0" type-name="embark_profile">
+        <ld:field name="name" ld:level="1" ld:meta="primitive" ld:subtype="stl-string"/>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="skill_type" type-name="int16_t" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="skill_dwarf_idx" type-name="int16_t" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="skill_level" type-name="int16_t" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
+
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" type-name="int32_t" ld:is-container="true" ld:anon-name="anon_1"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" type-name="int32_t" ld:is-container="true" ld:anon-name="anon_2"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" type-name="int16_t" ld:is-container="true" ld:anon-name="anon_3"><ld:item ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
+
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="item_type" type-name="int16_t" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="item_subtype" type-name="int16_t" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="mat_type" type-name="int16_t" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="mat_info" type-name="int32_t" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="item_count" type-name="int32_t" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
+
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="race" type-name="int32_t" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="caste" type-name="int16_t" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="profession" type-name="profession" ld:is-container="true"><ld:item ld:level="2" ld:meta="global" type-name="profession"/></ld:field>
     </ld:global-type>
     <ld:global-type ld:meta="class-type" ld:level="0" type-name="viewscreen_setupdwarfgamest" inherits-from="viewscreen">
         <ld:field size="256" name="title" ld:level="1" ld:meta="bytes" ld:subtype="static-string"/>
@@ -35436,11 +35810,11 @@
                 <enum-item name="Profile"/>
             </ld:item>
         </ld:field>
-        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="choices" type-name="int32_t" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="choices" pointer-type="embark_profile" ld:is-container="true"><ld:item ld:meta="pointer" ld:is-container="true" ld:level="2" type-name="embark_profile"><ld:item ld:level="3" ld:meta="global" type-name="embark_profile"/></ld:item></ld:field>
         <ld:field name="choice" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
         <ld:field name="profile_name" ld:level="1" ld:meta="primitive" ld:subtype="stl-string"/>
         <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="problems" pointer-type="stl-string" ld:is-container="true"><ld:item ld:meta="pointer" ld:is-container="true" ld:level="2" type-name="stl-string"><ld:item ld:level="3" ld:meta="primitive" ld:subtype="stl-string"/></ld:item></ld:field>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_1"/>
+        <ld:field name="unk_1" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
         <ld:field name="in_problems" ld:level="1" ld:meta="number" ld:subtype="int8_t" ld:bits="8"/>
         <ld:field name="in_save_profile" ld:level="1" ld:meta="number" ld:subtype="int8_t" ld:bits="8"/>
         <ld:field name="profile_name_conflict" ld:level="1" ld:meta="number" ld:subtype="int8_t" ld:bits="8"/>
@@ -35455,11 +35829,31 @@
         </ld:field>
         <ld:field name="fort_name" type-name="language_name" ld:level="1" ld:meta="global"/>
         <ld:field name="group_name" type-name="language_name" ld:level="1" ld:meta="global"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int8_t" ld:bits="8" ld:anon-name="anon_2"/>
+        <ld:field name="unk_2" ld:level="1" ld:meta="number" ld:subtype="int8_t" ld:bits="8"/>
+
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="unk_v43_1" ld:is-container="true"/>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="unk_v43_2" ld:is-container="true"/>
+        <ld:field name="unk_v43_3" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field ld:level="1" ld:meta="pointer" name="unk_v43_4" ld:is-container="true"/>
+        <ld:field ld:level="1" ld:meta="pointer" name="unk_v43_5" ld:is-container="true"/>
+        <ld:field ld:level="1" ld:meta="static-array" name="unk_v43_6" type-name="int32_t" count="10" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
+        <ld:field name="unk_v43_7" ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
+        <ld:field ld:level="1" ld:meta="static-array" name="unk_v43_8" type-name="int8_t" count="7" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int8_t" ld:bits="8"/></ld:field>
+        <ld:field name="unk_v43_sub9" ld:level="1" ld:meta="compound" ld:typedef-name="T_unk_v43_sub9">
+            <ld:field name="unk_s1" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+            <ld:field name="unk_s2" ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
+            <ld:field name="unk_s3" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+            <ld:field name="unk_s4" ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
+            <ld:field name="unk_s5" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+            <ld:field name="unk_s6" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+            <ld:field ld:level="2" ld:meta="pointer" name="unk_s7" ld:is-container="true"/>
+        </ld:field>
+        <ld:field ld:level="1" ld:meta="static-array" type-name="int32_t" count="4" comment="uninitialized?" name="unk_v43_10" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
+
         <ld:field name="location" type-name="embark_location" ld:level="1" ld:meta="global"/>
         <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="units" pointer-type="unit" ld:is-container="true"><ld:item ld:meta="pointer" ld:is-container="true" ld:level="2" type-name="unit"><ld:item ld:level="3" ld:meta="global" type-name="unit"/></ld:item></ld:field>
         <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="items" pointer-type="item" ld:is-container="true"><ld:item ld:meta="pointer" ld:is-container="true" ld:level="2" type-name="item"><ld:item ld:level="3" ld:meta="global" type-name="item"/></ld:item></ld:field>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_3"/>
+        <ld:field name="unk_3" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
         <ld:field name="points_remaining" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
 
         -- Set by viewscreen_selectitemst via pointers:
@@ -35468,27 +35862,6 @@
         <ld:field name="add_mattype" ref-target="material" aux-value="$$.add_matindex" ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
         <ld:field name="add_matindex" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
         <ld:field name="adding_item" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
-
-
-        <ld:field size="80" ld:level="1" ld:meta="bytes" ld:subtype="padding" ld:anon-name="anon_4"/>
-        <ld:field name="unk_850" ld:level="1" ld:meta="compound" ld:typedef-name="T_unk_850">
-            <ld:field ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_1"/>?
-            <ld:field ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_2"/>
-            <ld:field ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_3"/>
-            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" ld:is-container="true" ld:anon-name="anon_4"/>
-            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" ld:is-container="true" ld:anon-name="anon_5"/>
-        </ld:field>
-        <ld:field size="12" ld:level="1" ld:meta="bytes" ld:subtype="padding" ld:anon-name="anon_5"/>
-        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="unk_87C" ld:is-container="true"/>
-        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="unk_888" ld:is-container="true"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_6"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_7"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_8"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_9"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_10"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_11"/>
-        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_12"/>
-        <ld:field size="16" ld:level="1" ld:meta="bytes" ld:subtype="padding" ld:anon-name="anon_13"/>
     </ld:global-type>
     <ld:global-type ld:meta="class-type" ld:level="0" type-name="viewscreen_storesst" inherits-from="viewscreen">
         <ld:field name="title" size="256" ld:level="1" ld:meta="bytes" ld:subtype="static-string"/>
@@ -35534,7 +35907,7 @@
                     <ld:field name="no_newline" ld:level="4" ld:meta="number" ld:subtype="flag-bit" ld:bits="1"/>
                 </ld:field>
                 <ld:field name="pause_depth" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
-                <ld:field name="return_val" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+                <ld:field name="return_val" init-value="-1" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
                 <ld:field name="indent" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
             </ld:item>
                    NULL for empty lines
@@ -35678,7 +36051,7 @@
         <ld:field name="edit_count" ld:level="1" ld:meta="primitive" ld:subtype="stl-string"/>
     </ld:global-type>
     <ld:global-type ld:meta="class-type" ld:level="0" type-name="viewscreen_tradelistst" inherits-from="viewscreen">
-        <ld:field name="unk_10" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field name="cursor" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
         <ld:field ld:level="1" ld:meta="pointer" name="depot" type-name="building_tradedepotst" ld:is-container="true"><ld:item ld:level="2" ld:meta="global" type-name="building_tradedepotst"/></ld:field>
         <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="caravans" pointer-type="caravan_state" ld:is-container="true"><ld:item ld:meta="pointer" ld:is-container="true" ld:level="2" type-name="caravan_state"><ld:item ld:level="3" ld:meta="global" type-name="caravan_state"/></ld:item></ld:field>
     </ld:global-type>
@@ -35943,26 +36316,26 @@
 
         <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="population" pointer-type="world_population" ld:is-container="true"><ld:item ld:meta="pointer" ld:is-container="true" ld:level="2" type-name="world_population"><ld:item ld:level="3" ld:meta="global" type-name="world_population"/></ld:item></ld:field>
 
-        <ld:field ld:level="1" ld:meta="static-array" name="unk_118" count="51" ld:is-container="true">
+        <ld:field ld:level="1" ld:meta="static-array" name="biome_tile_counts" count="51" index-enum="biome_type" ld:is-container="true">
             <ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
         </ld:field>
-        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="unk_184" ld:is-container="true">
-            <ld:item refers-to="$$._global.unk_118[$]" ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="tree_biomes" ld:is-container="true">
+            <ld:item ld:subtype="enum" base-type="int16_t" type-name="biome_type" ld:level="2" ld:meta="global" ld:enum-size-forced="true"/>
         </ld:field>
-        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="unk_194" ld:is-container="true">
-            <ld:item ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="tree_tiles_1" index-refers-to="$$._global.tree_biomes[$].refers-to" ld:is-container="true">
+            <ld:item ref-target="plant_raw" ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
         </ld:field>
-        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="unk_1a4" ld:is-container="true">
-            <ld:item ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="tree_tiles_2" index-refers-to="$$._global.tree_biomes[$].refers-to" ld:is-container="true">
+            <ld:item ref-target="plant_raw" ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
         </ld:field>
-        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="unk_1b4" ld:is-container="true">
-            <ld:item ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="tree_tiles_good" index-refers-to="$$._global.tree_biomes[$].refers-to" ld:is-container="true">
+            <ld:item ref-target="plant_raw" ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
         </ld:field>
-        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="unk_1c4" ld:is-container="true">
-            <ld:item ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="tree_tiles_evil" index-refers-to="$$._global.tree_biomes[$].refers-to" ld:is-container="true">
+            <ld:item ref-target="plant_raw" ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
         </ld:field>
-        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="unk_1d4" ld:is-container="true">
-            <ld:item ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="tree_tiles_savage" index-refers-to="$$._global.tree_biomes[$].refers-to" ld:is-container="true">
+            <ld:item ref-target="plant_raw" ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
         </ld:field>
 
         <ld:field name="unk_1e4" ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
@@ -36014,12 +36387,39 @@
         <code-helper name="describe">(describe-obj $.name)</code-helper>
 
         <ld:field name="path" type-name="coord2d_path" ld:level="1" ld:meta="global"/>
-        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="unk_8c" type-name="int32_t" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
-        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="unk_9c" type-name="int16_t" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="flow" type-name="int32_t" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="exit_tile" type-name="int16_t" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>  --  0 - 15
         <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="elevation" type-name="int16_t" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/></ld:field>
 
         <ld:field name="end_pos" type-name="coord2d" ld:level="1" ld:meta="global"/>
         <ld:field ld:meta="container" ld:level="1" ld:subtype="df-flagarray" name="flags" ld:is-container="true"/>
+        <comment>
+            Additional river information:
+            The flow element affects the width of the river and seems to follow the
+            formula width = (flow / 40000 * 46) + 1, with a minimum width of 4 and
+            a maximum width of 47. DF uses specific names for rivers with certain flows:
+            - Stream:      less than    5000
+            - Minor River  5000 - 9999
+            - River        10000 - 19999
+            - Major River: greather than 20000
+            Brooks tend to have a flow of 0, but DF has divided the controlling information
+            between this structure, the region map entry (below), and the feature map.
+            Thus, the region map flag 'is_brook' controls whether a water course actually
+            is a (potentially broad) brook or an open water course. Likewise, the 'has_river'
+            flag is needed for DF to properly understand a water course should be present.
+            The exit tile holds the information on which mid level tile the river should
+            exit the region. Presumably the path controls which edge to apply this to.
+            Note that the river up/down/left/right flags of the region map entry should
+            align with the sides rivers enter/exit.
+            The feature map has to have a river entry for the corresponding world tile
+            for a river to be implemented properly. All this is done by DF, but needs
+            to be known if hacking.
+            The world region details (below) data on rivers are generated as the regions
+            are generated.
+            The elevation element affects the level of the river. If the river elevation
+            is lower than the surrounding area DF tends to generate a valley around the
+            river to allow it to reach the correct elevation.
+        </comment>
     </ld:global-type>
     <ld:global-type ld:meta="enum-type" ld:level="0" type-name="geo_layer_type" base-type="int16_t">
         <enum-attr name="flag" type-name="inorganic_flags" use-key-name="true"/>
@@ -36824,6 +37224,55 @@
             <ld:field ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_8"/>
         </ld:field>
     </ld:global-type>
+    <ld:global-type ld:meta="struct-type" ld:level="0" type-name="scribejob">
+        <ld:field name="idmaybe" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field comment="not locationid" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_1"/>
+        <ld:field name="item_id" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field name="written_content_id" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field name="unit_id" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field name="activity_entry_id" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_2"/>
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_3"/>
+        <ld:field name="locationmaybe" ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16"/>
+    </ld:global-type>
+    <ld:global-type ld:meta="struct-type" ld:level="0" type-name="site_reputation_report">
+        <ld:field name="site_id" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field name="location_id" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_1"/>
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_2"/>
+        <ld:field name="year" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field name="tickmaybe" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_3"/>
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_4"/>
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_5"/>
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_6"/>
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_7"/>
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_8"/>
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_9"/>
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_10"/>
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_11"/>
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_12"/>
+        <ld:global-type ld:meta="bitfield-type" ld:level="0">
+            <ld:field ld:level="1" ld:meta="number" ld:subtype="flag-bit" ld:bits="1"/>
+        </ld:global-type>
+    </ld:global-type>
+    <ld:global-type ld:meta="struct-type" ld:level="0" type-name="site_reputation_info">
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" pointer-type="site_reputation_report" ld:is-container="true" ld:anon-name="anon_1"><ld:item ld:meta="pointer" ld:is-container="true" ld:level="2" type-name="site_reputation_report"><ld:item ld:level="3" ld:meta="global" type-name="site_reputation_report"/></ld:item></ld:field>
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_2"/>
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_3"/>
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_4"/>
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_5"/>
+    </ld:global-type>
+    <ld:global-type ld:meta="struct-type" ld:level="0" type-name="location_scribe_jobs">
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="scribejobs" pointer-type="scribejob" ld:is-container="true"><ld:item ld:meta="pointer" ld:is-container="true" ld:level="2" type-name="scribejob"><ld:item ld:level="3" ld:meta="global" type-name="scribejob"/></ld:item></ld:field>
+        <ld:field name="nextidmaybe" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field name="year" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="uint16_t" ld:unsigned="true" ld:bits="16" ld:anon-name="anon_1"/>
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_2"/>
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_3"/>
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_4"/>
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_5"/>
+    </ld:global-type>
     <ld:global-type ld:meta="enum-type" ld:level="0" type-name="abstract_building_type">
         <enum-item name="MEAD_HALL"/>
         <enum-item name="KEEP"/>
@@ -36923,8 +37372,8 @@
         <ld:field name="unk3" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
         <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="unk4" type-name="int32_t" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
         <ld:field name="site_owner_id" ref-target="historical_entity" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
-        <ld:field ld:level="1" ld:meta="pointer" name="unk_v42_1" since="v0.42.01" ld:is-container="true"/>
-        <ld:field ld:level="1" ld:meta="pointer" name="unk_v42_2" since="v0.42.01" ld:is-container="true"/>
+        <ld:field ld:level="1" ld:meta="pointer" name="scribeinfo" since="v0.42.01" type-name="location_scribe_jobs" ld:is-container="true"><ld:item ld:level="2" ld:meta="global" type-name="location_scribe_jobs"/></ld:field>
+        <ld:field ld:level="1" ld:meta="pointer" name="reputation_reports" since="v0.42.01" type-name="site_reputation_info" ld:is-container="true"><ld:item ld:level="2" ld:meta="global" type-name="site_reputation_info"/></ld:field>
         <ld:field ld:level="1" ld:meta="pointer" name="unk_v42_3" since="v0.42.01" ld:is-container="true"/>
         <ld:field name="site_id" ref-target="world_site" comment="not initialized/saved/loaded, assumed member of base class" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
         <ld:field name="pos" type-name="coord2d" since="v0.42.01" ld:level="1" ld:meta="global"/>
@@ -37270,20 +37719,24 @@
         <ld:field name="id" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
         <ld:field name="site_id" ref-target="world_site" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
         <ld:field name="civ_id" ref-target="historical_entity" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
-        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="unk_c" ld:is-container="true">
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="group_log" comment="the circumstances of groups joining or leaving this culture" ld:is-container="true">
             <ld:item ld:level="2" ld:meta="pointer" ld:is-container="true">
-                <ld:item ld:meta="compound" ld:level="2" ld:typedef-name="T_unk_c">
+                <ld:item ld:meta="compound" ld:level="2" ld:typedef-name="T_group_log">
                 <ld:field name="group_id" ref-target="historical_entity" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
-                <ld:field name="unk_4" init-value="-1" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
-                <ld:field name="unk_8" init-value="-1" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
-                <ld:field name="unk_c" init-value="-1" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
-                <ld:field name="unk_10" init-value="-1" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
-                <ld:field name="unk_14" init-value="-1" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
-                <ld:field name="unk_18" init-value="-1" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
-                <ld:field name="unk_1c" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+                <ld:field name="start_year" init-value="-1" comment="when the group joined the culture, or -1 if it founded the culture" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+                <ld:field name="start_tick" init-value="-1" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+                <ld:field name="end_year" init-value="-1" comment="when the group left the culture, or -1 if it has not left" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+                <ld:field name="end_tick" init-value="-1" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+                <ld:field name="unk_14" init-value="-1" comment="copy of start_year" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+                <ld:field name="unk_18" init-value="-1" comment="copy of start_tick" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+                <ld:field ld:subtype="enum" name="join_type" ld:level="3" ld:meta="compound" ld:typedef-name="T_join_type">
+                    <enum-item name="Peaceful"/>
+                    <enum-item name="CompleteTakeOver" comment="The previous group left the culture."/>
+                    <enum-item name="TakeOver" comment="The previous group's end_year is still -1."/>
+                </ld:field>
                 <ld:field name="unk_20" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
                 <ld:field ld:meta="container" ld:level="3" ld:subtype="stl-vector" name="unk_24" type-name="int32_t" ld:is-container="true"><ld:item ld:level="4" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
-                <ld:field ld:meta="container" ld:level="3" ld:subtype="stl-vector" name="unk_34" type-name="int32_t" ld:is-container="true"><ld:item ld:level="4" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
+                <ld:field ld:meta="container" ld:level="3" ld:subtype="stl-vector" name="unk_34" type-name="int32_t" comment="same length as unk_24; elements always sum to 10000" ld:is-container="true"><ld:item ld:level="4" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
                 <ld:field name="unk_44" init-value="100" ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
             </ld:item>
                 
@@ -37304,12 +37757,12 @@
             <ld:item ld:subtype="enum" base-type="int16_t" type-name="ethic_response" ld:level="2" ld:meta="global"/>
         </ld:field>
         <ld:field ld:level="1" ld:meta="static-array" name="values" type-name="int32_t" count="64" index-enum="value_type" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
-        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="unk_c8" pointer-type="entity_event" ld:is-container="true"><ld:item ld:meta="pointer" ld:is-container="true" ld:level="2" type-name="entity_event"><ld:item ld:level="3" ld:meta="global" type-name="entity_event"/></ld:item></ld:field>
-        <ld:field name="unk_d8" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="events" pointer-type="entity_event" ld:is-container="true"><ld:item ld:meta="pointer" ld:is-container="true" ld:level="2" type-name="entity_event"><ld:item ld:level="3" ld:meta="global" type-name="entity_event"/></ld:item></ld:field>
+        <ld:field name="unk_d8" init-value="-1" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
         <ld:field ld:meta="container" ld:level="1" ld:subtype="stl-vector" name="unk_dc" type-name="int32_t" ld:is-container="true"><ld:item ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
-        <ld:field name="unk_ec" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
-        <ld:field name="unk_f0" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
-        <ld:field name="unk_f4" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field name="unk_ec" init-value="-1" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field name="unk_f0" init-value="-1" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field name="unk_f4" comment="0 or 800000" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
         <ld:field name="unk_f8" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
     </ld:global-type>
     <ld:global-type ld:meta="struct-type" ld:level="0" type-name="world_site_inhabitant">
@@ -37729,7 +38182,7 @@
         <ld:field name="base_z" comment="can be below ground, but not above ground" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
         <ld:field name="door_n_elevation" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
         <ld:field name="door_s_elevation" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
-        <ld:field name="soor_e_elevation" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+        <ld:field name="door_e_elevation" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
         <ld:field name="door_w_elevation" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
         <ld:field name="door_item" type-name="site_building_item" ld:level="1" ld:meta="global"/>
         <ld:field name="wall_item" type-name="site_building_item" ld:level="1" ld:meta="global"/>
@@ -37812,6 +38265,74 @@
     </ld:global-type>
     <ld:global-type ld:meta="class-type" ld:level="0" type-name="site_realization_building_info_hillock_housest" inherits-from="site_realization_building_infost">
         <ld:field ld:subtype="enum" base-type="int32_t" name="type" type-name="hillock_house_type" ld:level="1" ld:meta="global"/>
+    </ld:global-type>
+    <ld:global-type ld:meta="enum-type" ld:level="0" type-name="creation_zone_pwg_alteration_type">
+        <enum-item name="location_death"/>
+        <enum-item name="camp"/>
+        <enum-item name="srb_ruined"/>
+        <enum-item name="srp_ruined"/>
+    </ld:global-type>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="creation_zone_pwg_alterationst">
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_1"/>
+        <virtual-methods>
+            <vmethod ld:level="1" ret-type="creation_zone_pwg_alteration_type" name="getType"><ret-type ld:level="2" ld:meta="global" type-name="creation_zone_pwg_alteration_type"/></vmethod>
+            <vmethod ld:level="1" name="write_file"> <ld:field ld:level="2" ld:meta="pointer" name="file" type-name="file_compressorst" ld:is-container="true"><ld:item ld:level="3" ld:meta="global" type-name="file_compressorst"/></ld:field> </vmethod>
+            <vmethod ld:level="1" name="read_file">
+                <ld:field ld:level="2" ld:meta="pointer" name="file" type-name="file_compressorst" ld:is-container="true"><ld:item ld:level="3" ld:meta="global" type-name="file_compressorst"/></ld:field>
+                <ld:field name="loadversion" ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+            </vmethod>
+            <vmethod ld:level="1" is-destructor="true"/>
+            <vmethod ld:level="1" ld:anon-name="anon_vmethod_4"><ld:field ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></vmethod>
+            <vmethod ld:level="1" ret-type="int32_t" ld:anon-name="anon_vmethod_5"><ret-type ld:level="2" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></vmethod>
+        </virtual-methods>
+    </ld:global-type>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="creation_zone_pwg_alteration_location_deathst" inherits-from="creation_zone_pwg_alterationst">
+        <ld:field name="unk_1" ld:level="1" ld:meta="compound" ld:typedef-name="T_unk_1">
+            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" ld:is-container="true" ld:anon-name="anon_1">
+                <ld:item ld:level="3" ld:meta="pointer" ld:is-container="true">
+                    <ld:item ld:meta="compound" ld:level="3" ld:typedef-name="T_anon_1">
+                    <ld:field ld:level="4" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_1"/>
+                    <ld:field ld:level="4" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_2"/>
+                    <ld:field ld:level="4" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_3"/>
+                    <ld:field ld:level="4" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_4"/>
+                    <ld:field ld:level="4" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_5"/>
+                    <ld:field ld:level="4" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_6"/>
+                    <ld:field ld:level="4" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_7"/>
+                    <ld:field ld:level="4" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_8"/>
+                </ld:item>
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                </ld:item>
+            </ld:field>
+            <ld:field ld:meta="container" ld:level="2" ld:subtype="stl-vector" type-name="int32_t" ld:is-container="true" ld:anon-name="anon_2"><ld:item ld:level="3" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/></ld:field>
+        </ld:field>
+        <ld:field name="unk_2" ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32"/>
+    </ld:global-type>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="creation_zone_pwg_alteration_campst" inherits-from="creation_zone_pwg_alterationst">
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_1"/>
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_2"/>
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_3"/>
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_4"/>
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_5"/>
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_6"/>
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_7"/>
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_8"/>
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int16_t" ld:bits="16" ld:anon-name="anon_9"/>
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_10"/>
+    </ld:global-type>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="creation_zone_pwg_alteration_srb_ruinedst" inherits-from="creation_zone_pwg_alterationst">
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_1"/>
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_2"/>
+    </ld:global-type>
+    <ld:global-type ld:meta="class-type" ld:level="0" type-name="creation_zone_pwg_alteration_srp_ruinedst" inherits-from="creation_zone_pwg_alterationst">
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_1"/>
+        <ld:field ld:level="1" ld:meta="number" ld:subtype="int32_t" ld:bits="32" ld:anon-name="anon_2"/>
     </ld:global-type>
     <ld:global-type ld:meta="enum-type" ld:level="0" type-name="worldgen_region_type">
         <enum-item name="SWAMP"/>
