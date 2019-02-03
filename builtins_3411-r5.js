@@ -5,6 +5,8 @@ module.exports = {
 	types: {
 		null: 'null',
 		
+		_G: 'table',
+
 		df: {
 			_type: '__df',
 			global: {

@@ -178,6 +178,23 @@ function checktype(expr, ctx, opts) {
 				return expandtype(t[expr.index.value], ctx); 
 		}
 
+		if (t._enum) {
+			// If it's a string literal, we can check if the key exists
+			if (expr.index.type == 'StringLiteral' && t._enum) {
+				var t2 = t[expr.index.value];
+				if (!t2) {
+					err(expr.loc.start.line, 'value', chalk.bold(expr.index.value), 'does not exist in enum', chalk.bold(t._type));
+					return '__unknown';
+				}
+
+				return expandtype(t2, ctx) || '__unknown';
+			}
+
+			// But if it's a string expression, we can't
+			if (checktype(expr.index,ctx) == 'string')
+				return expandtype(t._type, ctx) || '__unknown';
+		}
+
 		if (t._array)
 			return expandtype(t._array, ctx);
 	}
@@ -692,7 +709,7 @@ function find_comment_dfver(b)
 	if (cs) {
 		for (var j = 0; j < cs.length; j++) {
 			var c = cs[j];
-			if (c.loc.start.line == b.loc.start.line && c.value.substr(0,6) == 'dfver:') {
+			if (c.loc.start.line == b.loc.start.line) {
 				var m = c.value.match(/dfver:\s*([^\s]+)/);
 				if (m) {
 					var vers = m[1].split('-');
@@ -730,12 +747,15 @@ function process(body, ctx) {
 				for (var j = 0; j < cs.length; j++) {
 					var c = cs[j];
 					
+					//TODO: use regex instead of 0,9
 					if (c.loc.start.line == b.loc.start.line-1 && c.value.substr(0,9) == 'luacheck:') {
-						var inp = c.value.match(/in=([^\s]*)/);
-						var outp = c.value.match(/out=([^\s]+)/);
-						
-						if (inp)
-							fnstocheck.push({node:b, inp:inp});
+						if (find_comment_dfver(b)) {
+							var inp = c.value.match(/in=([^\s]*)/);
+							var outp = c.value.match(/out=([^\s]+)/);
+							
+							if (inp)
+								fnstocheck.push({node:b, inp:inp});
+						}
 							
 						break;
 					}
