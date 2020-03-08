@@ -48,6 +48,9 @@ if (( $# > 0 )); then
 	done
 else
 	find "$dfhack_dir/scripts" -name '*.lua' -print0 | while IFS= read -r -d $'\0' script_path; do
+		if grep -qF "luacheck:skip-entirely" "$script_path"; then
+			continue
+		fi
 		node "$luacheck_dir/index.js" $args -v "$dfhack_version" -S "$dfhack_dir/scripts" -I "$dfhack_dir/library/lua" -I "$dfhack_dir/scripts" -p dfhack "$script_path"
 		if (( $? > 0 )); then had_error=1; fi
 	done
