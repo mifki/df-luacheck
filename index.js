@@ -121,7 +121,7 @@ function deepEqual(a, b, ctx, line) {
 	if (b == 'null') {
 		return true;
 	}
-	if (a && b && (Object.hasOwnProperty.call(a, '_value') || Object.hasOwnProperty.call(b, '_value')) && (a._type||a) == (b._type||b)) {
+	if (a && b && (Object.hasOwnProperty.call(a, '_value') || Object.hasOwnProperty.call(b, '_value') || (a._type||a) == 'number' || (b._type||b) == 'number') && (a._type||a) == (b._type||b)) {
 		return true;
 	}
 	if (typeof a != typeof b) {
@@ -1763,6 +1763,9 @@ function merge(a, b, ctx, line, quiet) {
 	}
 	if (b == 'null') {
 		return a;
+	}
+	if ((a._type||a) == 'number' && (b._type||b) == 'bool') {
+		return 'number'; // allow assigning true/false to bitfields
 	}
 	if (((a._type||a) == '__arg' && isargtype(b._type||b)) || ((b._type||b) == '__arg' && isargtype(a._type||a))) {
 		return '__arg';
