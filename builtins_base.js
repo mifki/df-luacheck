@@ -386,6 +386,7 @@ module.exports = {
 		'dfhack.maps.ensureTileBlock': 'df.map_block',
 		'dfhack.maps.getTileType': 'df.tiletype',
 		'dfhack.maps.getTileFlags': { _type:'tuple', _tuple:['df.tile_designation', 'df.tile_occupancy'] },
+		'dfhack.maps.isValidTilePos': 'bool',
 		'dfhack.maps.spawnFlow': 'df.flow_info',
 		'dfhack.maps.enableBlockUpdates': 'none',
 		'dfhack.burrows.setAssignedUnit': 'none',
