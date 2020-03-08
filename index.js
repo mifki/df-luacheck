@@ -2556,7 +2556,7 @@ function processAST(body, ctx) {
 					var t = checktype(clause.condition, ctx2, { in_if:true });
 					// if (t == '__unknown')
 					//	err(b.loc.start.line, 'type of expression is unknown', chalk.bold(sub(clause.condition.range)));
-					if (t && t._type == 'bool' && !t._value) {
+					if (t && t._type == 'bool' && Object.hasOwnProperty.call(t, '_value') && !t._value) {
 						if (verbose > 1) {
 							note(clause.loc.start.line, 'skipping if statement', chalk.bold(sub(clause.condition.range)), '(condition is always false)');
 						}
