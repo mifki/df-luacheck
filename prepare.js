@@ -490,6 +490,10 @@ pending_index_enums.forEach(function(e) {
 Object.keys(rootctx.functions || {}).forEach(function(f) {
 	var path = f.split(/\./g);
 	var t = rootctx.types;
+	if (path.length == 2 && path[0] == 'string') {
+		rootctx.functions['__arg.' + path[1]] = rootctx.functions[f];
+	}
+
 	for (var i = 0; i < path.length - 1; i++) {
 		if (!t[path[i]]) {
 			t[path[i]] = {

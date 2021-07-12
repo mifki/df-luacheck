@@ -121,7 +121,7 @@ function deepEqual(a, b, ctx, line) {
 	if (b == 'null') {
 		return true;
 	}
-	if (a && b && (Object.hasOwnProperty.call(a, '_value') || Object.hasOwnProperty.call(b, '_value')) && (a._type||a) == (b._type||b)) {
+	if (a && b && (Object.hasOwnProperty.call(a, '_value') || Object.hasOwnProperty.call(b, '_value') || (a._type||a) == 'number' || (b._type||b) == 'number') && (a._type||a) == (b._type||b)) {
 		return true;
 	}
 	if (typeof a != typeof b) {
@@ -1764,6 +1764,9 @@ function merge(a, b, ctx, line, quiet) {
 	if (b == 'null') {
 		return a;
 	}
+	if ((a._type||a) == 'number' && (b._type||b) == 'bool') {
+		return 'number'; // allow assigning true/false to bitfields
+	}
 	if (((a._type||a) == '__arg' && isargtype(b._type||b)) || ((b._type||b) == '__arg' && isargtype(a._type||a))) {
 		return '__arg';
 	}
@@ -2553,7 +2556,7 @@ function processAST(body, ctx) {
 					var t = checktype(clause.condition, ctx2, { in_if:true });
 					// if (t == '__unknown')
 					//	err(b.loc.start.line, 'type of expression is unknown', chalk.bold(sub(clause.condition.range)));
-					if (t && t._type == 'bool' && !t._value) {
+					if (t && t._type == 'bool' && Object.hasOwnProperty.call(t, '_value') && !t._value) {
 						if (verbose > 1) {
 							note(clause.loc.start.line, 'skipping if statement', chalk.bold(sub(clause.condition.range)), '(condition is always false)');
 						}
