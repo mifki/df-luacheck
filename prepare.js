@@ -1,6 +1,5 @@
 var fs = require('fs');
 var parseXml = require('xml2js').parseString;
-var xslt = require('libxslt');
 var _process = require('process');
 
 var ensureArray = function(a) {
@@ -422,17 +421,6 @@ function processXml(xml, ctxtypes)
 		});
 	});
 }
-
-/*var lower1 = xslt.parse(fs.readFileSync('./df/lower-1.xslt').toString());
-var lower2 = xslt.parse(fs.readFileSync('./df/lower-2.xslt').toString());
-fs.readdirSync('./df').forEach(function(f) {
-	if (f.substr(0,3) == 'df.' && f.substr(-4) == '.xml') {
-		var xml1 = lower1.apply(fs.readFileSync('./df/'+f).toString());
-		var xml2 = lower2.apply(xml1);
-		console.log(xml2);
-		processXml(xml2, rootctx.types.df);
-	}
-});*/
 
 processXml(fs.readFileSync('./codegen_'+dfhackver+'.out.xml'), rootctx.types.df);
 

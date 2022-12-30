@@ -16,7 +16,7 @@ var ensureArray = function(a) {
 	return a;
 };
 
-var argv = require('yargs').argv;
+var argv = require('yargs').array('I').argv;
 var dfhackver = argv.v;
 var dfver = dfhackver.toString().split('-')[0];
 var mainfn = argv._[0];
@@ -324,7 +324,7 @@ function checktype(expr, ctx, opts) {
 					var fn = incpath[i] + '/' + expr.argument.value.split('.').join('/') + '.lua';
 					src = fs.readFileSync(fn).toString();
 				} catch (e) {
-					err(expr.loc.start.line, 'could not require', expr.argument.value);
+					err(e, expr.loc.start.line, 'could not require', expr.argument.value);
 				}
 			}
 			
